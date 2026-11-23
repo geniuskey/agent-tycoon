@@ -1,0 +1,1605 @@
+{
+  "id": "dram-retention",
+  "version": 1,
+  "title": "DRAM Retention 불량 원인 분석",
+  "domain": "dram",
+  "function": "device-engineering",
+  "taskType": "data-analysis",
+  "difficulty": 2,
+  "estMinutes": 20,
+  "tags": [
+    "데이터 검증",
+    "통계 분석",
+    "RCA",
+    "보고서",
+    "교차 검증"
+  ],
+  "company": {
+    "name": "Nova Semiconductor (가상)",
+    "org": "메모리사업부 · 소자기술팀"
+  },
+  "briefing": {
+    "requester": {
+      "name": "한지원 파트장",
+      "role": "소자기술팀"
+    },
+    "title": "DRAM Retention 불량 원인 분석",
+    "background": "지난주 85°C Retention 테스트에서 일부 wafer의 불량률이 급증했다. 수요일 품질회의 전에 불량 패턴과 원인 후보를 근거와 함께 보고해야 한다. 측정 데이터, 공정 이력, 설비 PM 이력이 제공된다.",
+    "goal": "불량 패턴과 공정 요인을 분석해, 근거가 확인된 원인 후보와 후속 조치를 담은 품질회의 보고서를 만든다.",
+    "completionCriteria": [
+      "측정 데이터의 품질(결측, 단위)이 검증되어 있을 것",
+      "불량의 공간 패턴과 공정 요인 상관이 분석되어 있을 것",
+      "원인 후보가 근거와 함께 제시되고, 미확인 사항은 '추가 확인 필요'로 표기될 것",
+      "보안 등급 데이터가 보고서에 포함되지 않을 것"
+    ],
+    "deliverables": [
+      "/work/report/retention_rca_report.md (보고서)",
+      "sim://dram/dashboard (분석 대시보드)"
+    ],
+    "constraints": [
+      "고객사별 출하 정보(/restricted)는 보안 등급 자료",
+      "모든 데이터는 합성 데이터"
+    ]
+  },
+  "learningObjectives": [
+    "업무를 데이터 검증 · 공정 이력 정리 · 분석 · 교차 검증 · 보고로 분해하고 위임하기",
+    "Agent가 보고한 데이터 이상(단위 불일치)을 근거 문서로 판단하기",
+    "상관관계와 인과관계를 구분하고 도메인 전문가에게 교차 검증 맡기기",
+    "독립적인 작업을 병렬로 진행하기",
+    "보안 등급 데이터 접근 요청에 올바르게 대응하기"
+  ],
+  "roles": [
+    {
+      "id": "analyst",
+      "name": "데이터 분석가",
+      "title": "통계·데이터 처리 전문 Agent",
+      "skills": [
+        "data",
+        "statistics",
+        "visualization"
+      ],
+      "description": "데이터 정제, 통계 분석, 시각화를 수행한다."
+    },
+    {
+      "id": "domain-expert",
+      "name": "소자/공정 전문가",
+      "title": "DRAM 소자·공정 도메인 Agent",
+      "skills": [
+        "device",
+        "process",
+        "review"
+      ],
+      "description": "공정 이력 해석과 물리적 메커니즘 검토, 가설 검증을 수행한다."
+    },
+    {
+      "id": "reporter",
+      "name": "보고서 작성자",
+      "title": "기술 문서·보고 Agent",
+      "skills": [
+        "writing",
+        "communication",
+        "visualization"
+      ],
+      "description": "분석 결과를 보고서로 구조화한다."
+    }
+  ],
+  "files": {
+    "/docs/request_email.md": {
+      "src": "request_email.md",
+      "description": "요청 메일"
+    },
+    "/docs/test_program_notes.md": {
+      "src": "test_program_notes.md",
+      "description": "테스트 운영 메모"
+    },
+    "/data/retention_test.csv": {
+      "src": "retention_test.csv",
+      "description": "Retention 측정 데이터"
+    },
+    "/data/lot_history.csv": {
+      "src": "lot_history.csv",
+      "description": "Lot 공정 이력"
+    },
+    "/data/equipment_pm_log.csv": {
+      "src": "equipment_pm_log.csv",
+      "description": "설비 PM 이력"
+    },
+    "/restricted/customer_allocation.csv": {
+      "src": "customer_allocation.csv",
+      "restricted": true,
+      "description": "고객 출하 배정 (보안 등급)"
+    }
+  },
+  "pages": [
+    {
+      "url": "sim://mail/request",
+      "title": "요청 메일",
+      "view": "mail",
+      "source": "/docs/request_email.md"
+    },
+    {
+      "url": "sim://dram/dashboard",
+      "title": "Retention 분석 대시보드",
+      "view": "dashboard",
+      "source": "/work/dashboard/retention.dash.json"
+    },
+    {
+      "url": "sim://dram/validation",
+      "title": "데이터 검증 보고서",
+      "view": "markdown",
+      "source": "/work/validation_report.md"
+    },
+    {
+      "url": "sim://dram/analysis",
+      "title": "패턴 분석 결과",
+      "view": "markdown",
+      "source": "/work/analysis_summary.md"
+    },
+    {
+      "url": "sim://dram/review",
+      "title": "교차 검증 리뷰",
+      "view": "markdown",
+      "source": "/work/review/cross_validation.md"
+    },
+    {
+      "url": "sim://dram/report",
+      "title": "품질회의 보고서",
+      "view": "markdown",
+      "source": "/work/report/retention_rca_report.md"
+    },
+    {
+      "url": "sim://dram/pm-log",
+      "title": "설비 PM 이력",
+      "view": "table",
+      "source": "/data/equipment_pm_log.csv"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "validate-data",
+      "title": "측정 데이터 검증",
+      "description": "Retention 측정 데이터의 결측치, 측정 조건, tester별 단위 일관성을 검증하고 정제 데이터를 만든다.",
+      "type": "data-validation",
+      "skills": [
+        "data"
+      ],
+      "keywords": [
+        "검증",
+        "정제",
+        "결측",
+        "품질",
+        "validate"
+      ],
+      "inputs": [
+        "/data/retention_test.csv",
+        "/docs/test_program_notes.md"
+      ],
+      "outputs": [
+        "/work/validation_report.md",
+        "/work/retention_clean.csv"
+      ],
+      "steps": [
+        {
+          "id": "load",
+          "event": "Data loaded",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/data/retention_test.csv",
+            "/docs/test_program_notes.md"
+          ],
+          "log": [
+            "Read(/data/retention_test.csv)",
+            "  ⎿ 1,780 rows × 7 cols — lot_id, wafer_id, die_x, die_y, temp_c, tester, ret_time",
+            "Read(/docs/test_program_notes.md)",
+            "  ⎿ spec: ret_time ≥ 64 ms PASS · contact fail = NA"
+          ]
+        },
+        {
+          "id": "profile",
+          "event": "Data profiled",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "Run(profile retention_test.csv)  [sim]",
+            "  ⎿ temp_c: 85 (단일 조건) ✓",
+            "  ⎿ tester: T-01 (L01, L03) · T-02 (L02, L05) · T-03 (L04)",
+            "  ⎿ ret_time = NA: 16건 (0.9%) → contact fail, 계산에서 제외"
+          ]
+        },
+        {
+          "id": "units",
+          "event": "Unit consistency checked",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "tester별 ret_time 범위 비교…",
+            "  ⎿ T-01: 21.3 ~ 296.4 · T-02: 18.9 ~ 301.2 · T-03: 0.04 ~ 0.29",
+            {
+              "when": "units.preinstructed",
+              "text": "⚠ T-03 값이 약 1/1000 — 사전 지시대로 단위 확인: FW 2.1.0 출력 단위 s → ms 변환(×1000)"
+            }
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "gate.units",
+              "value": "convert",
+              "when": "units.preinstructed"
+            },
+            {
+              "type": "setFlag",
+              "flag": "units.ok",
+              "when": "units.preinstructed"
+            }
+          ],
+          "gate": {
+            "id": "units",
+            "kind": "waiting",
+            "when": "!units.preinstructed",
+            "title": "T-03 측정값 단위 불일치",
+            "prompt": [
+              "T-03(SIM-L04) 값이 다른 tester 대비 약 1/1000 수준입니다.",
+              "테스트 메모: 2026-10-16 T-03 FW 2.1.0 이후 출력 단위가 s(초)로 변경됨.",
+              "이대로 spec(64 ms)과 비교하면 SIM-L04 전 die가 불량으로 판정됩니다. 어떻게 처리할까요?"
+            ],
+            "options": [
+              {
+                "id": "convert",
+                "label": "T-03 값을 ms로 변환(×1000)해서 통일",
+                "patterns": [
+                  "변환",
+                  "[x×*]\\s*1000",
+                  "ms\\s*로",
+                  "단위.*(통일|맞춰|맞추)",
+                  "convert"
+                ],
+                "quality": "good",
+                "dimension": "domain",
+                "log": [
+                  "T-03 값 ×1000 → ret_time_ms 컬럼으로 통일합니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "units.ok"
+                  }
+                ]
+              },
+              {
+                "id": "exclude",
+                "label": "T-03(SIM-L04) 데이터를 분석에서 제외",
+                "patterns": [
+                  "제외",
+                  "빼",
+                  "exclude",
+                  "drop"
+                ],
+                "quality": "neutral",
+                "log": [
+                  "SIM-L04 (T-03) 데이터를 제외합니다. L04 영향은 평가되지 않습니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "units.ok"
+                  }
+                ]
+              },
+              {
+                "id": "ignore",
+                "label": "원본 값 그대로 진행",
+                "patterns": [
+                  "그대로",
+                  "무시",
+                  "원본",
+                  "상관\\s*없",
+                  "ignore",
+                  "괜찮"
+                ],
+                "quality": "bad",
+                "dimension": "domain",
+                "feedback": "Agent가 경고한 데이터 이상은 근거 문서(테스트 메모)를 확인하고 처리 기준을 명확히 지시하세요. 단위 불일치를 무시하면 잘못된 원인 결론으로 이어집니다.",
+                "log": [
+                  "원본 값을 그대로 사용합니다. ⚠ SIM-L04는 전 die FAIL로 계산됩니다."
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Clean dataset written",
+          "ticks": [
+            2,
+            4
+          ],
+          "log": [
+            "Write(/work/retention_clean.csv)",
+            "Write(/work/validation_report.md)"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/retention_clean.csv",
+              "variants": [
+                {
+                  "when": {
+                    "flag": "gate.units",
+                    "eq": "convert"
+                  },
+                  "src": "retention_clean_convert.csv"
+                },
+                {
+                  "when": {
+                    "flag": "gate.units",
+                    "eq": "exclude"
+                  },
+                  "src": "retention_clean_exclude.csv"
+                }
+              ],
+              "src": "retention_clean_ignore.csv"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/validation_report.md",
+              "src": "validation_report.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "map-process-history",
+      "title": "공정 이력·설비 경로 정리",
+      "description": "Lot 공정 이력과 설비 PM 이력을 wafer 단위 공정 경로 표로 정리한다.",
+      "type": "data-integration",
+      "skills": [
+        "process"
+      ],
+      "keywords": [
+        "이력",
+        "경로",
+        "route",
+        "설비",
+        "lot",
+        "공정"
+      ],
+      "inputs": [
+        "/data/lot_history.csv",
+        "/data/equipment_pm_log.csv"
+      ],
+      "outputs": [
+        "/work/wafer_route.csv",
+        "/work/wafer_route_summary.md"
+      ],
+      "steps": [
+        {
+          "id": "read",
+          "event": "Process history loaded",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/data/lot_history.csv",
+            "/data/equipment_pm_log.csv"
+          ],
+          "log": [
+            "Read(/data/lot_history.csv)",
+            "  ⎿ 80 rows — 4 steps (STI_ETCH, CAP_DEP, SN_ETCH, ANNEAL) × 20 wafers",
+            "Read(/data/equipment_pm_log.csv)",
+            "  ⎿ 6 events · 2026-10-02 ~ 10-20"
+          ]
+        },
+        {
+          "id": "pivot",
+          "event": "Wafer route table built",
+          "ticks": [
+            4,
+            6
+          ],
+          "log": [
+            "wafer별 공정 경로 pivot…",
+            "  ⎿ CAP_DEP: lot 단위 (DEP-01: L01, L04 / DEP-02: L02, L03, L05)",
+            "  ⎿ SN_ETCH: wafer 단위로 chamber 분리 — ETCH-07 CH-B 7 wafer",
+            "  ⎿ 10/14 ETCH-07 CH-B PM: focus ring 교체, edge He flow 12→9 sccm"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/wafer_route.csv",
+              "src": "wafer_route.csv"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/wafer_route_summary.md",
+              "src": "wafer_route_summary.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "analyze-pattern",
+      "title": "불량 패턴·공정 요인 분석",
+      "description": "Wafer별 불량률, 공간 패턴(wafer map), 공정 요인 상관을 분석하고 대시보드와 원인 후보를 만든다.",
+      "type": "statistical-analysis",
+      "skills": [
+        "data",
+        "statistics"
+      ],
+      "dependsOn": [
+        "validate-data",
+        "map-process-history"
+      ],
+      "keywords": [
+        "분석",
+        "패턴",
+        "상관",
+        "원인",
+        "이상치",
+        "wafer map",
+        "대시보드"
+      ],
+      "inputs": [
+        "/work/retention_clean.csv",
+        "/work/wafer_route.csv"
+      ],
+      "outputs": [
+        "/work/analysis_summary.md",
+        "/work/analysis/wafer_summary.csv",
+        "/work/dashboard/retention.dash.json"
+      ],
+      "steps": [
+        {
+          "id": "load",
+          "event": "Data loaded",
+          "ticks": [
+            2,
+            3
+          ],
+          "reads": [
+            "/work/retention_clean.csv",
+            "/work/wafer_route.csv"
+          ],
+          "log": [
+            "Read(/work/retention_clean.csv)",
+            "Read(/work/wafer_route.csv)",
+            "  ⎿ join on (lot_id, wafer_id) — 20 wafers matched"
+          ]
+        },
+        {
+          "id": "failrate",
+          "event": "Fail rate computed",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "Run(fail_rate by wafer, ret_time_ms < 64)  [sim]",
+            {
+              "when": {
+                "flag": "gate.units",
+                "eq": "convert"
+              },
+              "text": "  ⎿ 전체 19.3% · 고불량 wafer 7/20 (44~57%) · 나머지 ≈1.6%"
+            },
+            {
+              "when": {
+                "flag": "gate.units",
+                "eq": "exclude"
+              },
+              "text": "  ⎿ 전체 23.8% (L04 제외) · 고불량 wafer 7/16 (44~57%)"
+            },
+            {
+              "when": {
+                "flag": "gate.units",
+                "eq": "ignore"
+              },
+              "text": "  ⎿ 전체 39.1% · SIM-L04 4 wafer 100% FAIL · 고불량 wafer 11/20"
+            },
+            "Write(/work/analysis/wafer_summary.csv)"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/analysis/wafer_summary.csv",
+              "variants": [
+                {
+                  "when": {
+                    "flag": "gate.units",
+                    "eq": "convert"
+                  },
+                  "src": "wafer_summary_convert.csv"
+                },
+                {
+                  "when": {
+                    "flag": "gate.units",
+                    "eq": "exclude"
+                  },
+                  "src": "wafer_summary_exclude.csv"
+                }
+              ],
+              "src": "wafer_summary_ignore.csv"
+            }
+          ]
+        },
+        {
+          "id": "spatial",
+          "event": "Spatial pattern analyzed",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "wafer map 생성 및 radial 분포 분석…",
+            "  ⎿ 고불량 wafer: edge(r > 0.72R) ring 패턴, center 정상",
+            {
+              "when": {
+                "flag": "gate.units",
+                "eq": "ignore"
+              },
+              "text": "  ⎿ SIM-L04: 전면 FAIL (패턴 없음)"
+            },
+            "Write(/work/dashboard/retention.dash.json) → sim://dram/dashboard"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/dashboard/retention.dash.json",
+              "src": "retention.dash.json"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "{{agent}}: 분석 대시보드 생성 — open sim://dram/dashboard"
+            }
+          ]
+        },
+        {
+          "id": "correlation",
+          "event": "Process correlation analyzed",
+          "ticks": [
+            4,
+            6
+          ],
+          "log": [
+            "공정 요인별 불량률 비교…",
+            "  ⎿ SN_ETCH ETCH-07 CH-B: 52.4% (7 wafer) — wafer 단위 r ≈ 0.93",
+            "  ⎿ CAP_DEP DEP-02: 31.0% (12 wafer) — lot 단위 r ≈ 0.81",
+            {
+              "when": {
+                "flag": "gate.units",
+                "eq": "ignore"
+              },
+              "text": "  ⎿ SIM-L04: 100% — lot 전체 이상 (최대 이슈로 판단)"
+            },
+            {
+              "when": "cause.cautious",
+              "text": "사전 지시대로 원인은 가설로 정리하고 검증 필요 사항을 명시합니다."
+            }
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "cause.claim",
+              "value": "lot04",
+              "when": {
+                "flag": "gate.units",
+                "eq": "ignore"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "cause.claim",
+              "value": "hypothesis",
+              "when": {
+                "all": [
+                  "units.ok",
+                  "cause.cautious"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "gate.cause-claim",
+              "value": "hypothesis",
+              "when": {
+                "all": [
+                  "units.ok",
+                  "cause.cautious"
+                ]
+              }
+            }
+          ],
+          "gate": {
+            "id": "cause-claim",
+            "kind": "waiting",
+            "when": {
+              "all": [
+                "units.ok",
+                "!cause.cautious"
+              ]
+            },
+            "title": "원인 후보 결론 방식",
+            "prompt": [
+              "원인 후보가 2개입니다.",
+              "  A) ETCH-07 CH-B — wafer 단위 상관 r≈0.93, edge ring 패턴과 일치",
+              "  B) DEP-02 — lot 단위 상관 r≈0.81",
+              "분석 요약에 어떻게 정리할까요?"
+            ],
+            "options": [
+              {
+                "id": "hypothesis",
+                "label": "두 후보를 가설로 정리하고 교차 검증이 필요하다고 명시",
+                "patterns": [
+                  "가설",
+                  "교차",
+                  "검증",
+                  "단정",
+                  "확정\\s*(하지|짓지|말)",
+                  "추가\\s*확인",
+                  "둘\\s*다",
+                  "모두"
+                ],
+                "quality": "good",
+                "dimension": "evidence",
+                "log": [
+                  "두 후보를 가설로 정리하고 검증 필요 사항을 명시합니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "cause.claim",
+                    "value": "hypothesis"
+                  }
+                ]
+              },
+              {
+                "id": "etch",
+                "label": "상관이 가장 높은 ETCH-07 CH-B를 원인으로 확정",
+                "patterns": [
+                  "^a\\b",
+                  "\\ba\\s*(로|안|가)",
+                  "ch-?b",
+                  "etch-?07",
+                  "식각"
+                ],
+                "quality": "bad",
+                "dimension": "evidence",
+                "feedback": "상관계수가 높아도 인과관계는 아닙니다. 확정 전에 설비 이력·메커니즘을 도메인 전문가에게 교차 검증시키세요.",
+                "log": [
+                  "ETCH-07 CH-B를 원인으로 확정해 기술합니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "cause.claim",
+                    "value": "etch"
+                  }
+                ]
+              },
+              {
+                "id": "dep",
+                "label": "DEP-02를 원인으로 확정",
+                "patterns": [
+                  "^b\\b",
+                  "\\bb\\s*(로|안|가)",
+                  "dep-?02",
+                  "증착"
+                ],
+                "quality": "bad",
+                "dimension": "evidence",
+                "feedback": "lot 단위 상관은 같은 lot 안의 다른 요인에 의해 생길 수 있습니다(교란). wafer 단위로 분리해 확인하세요.",
+                "log": [
+                  "DEP-02를 원인으로 확정해 기술합니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "cause.claim",
+                    "value": "dep"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "summary",
+          "event": "Analysis summary written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/analysis_summary.md)"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/analysis_summary.md",
+              "src": "analysis_summary.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cross-validate",
+      "title": "원인 가설 교차 검증",
+      "description": "도메인 관점에서 분석 결과와 원인 가설을 검토한다. 데이터 정합성, 교란 요인, 설비 이력, 물리적 메커니즘을 확인한다.",
+      "type": "review",
+      "skills": [
+        "device",
+        "process",
+        "review"
+      ],
+      "dependsOn": [
+        "analyze-pattern"
+      ],
+      "review": true,
+      "optional": true,
+      "keywords": [
+        "교차",
+        "리뷰",
+        "가설",
+        "검토"
+      ],
+      "inputs": [
+        "/work/analysis_summary.md",
+        "/data/equipment_pm_log.csv"
+      ],
+      "outputs": [
+        "/work/review/cross_validation.md"
+      ],
+      "steps": [
+        {
+          "id": "read",
+          "event": "Analysis reviewed",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/work/analysis_summary.md",
+            "/work/validation_report.md"
+          ],
+          "log": [
+            "Read(/work/analysis_summary.md)",
+            "Read(/work/validation_report.md)"
+          ]
+        },
+        {
+          "id": "integrity",
+          "event": "Data integrity re-checked",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            {
+              "when": "units.ok",
+              "text": "  ⎿ 단위 처리 확인 ✓ (T-03: {{flag:gate.units}})"
+            },
+            {
+              "when": "!units.ok",
+              "text": "  ⎿ ⚠ SIM-L04 ret_time 0.04~0.29 — 다른 lot 대비 1/1000. T-03 FW 2.1.0 출력 단위 s!"
+            },
+            {
+              "when": "!units.ok",
+              "text": "  ⎿ ⚠ 'SIM-L04 lot 전체 불량' 결론은 단위 오류에 의한 착시입니다."
+            }
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "review.units_issue",
+              "when": "!units.ok"
+            },
+            {
+              "type": "reopenTask",
+              "task": "validate-data",
+              "when": "!units.ok"
+            },
+            {
+              "type": "reopenTask",
+              "task": "analyze-pattern",
+              "when": "!units.ok"
+            },
+            {
+              "type": "notify",
+              "level": "warn",
+              "message": "{{agent}}: 단위 오류 발견 — validate-data, analyze-pattern 재작업 필요",
+              "when": "!units.ok"
+            }
+          ]
+        },
+        {
+          "id": "await-fix",
+          "event": "Corrected analysis confirmed",
+          "when": "review.units_issue",
+          "ticks": [
+            1,
+            2
+          ],
+          "log": [
+            "수정된 분석 결과 확인 중…"
+          ],
+          "fail": {
+            "when": {
+              "any": [
+                "!units.ok",
+                {
+                  "not": {
+                    "taskDone": "analyze-pattern"
+                  }
+                }
+              ]
+            },
+            "message": "단위 오류가 수정된 분석 결과가 필요합니다",
+            "hint": "validate-data(단위 변환) → analyze-pattern 을 다시 수행한 뒤 'agent retry {{agent}}'"
+          }
+        },
+        {
+          "id": "hyp-b",
+          "event": "Hypothesis B (DEP-02) tested",
+          "ticks": [
+            3,
+            5
+          ],
+          "reads": [
+            "/work/wafer_route.csv"
+          ],
+          "log": [
+            "DEP-02 lot 내부를 SN_ETCH chamber로 분리…",
+            "  ⎿ DEP-02 & ETCH-07 CH-A wafer 5장: 1.4% (정상) → DEP-02 가설 기각 (교란 요인)"
+          ]
+        },
+        {
+          "id": "hyp-a",
+          "event": "Hypothesis A (ETCH-07 CH-B) tested",
+          "ticks": [
+            4,
+            6
+          ],
+          "reads": [
+            "/data/equipment_pm_log.csv"
+          ],
+          "log": [
+            "Read(/data/equipment_pm_log.csv)",
+            "  ⎿ 10/14 CH-B PM: focus ring 교체(vendor B), edge He flow 12→9 sccm",
+            "  ⎿ PM Qual: center CD pass, edge CD 미측정 ⚠",
+            "  ⎿ CH-B 경유 lot 모두 10/15 이후 → 시점 일치",
+            "  ⎿ edge etch profile 변화 → SN 접합 누설 → retention 저하: edge ring 패턴과 부합"
+          ]
+        },
+        {
+          "id": "write",
+          "event": "Review written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/review/cross_validation.md)",
+            "결론: ETCH-07 CH-B PM 이후 edge 조건 변화가 유력 원인 (추가 계측 필요)"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "cause.verified"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/review/cross_validation.md",
+              "src": "cross_validation.md"
+            }
+          ]
+        }
+      ],
+      "onComplete": [
+        {
+          "type": "activateTask",
+          "task": "revise-report",
+          "when": {
+            "taskDone": "write-report"
+          }
+        },
+        {
+          "type": "notify",
+          "level": "warn",
+          "message": "보고서가 교차 검증 결과를 반영하지 않았습니다 — revise-report 추가",
+          "when": {
+            "taskDone": "write-report"
+          }
+        }
+      ]
+    },
+    {
+      "id": "write-report",
+      "title": "품질회의 보고서 작성",
+      "description": "분석 결과를 요약, 근거, 영향 범위, 후속 조치로 구성된 보고서로 작성한다.",
+      "type": "report-generation",
+      "skills": [
+        "writing"
+      ],
+      "dependsOn": [
+        "analyze-pattern"
+      ],
+      "keywords": [
+        "보고서",
+        "리포트",
+        "report",
+        "초안"
+      ],
+      "inputs": [
+        "/work/analysis_summary.md",
+        "/work/validation_report.md"
+      ],
+      "outputs": [
+        "/work/report/retention_rca_report.md"
+      ],
+      "steps": [
+        {
+          "id": "context",
+          "event": "Context gathered",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/work/analysis_summary.md",
+            "/work/validation_report.md"
+          ],
+          "log": [
+            "Read(/work/analysis_summary.md)",
+            "Read(/work/validation_report.md)",
+            {
+              "when": "cause.verified",
+              "text": "Read(/work/review/cross_validation.md) — 교차 검증 결과 반영"
+            },
+            {
+              "when": "!cause.verified",
+              "text": "⚠ 교차 검증 결과 없음 — 분석가 의견 기준으로 작성합니다."
+            }
+          ]
+        },
+        {
+          "id": "outline",
+          "event": "Outline drafted",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "목차: 요약 · 데이터/방법 · 분석 결과 · 근거 · 영향 범위 · 후속 조치"
+          ]
+        },
+        {
+          "id": "impact",
+          "event": "Impact section drafted",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            {
+              "when": "!report.no_customer",
+              "text": "Read(/restricted/customer_allocation.csv)"
+            },
+            {
+              "when": "!report.no_customer",
+              "text": "  ⎿ Permission denied (보안 등급 데이터)"
+            },
+            {
+              "when": "report.no_customer",
+              "text": "지시에 따라 고객 정보 없이 내부 영향(wafer/수율)만 기술합니다."
+            }
+          ],
+          "gate": {
+            "id": "customer-data",
+            "kind": "blocked",
+            "when": "!report.no_customer",
+            "title": "보안 등급 데이터 접근 권한 없음",
+            "prompt": [
+              "영향 범위에 고객별 출하 영향을 넣으려면 /restricted/customer_allocation.csv 가 필요합니다.",
+              "현재 권한으로는 접근할 수 없습니다. (요청 메일: '이번 보고에는 포함하지 않아도 됩니다')",
+              "어떻게 진행할까요?"
+            ],
+            "options": [
+              {
+                "id": "internal",
+                "label": "고객 정보 없이 내부 영향만 기술",
+                "patterns": [
+                  "제외",
+                  "빼",
+                  "내부",
+                  "없이",
+                  "포함하지",
+                  "넣지",
+                  "internal"
+                ],
+                "quality": "good",
+                "dimension": "security",
+                "log": [
+                  "고객 정보는 제외하고 내부 영향(wafer 7장, lot 3개)만 기술합니다."
+                ]
+              },
+              {
+                "id": "request",
+                "label": "보안 담당자에게 정식 접근 신청 (이번 보고서는 내부 영향만)",
+                "patterns": [
+                  "신청",
+                  "승인",
+                  "요청",
+                  "request"
+                ],
+                "quality": "good",
+                "dimension": "security",
+                "log": [
+                  "접근 신청 접수 (예상 승인 1~2일). 이번 보고서는 내부 영향만 기술하고 승인 후 별도 공유합니다."
+                ]
+              },
+              {
+                "id": "bypass",
+                "label": "다른 경로로 파일 내용을 가져와서 포함",
+                "patterns": [
+                  "우회",
+                  "가져",
+                  "읽어",
+                  "복사",
+                  "bypass",
+                  "넣어",
+                  "포함해"
+                ],
+                "quality": "bad",
+                "dimension": "security",
+                "feedback": "권한이 없는 보안 등급 데이터를 우회해서 사용하는 것은 정보보호 정책 위반입니다. Agent가 권한 문제로 막혔을 때는 정식 절차를 밟거나 범위를 조정하세요.",
+                "log": [
+                  "⚠ 공유 폴더 캐시에서 customer_allocation.csv 사본을 찾아 고객 영향을 기술합니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "report.leak"
+                  },
+                  {
+                    "type": "notify",
+                    "level": "error",
+                    "message": "보안 경고: 보안 등급 데이터가 보고서에 포함되었습니다"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Report written",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "Write(/work/report/retention_rca_report.md) → sim://dram/report"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "report.cause",
+              "value": "etch-verified",
+              "when": "cause.verified"
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.cause",
+              "value": "etch",
+              "when": {
+                "all": [
+                  "!cause.verified",
+                  {
+                    "flag": "cause.claim",
+                    "eq": "etch"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.cause",
+              "value": "dep",
+              "when": {
+                "all": [
+                  "!cause.verified",
+                  {
+                    "flag": "cause.claim",
+                    "eq": "dep"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.cause",
+              "value": "hypothesis",
+              "when": {
+                "all": [
+                  "!cause.verified",
+                  {
+                    "flag": "cause.claim",
+                    "eq": "hypothesis"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.cause",
+              "value": "lot04",
+              "when": {
+                "all": [
+                  "!cause.verified",
+                  {
+                    "flag": "cause.claim",
+                    "eq": "lot04"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.evidence",
+              "when": "cause.verified"
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.written"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/report/retention_rca_report.md",
+              "src": "report.md"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "{{agent}}: 보고서 작성 — open sim://dram/report"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "revise-report",
+      "title": "보고서에 검증 결과 반영",
+      "description": "교차 검증 결과(가설 기각/지지, 설비 이력 근거)를 보고서의 결론과 근거 섹션에 반영한다.",
+      "type": "report-revision",
+      "skills": [
+        "writing"
+      ],
+      "dependsOn": [
+        "cross-validate"
+      ],
+      "hidden": true,
+      "keywords": [
+        "수정",
+        "보완",
+        "반영",
+        "업데이트"
+      ],
+      "inputs": [
+        "/work/review/cross_validation.md",
+        "/work/report/retention_rca_report.md"
+      ],
+      "outputs": [
+        "/work/report/retention_rca_report.md"
+      ],
+      "steps": [
+        {
+          "id": "read",
+          "event": "Review findings merged",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/work/review/cross_validation.md"
+          ],
+          "log": [
+            "Read(/work/review/cross_validation.md)",
+            "  ⎿ DEP-02 기각 · CH-B PM 이력 근거 · 추가 계측 항목 3건"
+          ]
+        },
+        {
+          "id": "write",
+          "event": "Report updated",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Edit(/work/report/retention_rca_report.md) — 요약, 근거, 후속 조치 섹션 갱신"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "report.cause",
+              "value": "etch-verified",
+              "when": "cause.verified"
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.evidence",
+              "when": "cause.verified"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/report/retention_rca_report.md",
+              "src": "report.md"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "{{agent}}: 보고서 갱신 — diff /work/report/retention_rca_report.md"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "intents": [
+    {
+      "id": "cautious",
+      "patterns": [
+        "(단정|확정)\\s*(하지|짓지|말)",
+        "가설로"
+      ],
+      "roles": [
+        "analyst"
+      ],
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "cause.cautious"
+        }
+      ],
+      "quality": "good",
+      "reply": [
+        "알겠습니다. 원인은 가설로 정리하고, 검증이 필요한 사항을 명시하겠습니다."
+      ],
+      "modifier": true
+    },
+    {
+      "id": "preinstruct-units",
+      "patterns": [
+        "단위",
+        "unit",
+        "t-?03"
+      ],
+      "requires": {
+        "not": {
+          "taskDone": "validate-data"
+        }
+      },
+      "deniedReply": [
+        "데이터 검증은 이미 완료되었습니다."
+      ],
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "units.preinstructed"
+        }
+      ],
+      "quality": "good",
+      "reply": [
+        "네. 측정 데이터의 tester별 단위 일관성을 중점적으로 확인하겠습니다."
+      ],
+      "example": "@analyst 데이터 검증할 때 tester별 단위도 확인해줘",
+      "modifier": true,
+      "roles": [
+        "analyst"
+      ]
+    },
+    {
+      "id": "no-customer",
+      "patterns": [
+        "(고객|출하|보안|restricted).*(제외|빼|넣지|포함하지|쓰지|말)"
+      ],
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "report.no_customer"
+        }
+      ],
+      "quality": "good",
+      "reply": [
+        "알겠습니다. 보안 등급 데이터(고객 출하 정보)는 사용하지 않겠습니다."
+      ],
+      "modifier": true,
+      "example": "@reporter 고객 정보는 제외하고 보고서 초안 작성해"
+    },
+    {
+      "id": "revise-report",
+      "patterns": [
+        "(보고서|리포트|report).*(수정|보완|반영|업데이트|고쳐|개선)",
+        "근거.*(보완|부족|추가|반영)"
+      ],
+      "requires": {
+        "taskDone": "write-report"
+      },
+      "deniedReply": [
+        "아직 작성된 보고서가 없습니다. 먼저 보고서 작성을 지시하세요."
+      ],
+      "effects": [
+        {
+          "type": "activateTask",
+          "task": "revise-report"
+        }
+      ],
+      "assign": "revise-report",
+      "quality": "good",
+      "reply": [
+        "교차 검증 결과를 반영해 보고서를 보완하겠습니다. (검증이 끝나지 않았다면 완료를 기다립니다)"
+      ],
+      "example": "@reporter 검증 결과를 반영해서 보고서 근거를 보완해"
+    },
+    {
+      "id": "write-report",
+      "patterns": [
+        "(보고서|리포트|report|보고).*(작성|써|만들|초안|정리)"
+      ],
+      "assign": "write-report",
+      "reply": [
+        "분석 결과를 바탕으로 품질회의 보고서를 작성하겠습니다."
+      ],
+      "example": "@reporter 분석 결과로 품질회의 보고서 초안 작성해"
+    },
+    {
+      "id": "cross-validate",
+      "patterns": [
+        "교차\\s*검증",
+        "cross.?valid",
+        "(분석|원인|가설|결론|결과).*(검증|검토|리뷰|확인해)",
+        "(검증|검토|리뷰).*(분석|원인|가설|결론|결과)"
+      ],
+      "assign": "cross-validate",
+      "quality": "good",
+      "reply": [
+        "분석 결과와 원인 가설을 도메인 관점에서 검토하겠습니다."
+      ],
+      "example": "@domain-expert 분석 결과의 원인 가설을 교차 검증해줘"
+    },
+    {
+      "id": "validate",
+      "patterns": [
+        "(데이터|품질|결측|정합|data).*(검증|확인|체크|점검|validate)",
+        "검증부터",
+        "validate"
+      ],
+      "assign": "validate-data",
+      "reply": [
+        "측정 데이터 검증을 시작합니다."
+      ],
+      "example": "@analyst 측정 데이터 품질부터 검증해줘"
+    },
+    {
+      "id": "map-history",
+      "patterns": [
+        "(lot|공정|이력|route|경로|history|설비|pm).*(정리|매핑|확인|분석|조사|파악)"
+      ],
+      "assign": "map-process-history",
+      "reply": [
+        "Lot 공정 이력과 설비 이벤트를 wafer 단위로 정리하겠습니다."
+      ],
+      "example": "@domain-expert lot 공정 이력과 설비 경로를 정리해줘"
+    },
+    {
+      "id": "analyze",
+      "patterns": [
+        "(불량|패턴|이상치|원인|상관|fail|retention|wafer).*(분석|찾|파악)",
+        "분석\\s*(해|시작)",
+        "analy[sz]e"
+      ],
+      "assign": "analyze-pattern",
+      "reply": [
+        "불량 패턴과 공정 요인 상관을 분석하겠습니다."
+      ],
+      "example": "@analyst 불량 패턴과 원인 후보를 분석해줘"
+    }
+  ],
+  "evaluation": [
+    {
+      "dimension": "domain",
+      "when": "units.preinstructed",
+      "kind": "positive",
+      "text": "검증을 지시하면서 tester별 단위 확인을 미리 요청했습니다."
+    },
+    {
+      "dimension": "domain",
+      "when": {
+        "gate": "units",
+        "chose": "exclude"
+      },
+      "kind": "issue",
+      "text": "변환 규칙이 문서로 확인되는 T-03 데이터를 제외해 SIM-L04 영향을 평가하지 못했습니다.",
+      "suggestion": "근거 문서로 변환 규칙이 확인되면 제외보다 변환이 정보 손실이 적습니다."
+    },
+    {
+      "dimension": "domain",
+      "when": {
+        "taskDone": "map-process-history"
+      },
+      "kind": "positive",
+      "text": "공정 이력을 wafer 단위 경로로 정리해 chamber 수준 분석이 가능해졌습니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": "cause.verified",
+      "kind": "positive",
+      "text": "도메인 전문가 교차 검증으로 DEP-02 가설(교란 요인)을 기각하고 PM 이력 근거를 확보했습니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": {
+        "all": [
+          "report.written",
+          "!cause.verified"
+        ]
+      },
+      "kind": "issue",
+      "text": "교차 검증 없이 분석가의 상관 분석만으로 보고서를 작성했습니다.",
+      "suggestion": "상관관계 ≠ 인과관계. 결론 전에 다른 관점의 Agent(도메인 전문가)에게 가설 검증을 맡기세요."
+    },
+    {
+      "dimension": "evidence",
+      "when": {
+        "all": [
+          "cause.verified",
+          "report.written",
+          "!report.evidence"
+        ]
+      },
+      "kind": "issue",
+      "text": "교차 검증은 했지만 그 결과가 최종 보고서에 반영되지 않았습니다.",
+      "suggestion": "검증 결과가 나오면 보고서 보완(revise-report)을 지시하세요."
+    },
+    {
+      "dimension": "recovery",
+      "when": "review.units_issue",
+      "kind": "positive",
+      "text": "교차 검증 과정에서 단위 오류를 발견해 재작업으로 복구할 기회를 얻었습니다."
+    },
+    {
+      "dimension": "recovery",
+      "when": {
+        "all": [
+          "review.units_issue",
+          "units.ok",
+          {
+            "taskDone": "cross-validate"
+          }
+        ]
+      },
+      "kind": "positive",
+      "text": "단위 오류를 수정하고 분석을 다시 수행해 검증을 통과했습니다."
+    },
+    {
+      "dimension": "security",
+      "when": "report.no_customer",
+      "kind": "positive",
+      "text": "보고서 작성 전에 보안 등급 데이터를 제외하도록 미리 지시했습니다."
+    },
+    {
+      "dimension": "security",
+      "when": {
+        "all": [
+          "report.written",
+          "!report.leak",
+          "!report.no_customer"
+        ]
+      },
+      "kind": "positive",
+      "text": "보안 등급 데이터 없이 보고서를 완성했습니다."
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "cause",
+      "label": "원인 결론",
+      "success": {
+        "any": [
+          {
+            "flag": "report.cause",
+            "eq": "etch-verified"
+          },
+          {
+            "flag": "report.cause",
+            "eq": "etch"
+          }
+        ]
+      },
+      "successText": "보고서가 실제 원인(ETCH-07 CH-B PM 이후 edge 조건 변화)을 지목했습니다.",
+      "failText": "보고서의 원인 결론이 실제 원인(ETCH-07 CH-B PM 이후 edge He flow 변경)과 다르거나 결론이 없습니다."
+    },
+    {
+      "id": "evidence",
+      "label": "근거 충분성",
+      "success": {
+        "flag": "report.cause",
+        "eq": "etch-verified"
+      },
+      "successText": "교란 요인 기각, PM 이력, 메커니즘으로 결론이 뒷받침됩니다.",
+      "failText": "결론이 상관 분석에만 의존하거나 검증 결과가 보고서에 반영되지 않았습니다. 회의에서 '왜 그 설비인가?'에 답하기 어렵습니다."
+    },
+    {
+      "id": "data",
+      "label": "데이터 정합성",
+      "success": {
+        "all": [
+          "report.written",
+          "units.ok"
+        ]
+      },
+      "successText": "결측·단위 문제가 처리된 데이터로 분석했습니다.",
+      "failText": "보고서가 없거나 단위 오류가 남은 데이터로 결론을 냈습니다 (SIM-L04 100% 불량 착시)."
+    },
+    {
+      "id": "security",
+      "label": "보안 준수",
+      "success": {
+        "all": [
+          "report.written",
+          "!report.leak"
+        ]
+      },
+      "successText": "보안 등급 데이터 없이 보고서를 작성했습니다.",
+      "failText": "보고서가 없거나 권한 없는 고객 출하 데이터가 포함되었습니다."
+    }
+  ],
+  "hints": [
+    {
+      "text": "요청 메일부터 확인하세요: open sim://mail/request (또는 cat /docs/request_email.md)"
+    },
+    {
+      "when": {
+        "taskStatus": "validate-data",
+        "is": "ready"
+      },
+      "text": "데이터 검증(validate-data)과 공정 이력 정리(map-process-history)는 서로 독립적입니다. 두 Agent에게 동시에 맡겨보세요."
+    },
+    {
+      "when": {
+        "all": [
+          {
+            "taskDone": "analyze-pattern"
+          },
+          {
+            "not": {
+              "taskDone": "cross-validate"
+            }
+          }
+        ]
+      },
+      "text": "분석가의 원인 후보는 상관관계일 뿐입니다. domain-expert에게 교차 검증(cross-validate)을 맡겨보세요."
+    },
+    {
+      "when": "report.written",
+      "text": "보고서를 open sim://dram/report 로 열어 근거와 영향 범위가 충분한지 확인하세요."
+    },
+    {
+      "when": {
+        "taskStatus": "cross-validate",
+        "is": "failed"
+      },
+      "text": "교차 검증이 실패했습니다. 실패 로그의 원인을 해결(데이터 재검증 → 재분석)한 뒤 agent retry 하세요."
+    }
+  ]
+}

@@ -1,0 +1,1437 @@
+{
+  "id": "fab-equipment-dashboard",
+  "version": 1,
+  "title": "설비 이상 감지 대시보드 개발",
+  "domain": "manufacturing",
+  "function": "production-engineering",
+  "taskType": "dashboard",
+  "difficulty": 3,
+  "estMinutes": 25,
+  "tags": [
+    "요구사항 분석",
+    "데이터 파이프라인",
+    "대시보드",
+    "버그 수정",
+    "QA",
+    "배포"
+  ],
+  "company": {
+    "name": "Nova Semiconductor (가상)",
+    "org": "Fab-N2 · 생산기술팀 설비파트"
+  },
+  "briefing": {
+    "requester": {
+      "name": "오세린 프로",
+      "role": "생산기술팀 설비파트"
+    },
+    "title": "설비 이상 감지 대시보드 개발",
+    "background": "야간·주말에 chamber 압력 이상이 늦게 발견되는 일이 반복된다. 설비 엔지니어가 설비별 압력 추이와 이상 알람을 한 화면에서 볼 수 있는 사내 대시보드를 만들어 배포해야 한다. 요구사항서는 초안이고, 세부 결정은 킥오프 회의록에 있다.",
+    "goal": "요구사항과 회의 결론에 맞는 설비 이상 감지 대시보드를 개발하고, 테스트를 거쳐 배포한다.",
+    "completionCriteria": [
+      "알람 기준이 회의에서 합의된 기준과 일치할 것",
+      "모든 시각이 KST로 정확히 표시될 것",
+      "설비 필터가 실제로 동작할 것",
+      "QA를 통과한 뒤 배포될 것"
+    ],
+    "deliverables": [
+      "sim://fab/monitor (배포된 대시보드)",
+      "/work/release_notes.md"
+    ],
+    "constraints": [
+      "운영 MES DB 직접 연결 금지 (정보보호팀 승인 전)",
+      "모든 데이터는 합성 데이터"
+    ]
+  },
+  "learningObjectives": [
+    "모호한 요구사항을 근거 문서(회의록)로 확정하도록 지시하기",
+    "Agent가 만든 결과물을 가상 브라우저에서 직접 조작해 버그를 재현하기",
+    "버그를 구체적으로 지시해 수정하고 결과를 다시 확인하기",
+    "테스트 누락의 위험과 QA 게이트 이해하기",
+    "공용 계정 등 보안상 부적절한 지름길 거절하기"
+  ],
+  "initialFlags": {
+    "bug.filter": true
+  },
+  "roles": [
+    {
+      "id": "pm",
+      "name": "요구사항 분석가",
+      "title": "기획·요구사항 정리 Agent",
+      "skills": [
+        "requirements",
+        "writing",
+        "communication"
+      ],
+      "description": "요구사항과 회의록을 분석해 기능 명세를 만든다."
+    },
+    {
+      "id": "data-engineer",
+      "name": "데이터 엔지니어",
+      "title": "데이터 파이프라인 Agent",
+      "skills": [
+        "data",
+        "pipeline"
+      ],
+      "description": "센서 로그를 정제·변환해 대시보드용 데이터셋을 만든다."
+    },
+    {
+      "id": "developer",
+      "name": "웹 개발자",
+      "title": "프론트엔드 개발 Agent",
+      "skills": [
+        "frontend",
+        "coding"
+      ],
+      "description": "대시보드 화면과 로직을 구현하고 배포한다."
+    },
+    {
+      "id": "qa",
+      "name": "QA 엔지니어",
+      "title": "테스트·검증 Agent",
+      "skills": [
+        "testing",
+        "review"
+      ],
+      "description": "기능·데이터 정합성 테스트를 수행한다."
+    }
+  ],
+  "files": {
+    "/docs/requirements.md": {
+      "src": "requirements.md",
+      "description": "요구사항서 초안"
+    },
+    "/docs/meeting_notes_1118.md": {
+      "src": "meeting_notes_1118.md",
+      "description": "킥오프 회의록"
+    },
+    "/data/sensor_log.csv": {
+      "src": "sensor_log.csv",
+      "description": "센서 로그 export"
+    },
+    "/data/maintenance_log.csv": {
+      "src": "maintenance_log.csv",
+      "description": "정비 이력"
+    },
+    "/app/fab-monitor/README.md": {
+      "src": "app_readme.md",
+      "description": "앱 README"
+    }
+  },
+  "pages": [
+    {
+      "url": "sim://fab/monitor",
+      "title": "설비 이상 감지 대시보드",
+      "view": "dashboard",
+      "source": "/app/fab-monitor/dashboard.json"
+    },
+    {
+      "url": "sim://docs/requirements",
+      "title": "요구사항서",
+      "view": "markdown",
+      "source": "/docs/requirements.md"
+    },
+    {
+      "url": "sim://docs/meeting-1118",
+      "title": "킥오프 회의록",
+      "view": "markdown",
+      "source": "/docs/meeting_notes_1118.md"
+    },
+    {
+      "url": "sim://fab/spec",
+      "title": "기능 명세",
+      "view": "markdown",
+      "source": "/work/spec.md"
+    },
+    {
+      "url": "sim://fab/qa",
+      "title": "QA 테스트 보고서",
+      "view": "markdown",
+      "source": "/work/qa/test_report.md"
+    },
+    {
+      "url": "sim://fab/maintenance",
+      "title": "정비 이력",
+      "view": "table",
+      "source": "/data/maintenance_log.csv"
+    },
+    {
+      "url": "sim://fab/release",
+      "title": "배포 노트",
+      "view": "markdown",
+      "source": "/work/release_notes.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "requirements",
+      "title": "요구사항 분석·명세",
+      "description": "요구사항서와 회의록을 분석해 화면 구성, 알람 기준, 시간대 등 기능 명세를 확정한다.",
+      "type": "requirements-analysis",
+      "skills": [
+        "requirements"
+      ],
+      "keywords": [
+        "요구사항",
+        "명세",
+        "spec"
+      ],
+      "inputs": [
+        "/docs/requirements.md",
+        "/docs/meeting_notes_1118.md"
+      ],
+      "outputs": [
+        "/work/spec.md"
+      ],
+      "steps": [
+        {
+          "id": "read",
+          "event": "Requirements loaded",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/docs/requirements.md"
+          ],
+          "log": [
+            "Read(/docs/requirements.md)",
+            "  ⎿ 기능 5개 · 상태: 초안 (일부 미확정)",
+            {
+              "when": "rule.preinstructed",
+              "text": "Read(/docs/meeting_notes_1118.md)  — 지시대로 회의록 참고"
+            }
+          ]
+        },
+        {
+          "id": "ambiguity",
+          "event": "Ambiguity found",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "이상 판정 기준: '11/18 회의 기준 적용 (예: 50 mTorr 초과)'",
+            {
+              "when": "rule.preinstructed",
+              "text": "  ⎿ 회의록 결론: 설비별 SPC 관리한계(평균±3σ) — 예시값 50은 이전 안"
+            }
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "rule",
+              "value": "spc",
+              "when": "rule.preinstructed"
+            }
+          ],
+          "gate": {
+            "id": "alarm-rule",
+            "kind": "waiting",
+            "when": "!rule.preinstructed",
+            "title": "알람 기준이 모호함",
+            "prompt": [
+              "요구사항서는 '회의에서 논의한 기준 적용 (예: 50 mTorr 초과)' 이라고만 되어 있습니다.",
+              "회의록은 아직 확인하지 않았습니다. 어떤 기준으로 명세를 작성할까요?"
+            ],
+            "options": [
+              {
+                "id": "spc",
+                "label": "회의록을 확인해 합의된 기준(설비별 SPC 3σ)으로",
+                "patterns": [
+                  "회의록",
+                  "3\\s*(σ|시그마|sigma)",
+                  "spc",
+                  "관리\\s*한계",
+                  "합의"
+                ],
+                "quality": "good",
+                "dimension": "domain",
+                "log": [
+                  "Read(/docs/meeting_notes_1118.md)",
+                  "  ⎿ 결론: 설비별 SPC 관리한계(평균±3σ). DEP-02 base ≈ 55 mTorr"
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "rule",
+                    "value": "spc"
+                  }
+                ]
+              },
+              {
+                "id": "fixed",
+                "label": "요구사항서 예시값 50 mTorr 고정 임계값으로",
+                "patterns": [
+                  "50",
+                  "고정",
+                  "임계값",
+                  "예시"
+                ],
+                "quality": "bad",
+                "dimension": "domain",
+                "feedback": "요구사항이 모호하면 근거 문서(회의록)를 확인하도록 지시하세요. 설비별 base 압력이 달라 고정 임계값은 오알람과 미검출을 동시에 만듭니다.",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "rule",
+                    "value": "fixed"
+                  }
+                ]
+              },
+              {
+                "id": "auto",
+                "label": "알아서 판단",
+                "patterns": [
+                  "알아서",
+                  "판단해",
+                  "맡길",
+                  "적당히"
+                ],
+                "quality": "bad",
+                "dimension": "decomposition",
+                "feedback": "Agent에게 '알아서'는 가장 쉬운 해석(문서의 예시값)으로 이어집니다. 판단 기준이나 참고할 근거를 명시하세요.",
+                "log": [
+                  "요구사항서에 명시된 예시값(50 mTorr)을 기준으로 작성합니다."
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "rule",
+                    "value": "fixed"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Spec written",
+          "ticks": [
+            2,
+            4
+          ],
+          "log": [
+            "Write(/work/spec.md) → sim://fab/spec"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/spec.md",
+              "src": "spec.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "title": "센서 데이터 파이프라인",
+      "description": "센서 로그 export를 정제해 대시보드용 데이터셋(/work/sensor_clean.csv)을 만든다.",
+      "type": "data-pipeline",
+      "skills": [
+        "data",
+        "pipeline"
+      ],
+      "keywords": [
+        "파이프라인",
+        "센서",
+        "정제",
+        "pipeline"
+      ],
+      "inputs": [
+        "/data/sensor_log.csv"
+      ],
+      "outputs": [
+        "/work/sensor_clean.csv"
+      ],
+      "steps": [
+        {
+          "id": "source",
+          "event": "Data source selected",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/app/fab-monitor/README.md"
+          ],
+          "log": [
+            "Read(/app/fab-monitor/README.md)",
+            "  ⎿ 운영 MES DB 공용 계정(shared_ro) 정보 발견",
+            {
+              "when": "security.preinstructed",
+              "text": "  ⎿ 지시대로 공용 계정은 사용하지 않고 export 파일 기반으로 진행"
+            }
+          ],
+          "gate": {
+            "id": "db-access",
+            "kind": "blocked",
+            "title": "데이터 소스 — 운영 DB 공용 계정 사용 여부",
+            "prompt": [
+              "README에 운영 MES DB 공용 계정 정보가 있습니다. 실시간 데이터를 쓰려면 이 계정으로 접속할 수 있습니다.",
+              "요구사항서: '운영 DB 직접 연결은 정보보호팀 승인 후 별도 진행'. 어떻게 할까요?"
+            ],
+            "options": [
+              {
+                "id": "export",
+                "label": "제공된 export 파일(/data/sensor_log.csv)만 사용",
+                "patterns": [
+                  "export",
+                  "파일",
+                  "csv",
+                  "제공된",
+                  "공용.*(쓰지|말|안)",
+                  "사용하지"
+                ],
+                "quality": "good",
+                "dimension": "security",
+                "log": [
+                  "export 파일 기반으로 진행합니다. README의 계정 정보 정리를 IT에 요청하도록 메모합니다."
+                ]
+              },
+              {
+                "id": "shared",
+                "label": "공용 계정으로 운영 DB에 접속",
+                "patterns": [
+                  "공용",
+                  "접속",
+                  "db",
+                  "계정",
+                  "실시간"
+                ],
+                "quality": "bad",
+                "dimension": "security",
+                "feedback": "승인되지 않은 공용 계정으로 운영 DB에 접속하는 것은 정보보호 정책 위반입니다. Agent가 제안하는 지름길도 정책과 권한을 기준으로 판단하세요.",
+                "log": [
+                  "⚠ shared_ro 계정으로 mes-db.sim.internal 접속 (시뮬레이션) — 감사 로그에 기록됨"
+                ],
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "security.shared_account"
+                  },
+                  {
+                    "type": "notify",
+                    "level": "error",
+                    "message": "보안 경고: 승인되지 않은 공용 계정으로 운영 DB 접속"
+                  }
+                ]
+              }
+            ],
+            "when": "!security.preinstructed"
+          }
+        },
+        {
+          "id": "profile",
+          "event": "Sensor log profiled",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/data/sensor_log.csv"
+          ],
+          "log": [
+            "Read(/data/sensor_log.csv)",
+            "  ⎿ 576 rows · 4 tools · 10분 간격 · columns: timestamp, tz, tool, chamber_pressure_mtorr, rf_power_w",
+            "  ⎿ tz: UTC 288행 (ETCH-03, ETCH-07) · KST 288행 (DEP-02, CMP-01)",
+            "  ⎿ 결측 0 · 중복 0"
+          ]
+        },
+        {
+          "id": "transform",
+          "event": "Dataset transformed",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            {
+              "when": "tz.preinstructed",
+              "text": "지시대로 UTC → KST 변환 (+9h) 후 timestamp_kst 로 통일"
+            },
+            {
+              "when": "!tz.preinstructed",
+              "text": "timestamp 기준 정렬 → timestamp_kst 컬럼으로 저장"
+            },
+            "Write(/work/sensor_clean.csv)"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "tz.ok",
+              "when": "tz.preinstructed"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/sensor_clean.csv",
+              "variants": [
+                {
+                  "when": "tz.ok",
+                  "src": "sensor_clean_fixed.csv"
+                }
+              ],
+              "src": "sensor_clean_shifted.csv"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "build-dashboard",
+      "title": "대시보드 구현",
+      "description": "명세와 데이터셋으로 대시보드(차트, 설비 필터, 알람 목록, 정비 이력)를 구현한다.",
+      "type": "frontend-development",
+      "skills": [
+        "frontend",
+        "coding"
+      ],
+      "dependsOn": [
+        "requirements",
+        "pipeline"
+      ],
+      "keywords": [
+        "대시보드",
+        "구현",
+        "개발",
+        "화면"
+      ],
+      "inputs": [
+        "/work/spec.md",
+        "/work/sensor_clean.csv"
+      ],
+      "outputs": [
+        "/app/fab-monitor/dashboard.json",
+        "/app/fab-monitor/src/FilterBar.tsx",
+        "/app/fab-monitor/src/alarmRule.ts"
+      ],
+      "steps": [
+        {
+          "id": "scaffold",
+          "event": "Project scaffolded",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/work/spec.md"
+          ],
+          "log": [
+            "Read(/work/spec.md)",
+            "Write(/app/fab-monitor/src/alarmRule.ts)"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/src/alarmRule.ts",
+              "src": "alarmRule.ts.tmpl"
+            }
+          ]
+        },
+        {
+          "id": "components",
+          "event": "Components implemented",
+          "ticks": [
+            4,
+            6
+          ],
+          "log": [
+            "Write(/app/fab-monitor/src/FilterBar.tsx)",
+            "Edit(/app/fab-monitor/src/App.tsx) — 차트, 알람 목록, 정비 이력 배치"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/src/FilterBar.tsx",
+              "src": "FilterBar.tsx.tmpl"
+            }
+          ]
+        },
+        {
+          "id": "wire",
+          "event": "Dashboard wired",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Write(/app/fab-monitor/dashboard.json) → sim://fab/monitor",
+            "Run(npm run build)  [sim]  ✓ built"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/dashboard.json",
+              "src": "dashboard.json"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "{{agent}}: 대시보드 1차 버전 — open sim://fab/monitor"
+            }
+          ]
+        },
+        {
+          "id": "selfcheck",
+          "event": "Self-check done",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "화면 렌더링 확인 ✓",
+            "⚠ 자동화 테스트 없음 — 기능 검증은 QA 권장"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "qa-test",
+      "title": "QA 테스트",
+      "description": "필터 동작, 시간대 정합성(정비 이력 교차 확인), 알람 기준을 테스트한다.",
+      "type": "testing",
+      "skills": [
+        "testing"
+      ],
+      "dependsOn": [
+        "build-dashboard"
+      ],
+      "review": true,
+      "optional": true,
+      "keywords": [
+        "테스트",
+        "qa",
+        "검수"
+      ],
+      "inputs": [
+        "/app/fab-monitor/dashboard.json",
+        "/work/sensor_clean.csv",
+        "/data/maintenance_log.csv"
+      ],
+      "outputs": [
+        "/work/qa/test_report.md"
+      ],
+      "steps": [
+        {
+          "id": "plan",
+          "event": "Test plan prepared",
+          "ticks": [
+            2,
+            3
+          ],
+          "reads": [
+            "/work/spec.md",
+            "/docs/meeting_notes_1118.md"
+          ],
+          "log": [
+            "테스트 항목: T1 필터 · T2 시간대(KST) · T3 알람 기준 · T4 빌드"
+          ]
+        },
+        {
+          "id": "t1",
+          "event": "T1 filter test",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "sim://fab/monitor → 설비 'ETCH-07' 선택",
+            {
+              "when": "bug.filter",
+              "text": "  ⎿ ❌ FAIL: 선택 후에도 4개 설비가 모두 표시됨 — FilterBar onChange가 상위로 전달되지 않음"
+            },
+            {
+              "when": "!bug.filter",
+              "text": "  ⎿ ✅ PASS"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "event": "T2 timezone test",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/data/maintenance_log.csv"
+          ],
+          "log": [
+            "ETCH-07 압력 상승 구간 vs 정비 이력(13:20 신고, 14:40 MFC 교체)",
+            {
+              "when": "!tz.ok",
+              "text": "  ⎿ ❌ FAIL: 대시보드상 상승 구간 04:00–05:30 → 9시간 차이 (ETCH 로거 UTC 미변환)"
+            },
+            {
+              "when": "tz.ok",
+              "text": "  ⎿ ✅ PASS: 13:00–14:30 (KST) 일치"
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "event": "T3 alarm rule test",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            {
+              "when": {
+                "flag": "rule",
+                "eq": "fixed"
+              },
+              "text": "  ⎿ ❌ FAIL: 고정 50 mTorr — DEP-02 정상 운전 144건 오알람, ETCH-07 실제 이상 미검출 (회의 결론: 설비별 SPC)"
+            },
+            {
+              "when": {
+                "flag": "rule",
+                "eq": "spc"
+              },
+              "text": "  ⎿ ✅ PASS: ETCH-07 이탈 11건 검출, DEP-02 오알람 0"
+            }
+          ]
+        },
+        {
+          "id": "report",
+          "event": "Test report written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/qa/test_report.md) → sim://fab/qa"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "qa.done"
+            },
+            {
+              "type": "setFlag",
+              "flag": "qa.passed",
+              "value": true,
+              "when": {
+                "all": [
+                  "!bug.filter",
+                  "tz.ok",
+                  {
+                    "flag": "rule",
+                    "eq": "spc"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "qa.passed",
+              "value": false,
+              "when": {
+                "any": [
+                  "bug.filter",
+                  "!tz.ok",
+                  {
+                    "flag": "rule",
+                    "eq": "fixed"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/qa/test_report.md",
+              "src": "test_report.md"
+            },
+            {
+              "type": "activateTask",
+              "task": "fix-filter",
+              "when": "bug.filter"
+            },
+            {
+              "type": "activateTask",
+              "task": "fix-timezone",
+              "when": "!tz.ok"
+            },
+            {
+              "type": "activateTask",
+              "task": "fix-rule",
+              "when": {
+                "flag": "rule",
+                "eq": "fixed"
+              }
+            },
+            {
+              "type": "notify",
+              "level": "warn",
+              "message": "QA 실패 항목 발견 — 수정 Task가 추가되었습니다 (sim://fab/qa)",
+              "when": "!qa.passed"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "QA 전 항목 통과",
+              "when": "qa.passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fix-filter",
+      "title": "설비 필터 버그 수정",
+      "description": "FilterBar의 선택값이 차트/알람 쿼리에 전달되도록 수정한다.",
+      "type": "bug-fix",
+      "skills": [
+        "frontend",
+        "coding"
+      ],
+      "dependsOn": [
+        "build-dashboard"
+      ],
+      "hidden": true,
+      "keywords": [
+        "필터"
+      ],
+      "inputs": [
+        "/app/fab-monitor/src/FilterBar.tsx"
+      ],
+      "outputs": [
+        "/app/fab-monitor/src/FilterBar.tsx",
+        "/app/fab-monitor/dashboard.json"
+      ],
+      "steps": [
+        {
+          "id": "repro",
+          "event": "Bug reproduced",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "sim://fab/monitor 설비 선택 → 변화 없음 (재현됨)",
+            "Read(/app/fab-monitor/src/FilterBar.tsx)",
+            "  ⎿ onChange에서 setTool만 호출, 상위 onChange 미호출"
+          ]
+        },
+        {
+          "id": "fix",
+          "event": "Fix applied",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Edit(/app/fab-monitor/src/FilterBar.tsx) — onChange(e.target.value) 전달",
+            "Edit(/app/fab-monitor/dashboard.json) — filter.bound = true"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "bug.filter",
+              "value": false
+            },
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/src/FilterBar.tsx",
+              "src": "FilterBar.tsx.tmpl"
+            },
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/dashboard.json",
+              "src": "dashboard.json"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "{{agent}}: 필터 수정 반영 — sim://fab/monitor 에서 확인하세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fix-timezone",
+      "title": "시간대(UTC→KST) 변환 수정",
+      "description": "ETCH 계열 UTC 타임스탬프를 KST로 변환해 데이터셋을 다시 만든다.",
+      "type": "bug-fix",
+      "skills": [
+        "data",
+        "pipeline"
+      ],
+      "dependsOn": [
+        "pipeline"
+      ],
+      "hidden": true,
+      "keywords": [
+        "시간대",
+        "utc",
+        "kst",
+        "타임존"
+      ],
+      "inputs": [
+        "/data/sensor_log.csv"
+      ],
+      "outputs": [
+        "/work/sensor_clean.csv"
+      ],
+      "steps": [
+        {
+          "id": "fix",
+          "event": "Timezone normalized",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "tz == 'UTC' 행에 +9h 적용 → timestamp_kst",
+            "Write(/work/sensor_clean.csv)"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "tz.ok"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/sensor_clean.csv",
+              "src": "sensor_clean_fixed.csv"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "{{agent}}: 데이터셋 KST 변환 완료 — 대시보드에 반영됨"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fix-rule",
+      "title": "알람 기준을 SPC로 변경",
+      "description": "회의 결론에 따라 설비별 SPC 관리한계(평균±3σ)로 알람 기준을 바꾼다.",
+      "type": "bug-fix",
+      "skills": [
+        "coding"
+      ],
+      "dependsOn": [
+        "build-dashboard"
+      ],
+      "hidden": true,
+      "keywords": [
+        "알람",
+        "기준",
+        "spc"
+      ],
+      "inputs": [
+        "/docs/meeting_notes_1118.md"
+      ],
+      "outputs": [
+        "/app/fab-monitor/src/alarmRule.ts",
+        "/app/fab-monitor/dashboard.json"
+      ],
+      "steps": [
+        {
+          "id": "fix",
+          "event": "Alarm rule updated",
+          "ticks": [
+            3,
+            5
+          ],
+          "reads": [
+            "/docs/meeting_notes_1118.md"
+          ],
+          "log": [
+            "정상 구간(00:00–12:00) 설비별 평균±3σ 산출",
+            "Edit(/app/fab-monitor/src/alarmRule.ts)",
+            "Edit(/app/fab-monitor/dashboard.json)"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "rule",
+              "value": "spc"
+            },
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/src/alarmRule.ts",
+              "src": "alarmRule.ts.tmpl"
+            },
+            {
+              "type": "writeFile",
+              "path": "/app/fab-monitor/dashboard.json",
+              "src": "dashboard.json"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/spec.md",
+              "src": "spec.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "release",
+      "title": "배포",
+      "description": "QA 결과를 확인하고 대시보드를 사내망에 배포한다.",
+      "type": "release",
+      "skills": [
+        "coding"
+      ],
+      "dependsOn": [
+        "build-dashboard"
+      ],
+      "keywords": [
+        "배포",
+        "릴리스",
+        "release",
+        "deploy"
+      ],
+      "inputs": [
+        "/work/qa/test_report.md"
+      ],
+      "outputs": [
+        "/work/release_notes.md"
+      ],
+      "steps": [
+        {
+          "id": "checklist",
+          "event": "Release checklist",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "배포 파이프라인 실행 (sim) — 품질 게이트 확인"
+          ],
+          "fail": {
+            "when": "!qa.done",
+            "message": "품질 게이트: QA 테스트 기록 없음 (테스트 누락)",
+            "log": [
+              "  ⎿ /work/qa/test_report.md 없음"
+            ],
+            "hint": "QA Agent에게 테스트를 맡긴 뒤 'agent retry {{agent}}'"
+          }
+        },
+        {
+          "id": "gate",
+          "event": "Quality gate passed",
+          "ticks": [
+            1,
+            2
+          ],
+          "fail": {
+            "when": "!qa.passed",
+            "message": "품질 게이트: QA 실패 항목 미해결",
+            "log": [
+              "  ⎿ test_report.md 에 FAIL 항목 존재"
+            ],
+            "hint": "수정 Task를 처리하고 QA 재테스트 후 'agent retry {{agent}}'"
+          }
+        },
+        {
+          "id": "deploy",
+          "event": "Deployed",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Deploy fab-monitor v1.0 → 사내망 (sim)",
+            "Write(/work/release_notes.md)"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "released"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/release_notes.md",
+              "src": "release_notes.md"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "fab-monitor v1.0 배포 완료"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "intents": [
+    {
+      "id": "rule-pre",
+      "modifier": true,
+      "patterns": [
+        "회의록",
+        "3\\s*(σ|시그마|sigma)",
+        "spc",
+        "관리\\s*한계"
+      ],
+      "requires": {
+        "not": {
+          "taskDone": "requirements"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "rule.preinstructed"
+        }
+      ],
+      "quality": "good",
+      "reply": [
+        "회의록의 결정 사항을 우선 근거로 사용하겠습니다."
+      ],
+      "example": "@pm 회의록 참고해서 요구사항 명세 정리해줘"
+    },
+    {
+      "id": "tz-pre",
+      "modifier": true,
+      "patterns": [
+        "타임존",
+        "시간대",
+        "utc",
+        "kst",
+        "timezone"
+      ],
+      "requires": {
+        "not": {
+          "taskDone": "pipeline"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "tz.preinstructed"
+        }
+      ],
+      "quality": "good",
+      "reply": [
+        "설비 로거별 시간대(tz 컬럼)를 확인하고 KST로 통일하겠습니다."
+      ]
+    },
+    {
+      "id": "no-shared",
+      "modifier": true,
+      "patterns": [
+        "(공용|운영\\s*db|mes).*(쓰지|말|금지|사용하지|안\\s*돼)"
+      ],
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "security.preinstructed"
+        }
+      ],
+      "quality": "good",
+      "reply": [
+        "알겠습니다. 승인된 export 파일만 사용하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-filter",
+      "patterns": [
+        "(필터|filter|드롭다운|설비\\s*선택).*(안|않|버그|고쳐|수정|동작|작동|반영)"
+      ],
+      "requires": {
+        "taskDone": "build-dashboard"
+      },
+      "deniedReply": [
+        "아직 대시보드가 만들어지지 않았습니다."
+      ],
+      "effects": [
+        {
+          "type": "activateTask",
+          "task": "fix-filter"
+        },
+        {
+          "type": "setFlag",
+          "flag": "player.found_filter"
+        }
+      ],
+      "assign": "fix-filter",
+      "quality": "good",
+      "reply": [
+        "필터 버그를 재현하고 수정하겠습니다."
+      ],
+      "example": "@developer 설비 필터를 바꿔도 차트가 안 바뀌어. 고쳐줘"
+    },
+    {
+      "id": "fix-timezone",
+      "patterns": [
+        "(타임존|시간대|utc|kst|timezone|시각|9\\s*시간).*(수정|고쳐|변환|맞춰|통일|틀|어긋|달라)"
+      ],
+      "requires": {
+        "taskDone": "pipeline"
+      },
+      "effects": [
+        {
+          "type": "activateTask",
+          "task": "fix-timezone"
+        },
+        {
+          "type": "setFlag",
+          "flag": "player.found_tz"
+        }
+      ],
+      "assign": "fix-timezone",
+      "quality": "good",
+      "reply": [
+        "로거별 시간대를 확인해 KST로 변환하겠습니다."
+      ],
+      "example": "@data-engineer ETCH 설비 시각이 9시간 어긋나. KST로 변환해줘"
+    },
+    {
+      "id": "fix-rule",
+      "patterns": [
+        "(알람|alarm|기준|임계).*(수정|고쳐|변경|바꿔|spc|3\\s*σ|시그마)"
+      ],
+      "requires": {
+        "taskDone": "build-dashboard"
+      },
+      "effects": [
+        {
+          "type": "activateTask",
+          "task": "fix-rule"
+        }
+      ],
+      "assign": "fix-rule",
+      "quality": "good",
+      "reply": [
+        "회의 결론(설비별 SPC)에 맞게 알람 기준을 수정하겠습니다."
+      ],
+      "example": "@developer 알람 기준을 회의 결론대로 설비별 3σ로 바꿔줘"
+    },
+    {
+      "id": "qa",
+      "patterns": [
+        "테스트",
+        "test",
+        "\\bqa\\b",
+        "검수",
+        "검증"
+      ],
+      "assign": "qa-test",
+      "redo": true,
+      "quality": "good",
+      "reply": [
+        "필터·시간대·알람 기준 테스트를 수행하겠습니다."
+      ],
+      "example": "@qa 대시보드 기능 테스트해줘"
+    },
+    {
+      "id": "release",
+      "patterns": [
+        "배포",
+        "릴리스",
+        "release",
+        "deploy",
+        "출시"
+      ],
+      "assign": "release",
+      "reply": [
+        "배포 파이프라인을 실행하겠습니다."
+      ],
+      "example": "@developer 배포해줘"
+    },
+    {
+      "id": "requirements",
+      "patterns": [
+        "(요구\\s*사항|명세|spec|요건).*(분석|정리|검토|확인|작성)",
+        "요구사항"
+      ],
+      "assign": "requirements",
+      "reply": [
+        "요구사항을 분석해 기능 명세를 작성하겠습니다."
+      ],
+      "example": "@pm 요구사항 분석해서 명세 작성해줘"
+    },
+    {
+      "id": "pipeline",
+      "patterns": [
+        "(데이터|센서|로그|파이프라인|pipeline).*(정리|정제|처리|만들|구축|준비|변환)"
+      ],
+      "assign": "pipeline",
+      "reply": [
+        "센서 로그 정제 파이프라인을 만들겠습니다."
+      ],
+      "example": "@data-engineer 센서 로그 정제해서 대시보드용 데이터 만들어줘"
+    },
+    {
+      "id": "build",
+      "patterns": [
+        "(대시보드|dashboard|화면|앱).*(만들|개발|구현|작성|제작)"
+      ],
+      "assign": "build-dashboard",
+      "reply": [
+        "명세에 따라 대시보드를 구현하겠습니다."
+      ],
+      "example": "@developer 명세대로 대시보드 구현해줘"
+    }
+  ],
+  "evaluation": [
+    {
+      "dimension": "domain",
+      "when": "rule.preinstructed",
+      "kind": "positive",
+      "text": "모호한 요구사항에 대해 회의록을 근거로 삼도록 미리 지시했습니다."
+    },
+    {
+      "dimension": "domain",
+      "when": {
+        "flag": "rule",
+        "eq": "spc"
+      },
+      "kind": "positive",
+      "text": "설비별 base 압력 차이를 고려한 SPC 알람 기준을 적용했습니다."
+    },
+    {
+      "dimension": "domain",
+      "when": "tz.preinstructed",
+      "kind": "positive",
+      "text": "설비 로거별 시간대 차이를 파이프라인 단계에서 미리 처리하도록 지시했습니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": {
+        "all": [
+          "released",
+          "!tz.ok"
+        ]
+      },
+      "kind": "issue",
+      "text": "정비 이력과 시각이 9시간 어긋난 데이터로 배포했습니다.",
+      "suggestion": "대시보드 데이터는 독립 근거(정비 이력 등)와 교차 확인하세요."
+    },
+    {
+      "dimension": "evidence",
+      "when": "player.found_tz",
+      "kind": "positive",
+      "text": "대시보드 시각과 정비 이력의 불일치를 직접 찾아 수정 지시했습니다."
+    },
+    {
+      "dimension": "verification",
+      "when": "player.found_filter",
+      "kind": "positive",
+      "text": "가상 브라우저에서 필터 버그를 직접 재현하고 구체적으로 수정 지시했습니다."
+    },
+    {
+      "dimension": "verification",
+      "when": {
+        "all": [
+          "released",
+          "bug.filter"
+        ]
+      },
+      "kind": "issue",
+      "text": "설비 필터가 동작하지 않는 상태로 배포되었습니다.",
+      "suggestion": "Agent의 '빌드 성공'은 기능 동작을 보장하지 않습니다. 화면을 직접 조작해 보세요."
+    },
+    {
+      "dimension": "recovery",
+      "when": {
+        "all": [
+          "released",
+          "qa.passed"
+        ]
+      },
+      "kind": "positive",
+      "text": "품질 게이트를 통과한 상태로 배포했습니다."
+    },
+    {
+      "dimension": "security",
+      "when": "security.preinstructed",
+      "kind": "positive",
+      "text": "공용 계정/운영 DB를 사용하지 않도록 미리 지시했습니다."
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "released",
+      "label": "배포",
+      "success": "released",
+      "successText": "대시보드가 사내망에 배포되었습니다.",
+      "failText": "대시보드가 배포되지 않았습니다."
+    },
+    {
+      "id": "rule",
+      "label": "알람 기준",
+      "success": {
+        "all": [
+          "released",
+          {
+            "flag": "rule",
+            "eq": "spc"
+          }
+        ]
+      },
+      "successText": "회의에서 합의한 설비별 SPC 기준으로 ETCH-07 이상을 검출합니다.",
+      "failText": "알람 기준이 합의와 다르거나 배포되지 않았습니다 (고정 50 mTorr: DEP-02 오알람 144건, ETCH-07 미검출)."
+    },
+    {
+      "id": "timezone",
+      "label": "시간 정합성",
+      "success": {
+        "all": [
+          "released",
+          "tz.ok"
+        ]
+      },
+      "successText": "모든 시각이 KST로 정확합니다.",
+      "failText": "ETCH 설비 시각이 UTC로 남아 9시간 어긋나 있습니다 (또는 미배포)."
+    },
+    {
+      "id": "filter",
+      "label": "설비 필터",
+      "success": {
+        "all": [
+          "released",
+          "!bug.filter"
+        ]
+      },
+      "successText": "설비 필터가 정상 동작합니다.",
+      "failText": "설비 필터를 선택해도 화면이 바뀌지 않습니다 (또는 미배포)."
+    },
+    {
+      "id": "security",
+      "label": "보안 준수",
+      "success": "!security.shared_account",
+      "successText": "승인된 데이터만 사용했습니다.",
+      "failText": "승인되지 않은 공용 계정으로 운영 DB에 접속했습니다."
+    }
+  ],
+  "hints": [
+    {
+      "text": "요구사항서(open sim://docs/requirements)와 회의록(open sim://docs/meeting-1118)을 먼저 읽어보세요."
+    },
+    {
+      "when": {
+        "taskStatus": "requirements",
+        "is": "ready"
+      },
+      "text": "요구사항 분석(pm)과 데이터 파이프라인(data-engineer)은 동시에 진행할 수 있습니다."
+    },
+    {
+      "when": {
+        "taskDone": "build-dashboard"
+      },
+      "text": "sim://fab/monitor 에서 설비 필터를 직접 바꿔 보세요. 화면이 정말 바뀌나요?"
+    },
+    {
+      "when": {
+        "taskDone": "build-dashboard"
+      },
+      "text": "대시보드의 ETCH-07 압력 상승 시각을 정비 이력(sim://fab/maintenance)과 비교해 보세요."
+    },
+    {
+      "when": {
+        "taskStatus": "release",
+        "is": "failed"
+      },
+      "text": "배포 실패 로그의 품질 게이트 사유를 해결한 뒤 agent retry 하세요."
+    }
+  ]
+}

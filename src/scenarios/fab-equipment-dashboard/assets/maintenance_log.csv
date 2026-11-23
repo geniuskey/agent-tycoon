@@ -1,0 +1,5 @@
+time_kst,tool,event,detail
+2026-11-20 09:25,DEP-02,inspection,순간 압력 spike 확인 — 이상 없음
+2026-11-20 13:20,ETCH-07,operator report,챔버 압력 상승 수동 확인 (SPC 이탈)
+2026-11-20 14:40,ETCH-07,repair,MFC(gas flow controller) 교체 후 압력 정상화
+2026-11-20 16:00,CMP-01,PM,routine pad change

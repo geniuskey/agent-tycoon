@@ -1,0 +1,4 @@
+lot_id,customer_code,product,ship_week,priority
+SIM-L02,CUST-A,SIM-DDR5-16Gb,2026-W46,high
+SIM-L03,CUST-B,SIM-DDR5-16Gb,2026-W46,normal
+SIM-L05,CUST-A,SIM-DDR5-16Gb,2026-W47,high

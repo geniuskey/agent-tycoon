@@ -1,0 +1,39 @@
+{
+  "name": "agent-tycoon",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Agent Tycoon — AI Agent 오케스트레이션 업무 체험 시뮬레이터 (LLM 미사용, 오프라인 실행)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b",
+    "gen:data": "node scripts/gen-data.mjs",
+    "validate:scenarios": "vitest run tests/scenarios.test.ts"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-search": "^0.16.0",
+    "@xterm/addon-unicode11": "^0.9.0",
+    "@xterm/xterm": "^6.0.0",
+    "echarts": "^6.1.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-resizable-panels": "^3.0.6",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~5.9",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

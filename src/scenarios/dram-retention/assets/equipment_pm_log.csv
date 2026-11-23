@@ -1,0 +1,7 @@
+date,tool,chamber,event,detail,engineer
+2026-10-02,ETCH-05,CH-A,PM,routine wet clean,SIM-ENG-11
+2026-10-08,DEP-02,CH-A,PM,showerhead clean, qual pass,SIM-ENG-04
+2026-10-13,ETCH-07,CH-A,PM,routine wet clean,SIM-ENG-07
+2026-10-14,ETCH-07,CH-B,PM,focus ring replaced (vendor B); edge He flow 12->9 sccm,SIM-ENG-07
+2026-10-14,ETCH-07,CH-B,QUAL,center CD pass; edge CD not measured,SIM-ENG-07
+2026-10-20,DEP-01,CH-A,PM,routine,SIM-ENG-04

@@ -1,0 +1,19 @@
+[
+  { "id": "hbm-thermal-stack", "domain": "hbm", "function": "quality", "taskType": "data-analysis", "title": "HBM 열 특성 및 적층 수율 분석", "summary": "TSV 적층 단계별 수율과 열 저항 데이터를 결합해 수율 손실 구간을 찾는다.", "status": "planned" },
+  { "id": "nand-vt-reliability", "domain": "nand", "function": "device-engineering", "taskType": "data-analysis", "title": "NAND Vt 분포 및 신뢰성 분석", "summary": "P/E cycle별 Vt 분포 shift와 retention 데이터로 신뢰성 마진을 평가한다.", "status": "planned" },
+  { "id": "foundry-variation-yield", "domain": "foundry", "function": "process-engineering", "taskType": "data-analysis", "title": "공정 편차와 수율 분석", "summary": "CD/두께 편차와 수율의 관계를 분석하고 공정 창(window)을 제안한다.", "status": "planned" },
+  { "id": "soc-ip-integration", "domain": "soc", "function": "verification", "taskType": "design-verification", "title": "IP 통합 검증 및 이슈 해결", "summary": "IP 통합 회귀 테스트 실패를 분류하고 원인 IP와 수정 우선순위를 정한다.", "status": "planned" },
+  { "id": "modem-log-analysis", "domain": "modem", "function": "software", "taskType": "sw-issue", "title": "통신 로그 분석", "summary": "필드 통신 로그에서 call drop 패턴을 찾고 재현 조건을 정리한다.", "status": "planned" },
+  { "id": "ddi-power-report", "domain": "ddi", "function": "verification", "taskType": "report", "title": "DDI 전력 특성 분석 및 보고", "summary": "구동 모드별 전력 측정 데이터를 분석해 고객 보고서를 작성한다.", "status": "planned" },
+  { "id": "cis-noise-automation", "domain": "image-sensor", "function": "verification", "taskType": "automation", "title": "Image Sensor Noise 평가 자동화", "summary": "Noise 평가 절차를 스크립트로 자동화하고 결과를 검증한다.", "status": "planned" },
+  { "id": "pmic-efficiency", "domain": "pmic", "function": "design", "taskType": "design-verification", "title": "PMIC 전력 효율 최적화", "summary": "부하 조건별 효율 곡선을 분석해 설계 파라미터 후보를 비교한다.", "status": "planned" },
+  { "id": "security-ic-vuln", "domain": "security-ic", "function": "verification", "taskType": "design-verification", "title": "보안 취약점 분석 및 검증", "summary": "Side-channel 측정 결과를 검토하고 대응책 검증 계획을 세운다.", "status": "planned" },
+  { "id": "cpu-perf-bottleneck", "domain": "cpu", "function": "design", "taskType": "data-analysis", "title": "CPU 성능 병목 분석", "summary": "벤치마크 PMU 카운터를 분석해 병목 구간을 찾는다.", "status": "planned" },
+  { "id": "gpu-memory-bandwidth", "domain": "gpu", "function": "design", "taskType": "data-analysis", "title": "GPU 메모리 대역폭 분석", "summary": "워크로드별 대역폭 사용률과 stall을 분석해 개선안을 비교한다.", "status": "planned" },
+  { "id": "fpga-rtl-timing", "domain": "fpga", "function": "design", "taskType": "design-verification", "title": "RTL 및 Timing 이슈 해결", "summary": "Timing report의 violation 경로를 분석하고 RTL 수정안을 검증한다.", "status": "planned" },
+  { "id": "mcu-firmware-voc", "domain": "mcu", "function": "software", "taskType": "sw-issue", "title": "MCU 펌웨어 VOC 대응", "summary": "고객 VOC를 분류하고 펌웨어 버그를 재현·수정·회귀 테스트한다.", "status": "planned" },
+  { "id": "weekly-report", "domain": "common", "function": "common", "taskType": "report", "title": "주간 업무 보고서 작성", "summary": "여러 팀원의 업무 로그를 취합해 주간 보고서를 작성한다.", "status": "planned" },
+  { "id": "data-cleaning-viz", "domain": "common", "function": "common", "taskType": "data-analysis", "title": "데이터 정제 및 시각화", "summary": "형식이 섞인 엑셀 데이터를 정제하고 시각화한다.", "status": "planned" },
+  { "id": "internal-webapp", "domain": "common", "function": "software", "taskType": "automation", "title": "요구사항 기반 사내 웹앱 개발", "summary": "요구사항서로 간단한 사내 웹앱을 개발하고 사용자 테스트를 반영한다.", "status": "planned" },
+  { "id": "market-demand-forecast", "domain": "common", "function": "sales-marketing", "taskType": "market-analysis", "title": "시장 조사 및 수요 예측", "summary": "공개 시장 데이터와 판매 이력으로 분기 수요를 예측한다.", "status": "planned" }
+]

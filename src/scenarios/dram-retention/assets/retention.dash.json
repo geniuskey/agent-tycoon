@@ -1,0 +1,18 @@
+{
+  "title": "DRAM Retention 분석 대시보드",
+  "subtitle": "85°C · spec ret_time ≥ 64 ms · 단위 처리: {{#if gate.units=convert}}T-03 s→ms 변환{{/if}}{{#if gate.units=exclude}}T-03(SIM-L04) 제외{{/if}}{{#if gate.units=ignore}}미처리(원본){{/if}}",
+  "filters": [
+    { "id": "lot", "label": "Lot", "field": "lot_id", "bound": true }
+  ],
+  "widgets": [
+    { "type": "kpi", "title": "전체 불량률", "source": "/work/analysis/wafer_summary.csv", "agg": "ratio", "num": "fail_dies", "den": "tested_dies", "unit": "%" },
+    { "type": "kpi", "title": "검사 die", "source": "/work/analysis/wafer_summary.csv", "agg": "sum", "field": "tested_dies" },
+    { "type": "kpi", "title": "ETCH-07 CH-B 불량률", "source": "/work/analysis/wafer_summary.csv", "where": { "sn_etch": "ETCH-07/CH-B" }, "agg": "ratio", "num": "fail_dies", "den": "tested_dies", "unit": "%" },
+    { "type": "kpi", "title": "고불량 wafer (>20%)", "source": "/work/analysis/wafer_summary.csv", "agg": "countIf", "field": "fail_rate_pct", "gt": 20 },
+    { "type": "bar", "title": "Wafer별 불량률 (%) — 색상: SN_ETCH 경로", "source": "/work/analysis/wafer_summary.csv", "x": "wafer", "y": "fail_rate_pct", "color": "sn_etch", "span": 2 },
+    { "type": "bar", "title": "SN_ETCH 경로별 불량률 (%)", "source": "/work/analysis/wafer_summary.csv", "groupBy": "sn_etch", "agg": "ratio", "num": "fail_dies", "den": "tested_dies" },
+    { "type": "bar", "title": "CAP_DEP 설비별 불량률 (%)", "source": "/work/analysis/wafer_summary.csv", "groupBy": "cap_dep", "agg": "ratio", "num": "fail_dies", "den": "tested_dies" },
+    { "type": "wafermap", "title": "Wafer Map (빨강 = FAIL)", "source": "/work/retention_clean.csv", "x": "die_x", "y": "die_y", "value": "ret_time_ms", "failBelow": 64, "key": ["lot_id", "wafer_id"], "span": 2 },
+    { "type": "histogram", "title": "Retention time 분포 (ms)", "source": "/work/retention_clean.csv", "field": "ret_time_ms", "bins": 30, "markLine": 64 }
+  ]
+}
