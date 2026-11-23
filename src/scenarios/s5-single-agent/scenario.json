@@ -273,7 +273,13 @@
             }
           ]
         }
-      ]
+      ],
+      "optional": {
+        "all": [
+          "!w51.had.cause",
+          "!w52.had.cause"
+        ]
+      }
     },
     {
       "id": "jung",

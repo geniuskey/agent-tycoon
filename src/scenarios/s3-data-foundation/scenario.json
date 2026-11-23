@@ -746,7 +746,8 @@
           ],
           "trust": 5
         }
-      ]
+      ],
+      "optional": true
     }
   ],
   "files": {

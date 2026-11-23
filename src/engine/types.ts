@@ -213,6 +213,8 @@ export interface PersonDef {
   replyDelay?: number;
   /** 고정 일정 — 이 시간에는 메시지를 읽지 않는다 ("HH:MM" 업무 시각) */
   schedule?: { from: string; to: string; label: string }[];
+  /** 이 조건이 참이면 만나지 않아도 협업 평가에서 감점하지 않는다 (예: 앞 단계에서 이미 들은 정보) */
+  optional?: Cond | true;
   topics: TopicDef[];
 }
 

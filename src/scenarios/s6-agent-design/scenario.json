@@ -406,7 +406,8 @@
             }
           ]
         }
-      ]
+      ],
+      "optional": true
     }
   ],
   "groups": [
@@ -2411,7 +2412,7 @@
         "evalset"
       ],
       "optional": true,
-      "review": true,
+      "review": false,
       "keywords": [
         "다시"
       ],

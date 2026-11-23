@@ -33,7 +33,8 @@
         "gate.content.",
         "mart.",
         "access.",
-        "found."
+        "found.",
+        "park."
       ],
       "files": [
         "/knowledge/AGENTS.md",
@@ -316,7 +317,8 @@
             }
           ]
         }
-      ]
+      ],
+      "optional": "found.backfill"
     },
     {
       "id": "lee",

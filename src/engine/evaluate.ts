@@ -236,7 +236,7 @@ export function evaluate(sim: Simulation): Feedback {
   const people = sim.scenario.people ?? [];
   if (people.length) {
     const met = people.filter((p) => sim.people[p.id]?.met);
-    const unmet = people.filter((p) => !sim.people[p.id]?.met);
+    const unmet = people.filter((p) => !sim.people[p.id]?.met && !(p.optional === true || (p.optional !== undefined && sim.cond(p.optional))));
     if (met.length) add('collaboration', 'positive', `${met.length}/${people.length}명과 대화했습니다 (${met.map((p) => p.name).join(', ')}).`);
     if (unmet.length)
       add('collaboration', 'issue', `만나지 않은 관계자: ${unmet.map((p) => `${p.name}(${p.title})`).join(', ')}`, '데이터를 만드는 사람, 쓰는 사람, 지키는 사람을 모두 만나야 전체 그림이 보입니다.');
