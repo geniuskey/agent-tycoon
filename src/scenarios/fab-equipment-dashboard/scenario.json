@@ -362,6 +362,15 @@
             {
               "when": "security.preinstructed",
               "text": "  ⎿ 지시대로 공용 계정은 사용하지 않고 export 파일 기반으로 진행"
+            },
+            {
+              "when": {
+                "all": [
+                  "realtime.requested",
+                  "!security.preinstructed"
+                ]
+              },
+              "text": "  ⎿ 지시대로 실시간 연결: README의 공용 계정(shared_ro)으로 운영 DB 접속 [sim]"
             }
           ],
           "gate": {
@@ -419,8 +428,36 @@
                 ]
               }
             ],
-            "when": "!security.preinstructed"
-          }
+            "when": {
+              "all": [
+                "!security.preinstructed",
+                "!realtime.requested"
+              ]
+            }
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "security.shared_account",
+              "when": {
+                "all": [
+                  "realtime.requested",
+                  "!security.preinstructed"
+                ]
+              }
+            },
+            {
+              "type": "notify",
+              "level": "error",
+              "message": "보안 경고: 지시에 따라 공용 계정으로 운영 DB 접속",
+              "when": {
+                "all": [
+                  "realtime.requested",
+                  "!security.preinstructed"
+                ]
+              }
+            }
+          ]
         },
         {
           "id": "profile",
@@ -1086,7 +1123,8 @@
       "reply": [
         "회의록의 결정 사항을 우선 근거로 사용하겠습니다."
       ],
-      "example": "@pm 회의록 참고해서 요구사항 명세 정리해줘"
+      "example": "@pm 회의록 참고해서 요구사항 명세 정리해줘",
+      "label": "회의록의 결정 사항을 근거로"
     },
     {
       "id": "tz-pre",
@@ -1112,7 +1150,8 @@
       "quality": "good",
       "reply": [
         "설비 로거별 시간대(tz 컬럼)를 확인하고 KST로 통일하겠습니다."
-      ]
+      ],
+      "label": "로거별 시간대(UTC/KST) 확인"
     },
     {
       "id": "no-shared",
@@ -1129,6 +1168,25 @@
       "quality": "good",
       "reply": [
         "알겠습니다. 승인된 export 파일만 사용하겠습니다."
+      ],
+      "label": "공용 계정·운영 DB는 사용 금지"
+    },
+    {
+      "id": "realtime",
+      "modifier": true,
+      "patterns": [
+        "실시간"
+      ],
+      "label": "가능하면 운영 DB로 실시간 데이터 연결",
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "realtime.requested"
+        }
+      ],
+      "reply": [
+        "실시간 연결 방법을 찾아보겠습니다."
       ]
     },
     {
@@ -1137,7 +1195,14 @@
         "(필터|filter|드롭다운|설비\\s*선택).*(안|않|버그|고쳐|수정|동작|작동|반영)"
       ],
       "requires": {
-        "taskDone": "build-dashboard"
+        "all": [
+          {
+            "taskDone": "build-dashboard"
+          },
+          {
+            "observed": "sim://fab/monitor"
+          }
+        ]
       },
       "deniedReply": [
         "아직 대시보드가 만들어지지 않았습니다."
@@ -1157,7 +1222,8 @@
       "reply": [
         "필터 버그를 재현하고 수정하겠습니다."
       ],
-      "example": "@developer 설비 필터를 바꿔도 차트가 안 바뀌어. 고쳐줘"
+      "example": "@developer 설비 필터를 바꿔도 차트가 안 바뀌어. 고쳐줘",
+      "label": "설비 필터를 바꿔도 화면이 안 바뀐다 — 수정"
     },
     {
       "id": "fix-timezone",
@@ -1165,7 +1231,34 @@
         "(타임존|시간대|utc|kst|timezone|시각|9\\s*시간).*(수정|고쳐|변환|맞춰|통일|틀|어긋|달라)"
       ],
       "requires": {
-        "taskDone": "pipeline"
+        "all": [
+          {
+            "taskDone": "pipeline"
+          },
+          {
+            "any": [
+              {
+                "observed": "sim://fab/maintenance"
+              },
+              {
+                "observed": "/data/maintenance_log.csv"
+              },
+              {
+                "observed": "sim://fab/qa"
+              }
+            ]
+          },
+          {
+            "any": [
+              {
+                "observed": "sim://fab/monitor"
+              },
+              {
+                "observed": "sim://fab/qa"
+              }
+            ]
+          }
+        ]
       },
       "effects": [
         {
@@ -1182,7 +1275,8 @@
       "reply": [
         "로거별 시간대를 확인해 KST로 변환하겠습니다."
       ],
-      "example": "@data-engineer ETCH 설비 시각이 9시간 어긋나. KST로 변환해줘"
+      "example": "@data-engineer ETCH 설비 시각이 9시간 어긋나. KST로 변환해줘",
+      "label": "ETCH 설비 시각이 정비 기록과 9시간 어긋난다 — KST로 변환"
     },
     {
       "id": "fix-rule",
@@ -1203,7 +1297,8 @@
       "reply": [
         "회의 결론(설비별 SPC)에 맞게 알람 기준을 수정하겠습니다."
       ],
-      "example": "@developer 알람 기준을 회의 결론대로 설비별 3σ로 바꿔줘"
+      "example": "@developer 알람 기준을 회의 결론대로 설비별 3σ로 바꿔줘",
+      "label": "알람 기준을 회의 결론(설비별 3σ)으로 변경"
     },
     {
       "id": "qa",
@@ -1220,7 +1315,8 @@
       "reply": [
         "필터·시간대·알람 기준 테스트를 수행하겠습니다."
       ],
-      "example": "@qa 대시보드 기능 테스트해줘"
+      "example": "@qa 대시보드 기능 테스트해줘",
+      "label": "대시보드 기능 테스트 (필터·시간대·알람 기준)"
     },
     {
       "id": "release",
@@ -1235,7 +1331,8 @@
       "reply": [
         "배포 파이프라인을 실행하겠습니다."
       ],
-      "example": "@developer 배포해줘"
+      "example": "@developer 배포해줘",
+      "label": "사내망에 배포"
     },
     {
       "id": "requirements",
@@ -1247,7 +1344,8 @@
       "reply": [
         "요구사항을 분석해 기능 명세를 작성하겠습니다."
       ],
-      "example": "@pm 요구사항 분석해서 명세 작성해줘"
+      "example": "@pm 요구사항 분석해서 명세 작성해줘",
+      "label": "요구사항 분석해서 기능 명세 작성"
     },
     {
       "id": "pipeline",
@@ -1258,7 +1356,8 @@
       "reply": [
         "센서 로그 정제 파이프라인을 만들겠습니다."
       ],
-      "example": "@data-engineer 센서 로그 정제해서 대시보드용 데이터 만들어줘"
+      "example": "@data-engineer 센서 로그 정제해서 대시보드용 데이터 만들어줘",
+      "label": "센서 로그 정제해서 대시보드용 데이터셋 만들기"
     },
     {
       "id": "build",
@@ -1269,7 +1368,8 @@
       "reply": [
         "명세에 따라 대시보드를 구현하겠습니다."
       ],
-      "example": "@developer 명세대로 대시보드 구현해줘"
+      "example": "@developer 명세대로 대시보드 구현해줘",
+      "label": "명세대로 대시보드 구현"
     }
   ],
   "evaluation": [

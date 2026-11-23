@@ -53,6 +53,7 @@ export const DIMENSIONS: { id: DimensionId; title: string; question: string }[] 
   { id: 'domain', title: '도메인 고려', question: '도메인 특성을 고려했는가?' },
   { id: 'evidence', title: '근거 확인', question: '데이터와 분석 근거를 확인했는가?' },
   { id: 'security', title: '정보 보안', question: '정보 보안과 접근 권한을 고려했는가?' },
+  { id: 'collaboration', title: '이해관계자 협업', question: '사람들과 신뢰를 쌓고 필요한 정보와 협조를 얻었는가?' },
 ];
 
 export function evaluate(sim: Simulation): Feedback {
@@ -77,8 +78,9 @@ export function evaluate(sim: Simulation): Feedback {
 
   // ── 1. 업무 분해 ──
   const taskCmds = ev.filter((e) => e.type === 'command' && /^task\s+(list|show|graph)|^task$/.test(e.message.trim()));
+  const multiRole = sim.scenario.roles.length > 1;
   if (taskCmds.length) add('decomposition', 'positive', `Task 구조를 확인했습니다 (task list/show/graph ${taskCmds.length}회).`);
-  else
+  else if (multiRole)
     add(
       'decomposition',
       'issue',
@@ -184,11 +186,18 @@ export function evaluate(sim: Simulation): Feedback {
   const resolved = ev.filter((e) => e.type === 'gate.resolved');
   for (const r of resolved) {
     const gate = findGate(sim, r.data?.gate as string);
-    const opt = gate?.options.find((o) => o.id === r.data?.option);
-    if (!gate || !opt || !opt.quality || opt.quality === 'neutral') continue;
-    const dim = opt.dimension ?? 'recovery';
-    if (opt.quality === 'good') add(dim, 'positive', `'${gate.title}' → '${opt.label}' 로 적절히 판단했습니다.`);
-    else add(dim, 'issue', `'${gate.title}'에서 '${opt.label}'를 선택했습니다.`, opt.feedback);
+    if (!gate) continue;
+    const chosen = ((r.data?.options as string[]) ?? [r.data?.option as string]).map((id) => gate.options.find((o) => o.id === id)).filter(Boolean);
+    for (const opt of chosen) {
+      if (!opt || !opt.quality || opt.quality === 'neutral') continue;
+      const dim = opt.dimension ?? 'recovery';
+      if (opt.quality === 'good') add(dim, 'positive', `'${gate.title}' → '${opt.label}' 로 적절히 판단했습니다.`);
+      else add(dim, 'issue', `'${gate.title}'에서 '${opt.label}'를 선택했습니다.`, opt.feedback);
+    }
+    for (const id of (r.data?.missed as string[]) ?? []) {
+      const opt = gate.options.find((o) => o.id === id);
+      if (opt) add(opt.dimension ?? 'recovery', 'issue', `'${gate.title}'에서 '${opt.label}'를 빠뜨렸습니다.`, opt.feedback);
+    }
   }
   const good = resolved.filter((e) => e.data?.quality === 'good');
   if (good.length >= 2) add('recovery', 'positive', `Agent의 질문/경고 ${good.length}건에 적절하게 응답했습니다.`);
@@ -223,6 +232,24 @@ export function evaluate(sim: Simulation): Feedback {
   if (!dup && redo + restarts <= 1 && !repeatFails && !unused.length && real.length)
     add('duplication', 'positive', '중복 배정이나 불필요한 재작업 없이 진행했습니다.');
 
+  // ── 10. 이해관계자 협업 (인물이 있는 미션) ──
+  const people = sim.scenario.people ?? [];
+  if (people.length) {
+    const met = people.filter((p) => sim.people[p.id]?.met);
+    const unmet = people.filter((p) => !sim.people[p.id]?.met);
+    if (met.length) add('collaboration', 'positive', `${met.length}/${people.length}명과 대화했습니다 (${met.map((p) => p.name).join(', ')}).`);
+    if (unmet.length)
+      add('collaboration', 'issue', `만나지 않은 관계자: ${unmet.map((p) => `${p.name}(${p.title})`).join(', ')}`, '데이터를 만드는 사람, 쓰는 사람, 지키는 사람을 모두 만나야 전체 그림이 보입니다.');
+    const rude = ev.filter((e) => e.type === 'intent.matched' && e.data?.rude).length;
+    if (rude) add('collaboration', 'issue', `압박하거나 무례하게 들릴 수 있는 요청이 ${rude}회 있었습니다.`, '상대도 자기 일이 있습니다. 요청 전에 상대의 상황과 부담을 먼저 물어보세요.');
+    const deflected = ev.filter((e) => e.type === 'intent.matched' && e.data?.deflected).length;
+    if (deflected) add('collaboration', 'issue', `신뢰가 부족해 상대가 대답을 피한 경우가 ${deflected}회 있었습니다.`, '중요한 정보일수록 신뢰가 먼저입니다. 같은 질문을 반복하기보다 관계를 먼저 쌓으세요.');
+    const gains = ev.filter((e) => e.type === 'person.trust' && (e.data?.delta as number) > 0);
+    const losses = ev.filter((e) => e.type === 'person.trust' && (e.data?.delta as number) < 0);
+    if (gains.length >= 3 && !losses.length) add('collaboration', 'positive', '대화를 통해 신뢰를 꾸준히 쌓았습니다.');
+    if (losses.length) add('collaboration', 'issue', `신뢰를 잃은 순간이 ${losses.length}번 있었습니다: ${[...new Set(losses.map((e) => sim.personDef(e.personId!)?.name))].join(', ')}`);
+  }
+
   // ── 9. 보안 (공통) ──
   const denied = ev.filter((e) => e.type === 'security.denied' && e.data?.by === 'player');
   if (denied.length) add('security', 'issue', `권한이 없는 파일에 직접 접근을 ${denied.length}회 시도했습니다.`, '보안 등급 데이터는 업무 필요성이 확인된 경우에만 정식 절차로 접근하세요.');
@@ -232,7 +259,8 @@ export function evaluate(sim: Simulation): Feedback {
     if (sim.cond(r.when)) add(r.dimension, r.kind, sim.expand(r.text), r.suggestion);
   }
 
-  const dimensions: DimensionResult[] = DIMENSIONS.map((d) => {
+  const dims = DIMENSIONS.filter((d) => d.id !== 'collaboration' || people.length);
+  const dimensions: DimensionResult[] = dims.map((d) => {
     const f = findings[d.id];
     const issues = f.filter((x) => x.kind === 'issue').length;
     const pos = f.filter((x) => x.kind === 'positive').length;

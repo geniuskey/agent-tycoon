@@ -53,6 +53,8 @@ describe('Fab 설비 대시보드', () => {
     expect(sim.flags['qa.passed']).toBe(false);
     for (const t of ['fix-filter', 'fix-timezone', 'fix-rule']) expect(sim.tasks[t].visible, t).toBe(true);
     sh(sim, 'agent assign developer fix-filter');
+    sh(sim, 'open sim://fab/monitor');
+    sh(sim, 'open sim://fab/maintenance');
     to(sim, 'data-engineer', 'ETCH 시각이 9시간 어긋나. KST로 변환해줘');
     runUntil(sim, () => taskStatus(sim, 'fix-filter') === 'done' && taskStatus(sim, 'fix-timezone') === 'done');
     to(sim, 'developer', '알람 기준을 회의 결론대로 3σ로 바꿔줘');

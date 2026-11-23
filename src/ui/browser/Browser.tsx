@@ -6,6 +6,7 @@ import { useSession } from '../../store/session';
 import { Btn, useSim } from '../common';
 import DashboardView from './DashboardView';
 import Markdown from './Markdown';
+import ScanView from './ScanView';
 
 /**
  * 가상 브라우저. sim:// URL만 열 수 있으며 외부 네트워크에 접근하지 않는다.
@@ -92,6 +93,8 @@ export default function Browser() {
           <DashboardView key={url} sim={sim} source={page.source} />
         ) : page.view === 'table' ? (
           <TableView content={file.content} title={page.title} />
+        ) : page.view === 'scan' ? (
+          <ScanView content={file.content} />
         ) : page.view === 'text' ? (
           <pre className="px-5 py-4 font-mono text-[12px] leading-6 whitespace-pre-wrap text-fg">{file.content}</pre>
         ) : page.view === 'mail' ? (

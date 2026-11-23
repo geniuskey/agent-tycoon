@@ -32,3 +32,17 @@ export function lastOutput(sim: Simulation, n = 10): string {
 
 export const status = (sim: Simulation, id: string) => sim.agents[id]?.status;
 export const taskStatus = (sim: Simulation, id: string) => sim.tasks[id]?.status;
+
+/** 인물 대화 패널에서 말하기 (응답이 출력될 때까지 몇 tick 진행) */
+export function talk(sim: Simulation, personId: string, text: string, ticks = 4): void {
+  sim.input(text, { paneId: `person:${personId}`, personId });
+  sim.advance(ticks);
+}
+export const trust = (sim: Simulation, id: string) => sim.people[id]?.trust;
+export function lastSaid(sim: Simulation, personId: string, n = 3): string {
+  return sim.events
+    .filter((e) => e.type === 'person.said' && e.personId === personId)
+    .slice(-n)
+    .map((e) => stripAnsi(e.message))
+    .join('\n');
+}

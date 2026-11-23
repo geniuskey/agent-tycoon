@@ -89,9 +89,9 @@ export default function Briefing({ onClose }: { onClose: () => void }) {
           <div className="mb-1 font-semibold text-fg">시작하는 방법</div>
           1. 왼쪽 <b className="text-fg">＋ 생성</b> 또는 터미널에 <code className="text-sky-300">agent spawn &lt;role&gt;</code> — Agent마다 전용 터미널이 열립니다.
           <br />
-          2. Agent 터미널에 자연어로 지시하거나 <code className="text-sky-300">agent assign &lt;agent&gt; &lt;task&gt;</code>
+          2. Agent 패널 아래 선택 카드에서 <b className="text-fg">지시 하나</b>와 필요한 <b className="text-fg">조건(복수)</b>을 골라 지시합니다. 사람은 왼쪽 목록을 눌러 대화하고 질문을 고릅니다.
           <br />
-          3. Agent가 <span className="text-amber-300">Waiting/Blocked</span> 상태가 되면 판단을 내려 주세요. 결과물은 오른쪽 브라우저·파일에서 확인합니다.
+          3. Agent가 <span className="text-amber-300">Waiting/Blocked</span> 상태가 되면 선택 카드에서 판단을 내려 주세요 (단일/복수 선택). 결과물은 오른쪽 브라우저·파일에서 확인합니다.
           <br />
           4. 완료되면 상단 <b className="text-fg">제출</b> → 학습 피드백
         </div>

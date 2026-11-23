@@ -31,7 +31,10 @@ export type Cond =
   | { taskDone: string }
   | { taskStatus: string; is: TaskStatus | TaskStatus[] }
   | { fileExists: string }
-  | { gate: string; chose: string | string[] };
+  | { gate: string; chose: string | string[] }
+  | { trust: string; gte?: number; lt?: number }
+  /** 플레이어가 해당 화면(sim://…) 또는 파일을 직접 열어본 적이 있음 */
+  | { observed: string };
 
 // ───────────────────────────── Effects ─────────────────────────────
 
@@ -49,6 +52,7 @@ export type Effect = { when?: Cond } & (
   | { type: 'notify'; level?: NotifyLevel; message: string }
   | { type: 'activateTask'; task: string }
   | { type: 'reopenTask'; task: string }
+  | { type: 'trust'; person: string; delta: number }
 );
 
 export type NotifyLevel = 'info' | 'warn' | 'error' | 'success';
@@ -88,6 +92,10 @@ export interface GateDef {
   title: string;
   prompt: LogLine[];
   options: GateOption[];
+  /** 복수 선택 (체크박스). 선택한 모든 선택지의 효과가 적용된다 */
+  multi?: boolean;
+  min?: number;
+  max?: number;
 }
 
 export interface StepDef {
@@ -130,6 +138,10 @@ export interface IntentDef {
   roles?: string[];
   requires?: Cond;
   deniedReply?: string[];
+  /** 객관식 선택지에 표시할 지시 문장 (없으면 example에서 생성) */
+  label?: string;
+  /** 객관식 선택지에 노출하지 않음 (자유 입력으로만 인식) */
+  hiddenChoice?: boolean;
   /** 대상 Agent에게 배정할 task */
   assign?: string;
   /** 이미 완료된 task라도 다시 수행 (예: 수정 후 재테스트) */
@@ -147,10 +159,85 @@ export interface IntentDef {
   modifier?: boolean;
 }
 
+// ───────────────────────────── People (가상 인물) ─────────────────────────────
+
+/** 인물에게 물어볼 수 있는 주제. 질문이 패턴에 맞으면 응답한다. */
+export interface TopicDef {
+  id: string;
+  patterns: string[];
+  requires?: Cond;
+  /** 이 신뢰도 미만이면 lowTrust로 얼버무린다 */
+  minTrust?: number;
+  lowTrust?: LogLine[];
+  reply: LogLine[];
+  effects?: Effect[];
+  /** 신뢰도 변화 (첫 응답 시) */
+  trust?: number;
+  /** 같은 주제를 다시 물었을 때 (기본: 짧게 반복) */
+  repeat?: LogLine[];
+  /** 대화 중 '질문 예'로 노출할 문장 */
+  hint?: string;
+  /** 객관식 선택지로 표시할 플레이어의 질문/발언 (없으면 hint) */
+  ask?: string;
+  quality?: 'good' | 'bad' | 'neutral';
+}
+
+export interface PersonDef {
+  id: string;
+  name: string;
+  title: string;
+  org: string;
+  /** 초기 신뢰도 0–100 */
+  trust: number;
+  description: string;
+  greeting: LogLine[];
+  fallback: string[];
+  /** 무례/압박성 발언 반응 */
+  rude?: LogLine[];
+  /** 한 번 만날 때 받아주는 질문 수 (기본 5). 넘으면 잠시 자리를 비운다 */
+  patience?: number;
+  topics: TopicDef[];
+}
+
+export interface PersonRuntime {
+  id: string;
+  trust: number;
+  met: boolean;
+  asked: string[];
+  /** 이번 만남에서 받은 질문 수 */
+  visitCount: number;
+  /** 이 tick까지 자리 비움 */
+  awayUntil: number;
+  lastTick?: number;
+  pending: PendingLog[];
+}
+
+// ───────────────────────────── Campaign ─────────────────────────────
+
+/** 이전 미션에서 다음 미션으로 이어지는 회사 상태 */
+export interface CarryState {
+  flags: Record<string, FlagValue>;
+  files: Record<string, string>;
+  trust: Record<string, number>;
+  from?: string[];
+}
+
+export interface ScenarioCampaign {
+  id: string;
+  stage: number;
+  order?: number;
+  /** 선행 미션 (scenario id) */
+  requires?: string[];
+  /** 다음 미션으로 넘길 것: flag 접두어, 파일 경로, 신뢰도 */
+  carry?: { flags?: string[]; files?: string[]; trust?: boolean };
+  /** 선행 미션 없이 시작할 때 사용하는 기본 이월 상태 */
+  defaultCarry?: CarryState;
+}
+
 export interface PageDef {
   url: string;
   title: string;
-  view: 'markdown' | 'dashboard' | 'table' | 'mail' | 'text';
+  view: 'markdown' | 'dashboard' | 'table' | 'mail' | 'text' | 'scan';
   source: string;
   description?: string;
 }
@@ -164,7 +251,8 @@ export type DimensionId =
   | 'duplication'
   | 'domain'
   | 'evidence'
-  | 'security';
+  | 'security'
+  | 'collaboration';
 
 export interface EvalRule {
   dimension: DimensionId;
@@ -211,6 +299,8 @@ export interface ScenarioDef {
   };
   learningObjectives: string[];
   roles: RoleDef[];
+  people?: PersonDef[];
+  campaign?: ScenarioCampaign;
   files: Record<string, FileDef>;
   pages: PageDef[];
   tasks: TaskDef[];
@@ -322,13 +412,16 @@ export type EventType =
   | 'intent.unrecognized'
   | 'security.denied'
   | 'ui.request'
-  | 'session.submitted';
+  | 'session.submitted'
+  | 'person.said'
+  | 'person.trust';
 
 export interface SimEvent {
   seq: number;
   tick: number;
   type: EventType;
   agentId?: string;
+  personId?: string;
   taskId?: string;
   paneId?: string;
   message: string;
@@ -341,6 +434,8 @@ export interface PlayerCommand {
   paneId: string;
   /** Agent 전용 패널에서 입력했을 때의 대상 Agent */
   agentId?: string;
+  /** 대화 패널에서 입력했을 때의 대상 인물 */
+  personId?: string;
   text: string;
 }
 

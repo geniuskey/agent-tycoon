@@ -2,6 +2,9 @@ import { c } from './ansi';
 import { evalCond, type CondContext } from './conditions';
 import { Rng } from './rng';
 import type {
+  CarryState,
+  PersonDef,
+  PersonRuntime,
   AgentRuntime,
   AgentStatus,
   Cond,
@@ -61,6 +64,10 @@ export class Simulation {
   agentOrder: string[] = [];
   tasks: Record<string, TaskRuntime> = {};
   files = new Map<string, VFile>();
+  people: Record<string, PersonRuntime> = {};
+  /** 플레이어가 직접 확인한 화면/파일 */
+  observed = new Set<string>();
+  readonly carry: CarryState | undefined;
   flags: Record<string, FlagValue> = {};
   events: SimEvent[] = [];
   commands: PlayerCommand[] = [];
@@ -84,15 +91,21 @@ export class Simulation {
   private roleDefs: Record<string, RoleDef> = {};
   readonly condCtx: CondContext;
 
-  constructor(scenario: LoadedScenario, seed: number) {
+  constructor(scenario: LoadedScenario, seed: number, carry?: CarryState) {
     this.scenario = scenario;
     this.seed = seed >>> 0;
+    this.carry = carry;
     this.rng = new Rng(this.seed);
     this.condCtx = {
       flags: this.flags,
       tasks: this.tasks,
       fileExists: (p) => this.files.has(p),
+      trust: (id) => this.people[id]?.trust ?? 0,
+      observed: (t) => this.observed.has(t),
     };
+    for (const p of scenario.people ?? []) {
+      this.people[p.id] = { id: p.id, trust: carry?.trust[p.id] ?? p.trust, met: false, asked: [], pending: [], visitCount: 0, awayUntil: 0 };
+    }
     for (const r of scenario.roles) this.roleDefs[r.id] = r;
     for (const t of scenario.tasks) {
       this.taskDefs[t.id] = t;
@@ -117,6 +130,12 @@ export class Simulation {
         description: def.description,
       });
     }
+    if (carry) {
+      Object.assign(this.flags, carry.flags);
+      for (const [path, content] of Object.entries(carry.files)) {
+        this.files.set(path, { path, content, restricted: false, createdBy: 'carry', versions: [{ content, tick: 0, by: 'carry' }], description: '이전 단계 산출물' });
+      }
+    }
     this.refreshTasks();
     this.emit('session.start', `시나리오 시작: ${scenario.title} (seed ${this.seed})`, {
       data: { scenarioId: scenario.id, seed: this.seed },
@@ -126,8 +145,8 @@ export class Simulation {
   // ═════════════════════════════ Public API ═════════════════════════════
 
   /** 플레이어 입력(CLI 명령 또는 자연어). 명령 로그에 기록되어 재생 가능. */
-  input(text: string, ctx: { paneId: string; agentId?: string }): void {
-    const cmd: PlayerCommand = { tick: this.tick, kind: 'input', paneId: ctx.paneId, agentId: ctx.agentId, text };
+  input(text: string, ctx: { paneId: string; agentId?: string; personId?: string }): void {
+    const cmd: PlayerCommand = { tick: this.tick, kind: 'input', paneId: ctx.paneId, agentId: ctx.agentId, personId: ctx.personId, text };
     this.applyCommand(cmd);
     this.notify();
   }
@@ -149,7 +168,7 @@ export class Simulation {
       return;
     }
     this.metrics.commands++;
-    this.emit('command', cmd.text, { paneId: cmd.paneId, agentId: cmd.agentId });
+    this.emit('command', cmd.text, { paneId: cmd.paneId, agentId: cmd.agentId, personId: cmd.personId });
     executeCommand(this, cmd);
   }
 
@@ -159,12 +178,18 @@ export class Simulation {
       this.emit('security.denied', `접근 거부: ${target} (player)`, { data: { path: target, by: 'player' } });
       return;
     }
+    this.observed.add(target);
     this.emit('observe', `${kind === 'file' ? '파일 확인' : '화면 확인'}: ${target}`, { data: { kind, target } });
   }
 
   /** 시뮬레이션 1 tick 진행 */
   step(): void {
     this.tick++;
+    for (const p of Object.values(this.people)) {
+      while (p.pending.length && p.pending[0].at <= this.tick) {
+        this.emit('person.said', p.pending.shift()!.text, { personId: p.id });
+      }
+    }
     let busy = 0;
     for (const id of this.agentOrder) {
       const a = this.agents[id];
@@ -207,6 +232,26 @@ export class Simulation {
   }
   roleDef(id: string): RoleDef | undefined {
     return this.roleDefs[id];
+  }
+  personDef(id: string): PersonDef | undefined {
+    return this.scenario.people?.find((p) => p.id === id);
+  }
+  rand(): number {
+    return this.rng.next();
+  }
+  /** 인물 발화 예약 (타이핑하는 듯 1 tick 간격) */
+  personSay(id: string, lines: string[]): void {
+    const p = this.people[id];
+    if (!p) return;
+    let at = Math.max(this.tick + 1, (p.pending[p.pending.length - 1]?.at ?? 0) + 1);
+    for (const text of lines) p.pending.push({ at: at++, text });
+  }
+  changeTrust(id: string, delta: number, by: string): void {
+    const p = this.people[id];
+    if (!p || !delta) return;
+    const from = p.trust;
+    p.trust = Math.max(0, Math.min(100, p.trust + delta));
+    this.emit('person.trust', `${this.personDef(id)?.name ?? id} 신뢰 ${from} → ${p.trust}`, { personId: id, data: { from, to: p.trust, delta, by } });
   }
   visibleTasks(): TaskRuntime[] {
     return this.scenario.tasks.map((t) => this.tasks[t.id]).filter((t) => t.visible);
@@ -258,7 +303,7 @@ export class Simulation {
   emit(
     type: SimEvent['type'],
     message: string,
-    extra: { agentId?: string; taskId?: string; paneId?: string; data?: Record<string, unknown> } = {},
+    extra: { agentId?: string; personId?: string; taskId?: string; paneId?: string; data?: Record<string, unknown> } = {},
   ): SimEvent {
     const ev: SimEvent = { seq: ++this.seq, tick: this.tick, type, message, ...extra };
     this.events.push(ev);
@@ -396,13 +441,16 @@ export class Simulation {
         if (!t.visible) {
           t.visible = true;
           this.emit('task.activated', `새 Task 추가: ${e.task} — ${this.taskDefs[e.task].title}`, { taskId: e.task });
-        } else if (t.status === 'done' || t.status === 'failed') {
+        } else if (t.status === 'done') {
           this.resetTask(t);
           this.emit('task.activated', `Task 재활성화: ${e.task}`, { taskId: e.task });
         }
         this.refreshTasks();
         break;
       }
+      case 'trust':
+        this.changeTrust(e.person, e.delta, by);
+        break;
       case 'reopenTask': {
         const t = this.tasks[e.task];
         if (!t) break;
@@ -570,7 +618,7 @@ export class Simulation {
       this.agentLog(a, '');
       this.agentLog(a, c.yellow(`⚠ '${def.title}' 작업에는 [${missing.join(', ')}] 역량이 필요하지만 제 역할(${this.roleDefs[a.role].name})에는 없습니다.`));
       this.agentLog(a, c.yellow(`  진행하면 품질이 낮아지고 시간이 더 걸릴 수 있습니다. 그래도 진행할까요?`));
-      this.agentLog(a, c.cyan(`  [1] 진행  [2] 취소   (이 패널에 입력하거나 'agent reply ${a.id} 1')`));
+      this.agentLog(a, c.cyan(`  ▾ 아래 선택 카드에서 '진행' 또는 '배정 취소'를 고르세요`));
       this.notifyPlayer('warn', `${a.id}: '${taskId}' 역량 부족 확인 요청`, { agentId: a.id, taskId });
       return ok(`${taskId} → ${a.id} (역량 확인 대기)`);
     }
@@ -658,7 +706,7 @@ export class Simulation {
     if (step.fail && this.cond(step.fail.when)) {
       for (const l of this.resolveLines(step.fail.log, a)) this.agentLog(a, `  ${l}`);
       this.agentLog(a, c.red(`✗ 실패: ${this.expand(step.fail.message, a)}`));
-      if (step.fail.hint) this.agentLog(a, c.dim(`  힌트: ${step.fail.hint}`));
+      if (step.fail.hint) this.agentLog(a, c.dim(`  힌트: ${this.expand(step.fail.hint, a)}`));
       a.error = step.fail.message;
       a.phase = 'none';
       this.setStatus(a, 'failed', step.fail.message);
@@ -687,16 +735,18 @@ export class Simulation {
     this.agentLog(a, '');
     this.agentLog(a, `${icon}: ${c.bold(gate.title)}`);
     for (const l of this.resolveLines(gate.prompt, a)) this.agentLog(a, `  ${l}`);
-    gate.options.forEach((o, i) => this.agentLog(a, c.cyan(`  [${i + 1}] ${o.label}`)));
-    this.agentLog(a, c.dim(`  → 번호 또는 자연어로 답하세요. (예: agent reply ${a.id} 1)`));
+    const kind = gate.multi ? `복수 선택 ${gate.min ?? 1}~${gate.max ?? gate.options.length}개` : '단일 선택';
+    this.agentLog(a, c.cyan(`  ▾ 선택지 ${gate.options.length}개 (${kind}) — 아래 선택 카드에서 고르세요`));
     this.emit('gate.opened', `${a.id}: ${gate.title}`, { agentId: a.id, taskId: t.id, data: { gate: gate.id, kind: gate.kind } });
     this.notifyPlayer(gate.kind === 'blocked' ? 'error' : 'warn', `${a.id}: ${gate.title} — 개입 필요`, { agentId: a.id, taskId: t.id });
   }
 
   /** 열린 gate 또는 역량 확인에 응답 */
-  resolveGate(agentId: string, optionIndex: number, via = 'cli'): ActionResult {
+  resolveGate(agentId: string, choice: number | number[], via = 'cli'): ActionResult {
     const a = this.agents[agentId];
     if (!a) return err(`Agent '${agentId}' 없음`);
+    const indices = (Array.isArray(choice) ? choice : [choice]).filter((v, i, arr) => arr.indexOf(v) === i);
+    const optionIndex = indices[0] ?? -1;
     if (a.phase === 'confirm-mismatch') {
       if (optionIndex === 0) {
         this.agentLog(a, c.dim('  → 진행합니다.'));
@@ -717,24 +767,36 @@ export class Simulation {
     }
     const gate = this.openGate(a);
     if (!gate || !a.gate) return err(`${agentId}는 응답을 기다리고 있지 않습니다.`);
-    const opt = gate.options[optionIndex];
-    if (!opt) return err(`선택지 번호는 1~${gate.options.length} 입니다.`);
+    const opts = indices.map((i) => gate.options[i]);
+    if (!opts.length || opts.some((o) => !o)) return err(`선택지 번호는 1~${gate.options.length} 입니다.`);
+    if (!gate.multi && opts.length > 1) return err('하나만 선택할 수 있습니다.');
+    if (gate.multi) {
+      const min = gate.min ?? 1;
+      const max = gate.max ?? gate.options.length;
+      if (opts.length < min || opts.length > max) return err(`${min === max ? `${min}개` : `${min}~${max}개`}를 선택하세요.`);
+    }
     const t = this.tasks[a.gate.taskId];
-    this.setFlag(`gate.${gate.id}`, opt.id, 'player');
-    this.emit('gate.resolved', `${a.id}: ${gate.title} → ${opt.label}`, {
+    const ids = opts.map((o) => o.id);
+    this.setFlag(`gate.${gate.id}`, gate.multi ? ids.slice().sort().join(',') : ids[0], 'player');
+    if (gate.multi) for (const o of gate.options) this.setFlag(`gate.${gate.id}.${o.id}`, ids.includes(o.id), 'player');
+    const missed = gate.multi ? gate.options.filter((o) => o.quality === 'good' && !ids.includes(o.id)).map((o) => o.id) : [];
+    const label = opts.map((o) => o.label).join(', ');
+    this.emit('gate.resolved', `${a.id}: ${gate.title} → ${label}`, {
       agentId: a.id,
       taskId: t.id,
-      data: { gate: gate.id, option: opt.id, quality: opt.quality ?? 'neutral', via },
+      data: { gate: gate.id, option: ids[0], options: ids, missed, multi: !!gate.multi, quality: opts[0].quality ?? 'neutral', via },
     });
-    this.agentLog(a, c.green(`  ✓ 지시 확인: ${opt.label}`));
-    for (const l of this.resolveLines(opt.log, a)) this.agentLog(a, `  ${l}`);
-    this.applyEffects(opt.effects, a.id, a);
+    for (const o of opts) {
+      this.agentLog(a, c.green(`  ✓ 지시 확인: ${o.label}`));
+      for (const l of this.resolveLines(o.log, a)) this.agentLog(a, `  ${l}`);
+      this.applyEffects(o.effects, a.id, a);
+    }
     a.gate = undefined;
     // 효과로 task가 재설정되었을 수 있음
-    if (a.taskId !== t.id || t.assignee !== a.id) return ok(opt.label);
+    if (a.taskId !== t.id || t.assignee !== a.id) return ok(label);
     t.stepIndex++;
     this.startStep(a);
-    return ok(opt.label);
+    return ok(label);
   }
 
   private completeTask(a: AgentRuntime): void {
@@ -923,14 +985,33 @@ export class Simulation {
   }
 }
 
+/** 미션 종료 시 다음 미션으로 넘길 회사 상태 */
+export function exportCarry(sim: Simulation): CarryState {
+  const spec = sim.scenario.campaign?.carry;
+  const base: CarryState = sim.carry
+    ? { flags: { ...sim.carry.flags }, files: { ...sim.carry.files }, trust: { ...sim.carry.trust }, from: [...(sim.carry.from ?? [])] }
+    : { flags: {}, files: {}, trust: {}, from: [] };
+  for (const [k, v] of Object.entries(sim.flags)) {
+    if (spec?.flags?.some((pre) => k === pre || k.startsWith(pre))) base.flags[k] = v;
+  }
+  for (const path of spec?.files ?? []) {
+    const f = sim.files.get(path);
+    if (f) base.files[path] = f.content;
+  }
+  if (spec?.trust !== false) for (const p of Object.values(sim.people)) base.trust[p.id] = p.trust;
+  base.from = [...(base.from ?? []), sim.scenario.id];
+  return base;
+}
+
 /** 결정적 재생: 동일 (scenario, seed, commands) → 동일 상태 */
 export function replay(
   scenario: LoadedScenario,
   seed: number,
   commands: PlayerCommand[],
   untilTick: number,
+  carry?: CarryState,
 ): Simulation {
-  const sim = new Simulation(scenario, seed);
+  const sim = new Simulation(scenario, seed, carry);
   sim.replaying = true;
   let i = 0;
   while (true) {

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { evaluate, type Rating } from '../engine/evaluate';
-import { formatSimTime, replay } from '../engine/engine';
+import { exportCarry, formatSimTime, replay } from '../engine/engine';
+import { SCENARIOS } from '../scenarios';
 import { useSession } from '../store/session';
 import { Btn, SimBadge, StatusBadge, TASK_STATUS, useSim } from './common';
 import { EventLog, Gantt } from './Timeline';
@@ -18,6 +19,8 @@ export default function Feedback() {
   const fb = useMemo(() => evaluate(sim), [sim]);
   const [tab, setTab] = useState<'feedback' | 'replay'>('feedback');
   const okCount = fb.outcomes.filter((o) => o.success).length;
+  const next = sim.scenario.campaign ? SCENARIOS.find((x) => x.campaign?.requires?.includes(sim.scenario.id)) : undefined;
+  const carryOut = useMemo(() => (sim.scenario.campaign ? exportCarry(sim) : undefined), [sim]);
 
   return (
     <div className="flex h-full flex-col">
@@ -34,12 +37,17 @@ export default function Feedback() {
           </button>
         </div>
         <div className="ml-auto flex gap-2">
-          <Btn variant="outline" onClick={() => start(sim.scenario.id, sim.seed)}>
+          <Btn variant="outline" onClick={() => start(sim.scenario.id, sim.seed, sim.carry)}>
             같은 시드로 다시
           </Btn>
-          <Btn variant="outline" onClick={() => start(sim.scenario.id, (sim.seed * 7 + 13) % 99991)}>
+          <Btn variant="outline" onClick={() => start(sim.scenario.id, (sim.seed * 7 + 13) % 99991, sim.carry)}>
             새 시드로 다시
           </Btn>
+          {next && sim.submitted && (
+            <Btn variant="primary" onClick={() => start(next.id, sim.seed, carryOut)}>
+              다음 단계: {next.title.replace(/^\d단계 · /, '')} →
+            </Btn>
+          )}
           <Btn variant="primary" onClick={goHome}>
             홈
           </Btn>
@@ -68,7 +76,38 @@ export default function Feedback() {
               </div>
             </div>
 
-            <h2 className="mb-3 text-xs font-semibold tracking-wider text-faint uppercase">Agent 운영 역량 피드백</h2>
+            {carryOut && (
+              <div className="mb-6 rounded-lg border border-sky-900/60 bg-sky-500/5 p-4">
+                <div className="mb-1 text-xs font-semibold text-sky-300">다음 단계로 이어지는 것</div>
+                <div className="text-[12.5px] leading-relaxed text-dim">
+                  이번 미션에서 파악한 사실, 만든 산출물, 사람들과의 관계가 다음 미션의 시작 상태가 됩니다. 여기서 놓친 것은 다음 단계에서 문제로 돌아옵니다.
+                </div>
+                <div className="mt-2 grid gap-2 text-[12px] md:grid-cols-3">
+                  <div>
+                    <div className="text-faint">신뢰도</div>
+                    {Object.entries(carryOut.trust).map(([k, v]) => (
+                      <div key={k} className={v >= 50 ? 'text-emerald-300' : v >= 40 ? 'text-amber-300' : 'text-red-300'}>
+                        {sim.personDef(k)?.name ?? k} {v}
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-faint">파악한 사항</div>
+                    <div className="text-fg">{Object.keys(carryOut.flags).filter((k) => k.startsWith('found.') && carryOut.flags[k]).length}개</div>
+                  </div>
+                  <div>
+                    <div className="text-faint">이어지는 산출물</div>
+                    {Object.keys(carryOut.files).map((f) => (
+                      <div key={f} className="truncate font-mono text-[11px] text-fg">
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <h2 className="mb-3 text-xs font-semibold tracking-wider text-faint uppercase">역량 피드백</h2>
             <div className="grid gap-3 md:grid-cols-2">
               {fb.dimensions.map((d, i) => {
                 const r = RATING[d.rating];

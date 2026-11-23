@@ -4,6 +4,8 @@ export interface CondContext {
   flags: Record<string, FlagValue>;
   tasks: Record<string, TaskRuntime>;
   fileExists: (path: string) => boolean;
+  trust?: (person: string) => number;
+  observed?: (target: string) => boolean;
 }
 
 export function evalCond(cond: Cond | undefined, ctx: CondContext): boolean {
@@ -24,6 +26,11 @@ export function evalCond(cond: Cond | undefined, ctx: CondContext): boolean {
   if ('gate' in cond) {
     const v = ctx.flags[`gate.${cond.gate}`];
     return Array.isArray(cond.chose) ? cond.chose.includes(v as string) : v === cond.chose;
+  }
+  if ('observed' in cond) return !!ctx.observed?.(cond.observed);
+  if ('trust' in cond) {
+    const t = ctx.trust?.(cond.trust) ?? 0;
+    return (cond.gte === undefined || t >= cond.gte) && (cond.lt === undefined || t < cond.lt);
   }
   if ('flag' in cond) {
     const v = ctx.flags[cond.flag];

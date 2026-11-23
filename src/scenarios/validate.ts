@@ -11,6 +11,7 @@ export function validateScenario(s: LoadedScenario): string[] {
   const roleIds = new Set(s.roles.map((r) => r.id));
   const skills = new Set(s.roles.flatMap((r) => r.skills));
   const gateIds = new Set<string>();
+  const personIds = new Set((s.people ?? []).map((p) => p.id));
 
   for (const k of ['id', 'title', 'domain', 'function', 'taskType'] as const) if (!s[k]) e(`필수 필드 누락: ${k}`);
   if (!s.roles.length) e('roles 비어 있음');
@@ -32,6 +33,7 @@ export function validateScenario(s: LoadedScenario): string[] {
     else if ('not' in c) checkCond(c.not, where);
     else if ('taskDone' in c && !taskIds.has(c.taskDone)) e(`${where}: 조건의 task '${c.taskDone}' 없음`);
     else if ('taskStatus' in c && !taskIds.has(c.taskStatus)) e(`${where}: 조건의 task '${c.taskStatus}' 없음`);
+    else if ('trust' in c && !personIds.has(c.trust)) e(`${where}: 조건의 인물 '${c.trust}' 없음`);
   };
   const checkEffects = (effs: Effect[] | undefined, where: string) => {
     for (const ef of effs ?? []) {
@@ -45,6 +47,7 @@ export function validateScenario(s: LoadedScenario): string[] {
         if (ef.src === undefined && ef.content === undefined && !ef.variants?.length) e(`${where}: writeFile 내용 없음`);
       }
       if ((ef.type === 'activateTask' || ef.type === 'reopenTask') && !taskIds.has(ef.task)) e(`${where}: task '${ef.task}' 없음`);
+      if (ef.type === 'trust' && !personIds.has(ef.person)) e(`${where}: 인물 '${ef.person}' 없음`);
     }
   };
   const checkRegex = (p: string, where: string) => {
@@ -107,6 +110,17 @@ export function validateScenario(s: LoadedScenario): string[] {
     i.roles?.forEach((r) => roleIds.has(r) || e(`intent ${i.id}: role '${r}' 없음`));
     checkCond(i.requires, `intent ${i.id}`);
     checkEffects(i.effects, `intent ${i.id}`);
+  }
+  for (const p of s.people ?? []) {
+    if (p.trust < 0 || p.trust > 100) e(`person ${p.id}: trust는 0–100`);
+    const topicIds = new Set<string>();
+    for (const t of p.topics) {
+      if (topicIds.has(t.id)) e(`person ${p.id}: 중복 topic ${t.id}`);
+      topicIds.add(t.id);
+      t.patterns.forEach((pt) => checkRegex(pt, `person ${p.id}.${t.id}`));
+      checkCond(t.requires, `person ${p.id}.${t.id}`);
+      checkEffects(t.effects, `person ${p.id}.${t.id}`);
+    }
   }
   for (const p of s.pages) {
     if (!p.url.startsWith('sim://')) e(`page url은 sim:// 로 시작: ${p.url}`);

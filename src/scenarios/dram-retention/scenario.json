@@ -584,6 +584,15 @@
             {
               "when": "cause.cautious",
               "text": "사전 지시대로 원인은 가설로 정리하고 검증 필요 사항을 명시합니다."
+            },
+            {
+              "when": {
+                "all": [
+                  "rush.requested",
+                  "!cause.cautious"
+                ]
+              },
+              "text": "지시대로 검증 없이 상관이 가장 높은 ETCH-07 CH-B를 원인으로 정리합니다."
             }
           ],
           "effects": [
@@ -617,6 +626,18 @@
                   "cause.cautious"
                 ]
               }
+            },
+            {
+              "type": "setFlag",
+              "flag": "cause.claim",
+              "value": "etch",
+              "when": {
+                "all": [
+                  "units.ok",
+                  "rush.requested",
+                  "!cause.cautious"
+                ]
+              }
             }
           ],
           "gate": {
@@ -625,7 +646,8 @@
             "when": {
               "all": [
                 "units.ok",
-                "!cause.cautious"
+                "!cause.cautious",
+                "!rush.requested"
               ]
             },
             "title": "원인 후보 결론 방식",
@@ -1275,7 +1297,8 @@
       "reply": [
         "알겠습니다. 원인은 가설로 정리하고, 검증이 필요한 사항을 명시하겠습니다."
       ],
-      "modifier": true
+      "modifier": true,
+      "label": "원인은 단정하지 말고 가설로 정리"
     },
     {
       "id": "preinstruct-units",
@@ -1306,7 +1329,8 @@
       "modifier": true,
       "roles": [
         "analyst"
-      ]
+      ],
+      "label": "tester별 측정 단위도 확인"
     },
     {
       "id": "no-customer",
@@ -1324,7 +1348,27 @@
         "알겠습니다. 보안 등급 데이터(고객 출하 정보)는 사용하지 않겠습니다."
       ],
       "modifier": true,
-      "example": "@reporter 고객 정보는 제외하고 보고서 초안 작성해"
+      "example": "@reporter 고객 정보는 제외하고 보고서 초안 작성해",
+      "label": "고객·출하 정보는 제외"
+    },
+    {
+      "id": "rush",
+      "modifier": true,
+      "patterns": [
+        "(검증|확인).*(생략|건너뛰|빼고)",
+        "빨리.*결론"
+      ],
+      "label": "검증은 생략하고 빨리 결론만",
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "rush.requested"
+        }
+      ],
+      "reply": [
+        "알겠습니다. 가능한 빨리 결론을 내겠습니다."
+      ]
     },
     {
       "id": "revise-report",
@@ -1349,7 +1393,8 @@
       "reply": [
         "교차 검증 결과를 반영해 보고서를 보완하겠습니다. (검증이 끝나지 않았다면 완료를 기다립니다)"
       ],
-      "example": "@reporter 검증 결과를 반영해서 보고서 근거를 보완해"
+      "example": "@reporter 검증 결과를 반영해서 보고서 근거를 보완해",
+      "label": "교차 검증 결과를 반영해 보고서 근거 보완"
     },
     {
       "id": "write-report",
@@ -1360,7 +1405,8 @@
       "reply": [
         "분석 결과를 바탕으로 품질회의 보고서를 작성하겠습니다."
       ],
-      "example": "@reporter 분석 결과로 품질회의 보고서 초안 작성해"
+      "example": "@reporter 분석 결과로 품질회의 보고서 초안 작성해",
+      "label": "분석 결과로 품질회의 보고서 초안 작성"
     },
     {
       "id": "cross-validate",
@@ -1375,7 +1421,8 @@
       "reply": [
         "분석 결과와 원인 가설을 도메인 관점에서 검토하겠습니다."
       ],
-      "example": "@domain-expert 분석 결과의 원인 가설을 교차 검증해줘"
+      "example": "@domain-expert 분석 결과의 원인 가설을 교차 검증해줘",
+      "label": "분석 결과의 원인 가설을 교차 검증"
     },
     {
       "id": "validate",
@@ -1388,7 +1435,8 @@
       "reply": [
         "측정 데이터 검증을 시작합니다."
       ],
-      "example": "@analyst 측정 데이터 품질부터 검증해줘"
+      "example": "@analyst 측정 데이터 품질부터 검증해줘",
+      "label": "측정 데이터 품질 검증"
     },
     {
       "id": "map-history",
@@ -1399,7 +1447,8 @@
       "reply": [
         "Lot 공정 이력과 설비 이벤트를 wafer 단위로 정리하겠습니다."
       ],
-      "example": "@domain-expert lot 공정 이력과 설비 경로를 정리해줘"
+      "example": "@domain-expert lot 공정 이력과 설비 경로를 정리해줘",
+      "label": "lot 공정 이력·설비 경로 정리"
     },
     {
       "id": "analyze",
@@ -1412,7 +1461,8 @@
       "reply": [
         "불량 패턴과 공정 요인 상관을 분석하겠습니다."
       ],
-      "example": "@analyst 불량 패턴과 원인 후보를 분석해줘"
+      "example": "@analyst 불량 패턴과 원인 후보를 분석해줘",
+      "label": "불량 패턴과 원인 후보 분석"
     }
   ],
   "evaluation": [
@@ -1508,6 +1558,13 @@
       },
       "kind": "positive",
       "text": "보안 등급 데이터 없이 보고서를 완성했습니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": "rush.requested",
+      "kind": "issue",
+      "text": "'검증은 생략하고 빨리 결론'을 지시했습니다.",
+      "suggestion": "속도보다 근거가 먼저입니다. 원인 결론은 검증 단계를 거치게 하세요."
     }
   ],
   "outcomes": [

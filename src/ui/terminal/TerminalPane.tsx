@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession } from '../../store/session';
 import { Btn, StatusBadge, Progress, useSim } from '../common';
 import { fitTerm, getTerm, mountTerm } from './termRegistry';
+import ChatBody from './ChatBody';
+import ChoiceCard from './ChoiceCard';
 
-export default function TerminalPane({ paneId, agentId, index }: { paneId: string; agentId?: string; index: number }) {
+export default function TerminalPane({ paneId, agentId, personId, index }: { paneId: string; agentId?: string; personId?: string; index: number }) {
   const sim = useSim();
   const host = useRef<HTMLDivElement>(null);
   const focused = useSession((s) => s.focusedPane === paneId);
@@ -12,10 +14,13 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-  const inst = getTerm(paneId, agentId, sim, (text) => input(paneId, text));
+  const inst = getTerm(paneId, agentId, sim, (text) => input(paneId, text), personId);
+  const isChat = !!personId;
+  const person = personId ? sim?.people[personId] : undefined;
+  const pdef = personId ? sim?.personDef(personId) : undefined;
 
   useEffect(() => {
-    if (!host.current) return;
+    if (!host.current || isChat) return;
     mountTerm(inst, host.current);
     const ro = new ResizeObserver(() => fitTerm(inst));
     ro.observe(host.current);
@@ -36,11 +41,11 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
       ro.disconnect();
       d?.removeEventListener('focus', onFocus);
     };
-  }, [inst, paneId, focusPane]);
+  }, [inst, paneId, focusPane, isChat]);
 
   useEffect(() => {
-    if (focused) inst.term.focus();
-  }, [focused, inst]);
+    if (focused && !isChat) inst.term.focus();
+  }, [focused, inst, isChat]);
 
   const agent = agentId ? sim?.agents[agentId] : undefined;
   const role = agent ? sim?.roleDef(agent.role) : undefined;
@@ -57,7 +62,13 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
         <span className="rounded bg-line px-1 font-mono text-[10px] text-faint" title={`Alt+${index + 1}`}>
           {index + 1}
         </span>
-        {agentId ? (
+        {personId ? (
+          <>
+            <span className="font-semibold text-amber-300">{pdef?.name ?? personId}</span>
+            <span className="truncate text-faint">{pdef?.title}</span>
+            {person && <TrustMeter value={person.trust} />}
+          </>
+        ) : agentId ? (
           <>
             <span className="font-mono font-semibold text-fuchsia-300">{agentId}</span>
             {role && <span className="truncate text-faint">{role.name}</span>}
@@ -92,9 +103,9 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
               ↻
             </Btn>
           )}
-          <Btn title="로그 검색 (Ctrl+F)" onClick={() => setSearchOpen((v) => !v)}>
+          {!isChat && <Btn title="로그 검색 (Ctrl+F)" onClick={() => setSearchOpen((v) => !v)}>
             ⌕
-          </Btn>
+          </Btn>}
           <Btn title="최대화 (Alt+Enter)" onClick={() => toggleMaximize(paneId)}>
             {maximized ? '▣' : '□'}
           </Btn>
@@ -135,7 +146,28 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
           </Btn>
         </div>
       )}
-      <div ref={host} className="min-h-0 flex-1" onClick={() => inst.term.focus()} />
+      {personId ? (
+        <ChatBody paneId={paneId} personId={personId} focused={focused} />
+      ) : (
+        <>
+          <div ref={host} className="min-h-0 flex-1" onClick={() => inst.term.focus()} />
+          {agentId && agent && <ChoiceCard paneId={paneId} agentId={agentId} onFreeText={() => inst.term.focus()} />}
+        </>
+      )}
+
     </div>
+  );
+}
+
+export function TrustMeter({ value }: { value: number }) {
+  const col = value >= 60 ? 'bg-emerald-400' : value >= 40 ? 'bg-amber-400' : 'bg-red-400';
+  return (
+    <span className="flex items-center gap-1 text-[10.5px] text-faint" title="신뢰도 — 질문 방식에 따라 오르내립니다. 신뢰가 쌓여야 털어놓는 정보가 있습니다.">
+      신뢰
+      <span className="inline-block h-1.5 w-14 overflow-hidden rounded bg-line">
+        <span className={`block h-full ${col} transition-all duration-500`} style={{ width: `${value}%` }} />
+      </span>
+      <span className="font-mono">{value}</span>
+    </span>
   );
 }

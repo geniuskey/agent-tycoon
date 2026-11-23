@@ -20,6 +20,7 @@ import type { SimEvent } from '../../engine/types';
 export interface TermInstance {
   paneId: string;
   agentId?: string;
+  personId?: string;
   term: Terminal;
   fit: FitAddon;
   search: SearchAddon;
@@ -63,11 +64,18 @@ const THEME = {
   brightWhite: '#f8fafc',
 };
 
-export function promptOf(inst: Pick<TermInstance, 'agentId'>): string {
+export function promptOf(inst: Pick<TermInstance, 'agentId' | 'personId'>): string {
+  if (inst.personId) return c.yellow('나 ') + c.cyan('❯ ');
   return inst.agentId ? c.magenta(`${inst.agentId} `) + c.cyan('❯ ') : c.cyan('❯ ');
 }
 
-export function getTerm(paneId: string, agentId: string | undefined, sim: Simulation | null, onSubmit: (t: string) => void): TermInstance {
+export function getTerm(
+  paneId: string,
+  agentId: string | undefined,
+  sim: Simulation | null,
+  onSubmit: (t: string) => void,
+  personId?: string,
+): TermInstance {
   let inst = registry.get(paneId);
   if (inst) {
     inst.onSubmit = onSubmit;
@@ -101,6 +109,7 @@ export function getTerm(paneId: string, agentId: string | undefined, sim: Simula
   inst = {
     paneId,
     agentId,
+    personId,
     term,
     fit,
     search,
@@ -174,6 +183,7 @@ export function fitTerm(inst: TermInstance) {
 function relevant(inst: TermInstance, e: SimEvent): boolean {
   if (e.paneId === inst.paneId && (e.type === 'cli.output' || e.type === 'command')) return true;
   if (e.type === 'ui.request' && e.paneId === inst.paneId && e.data?.action === 'clear') return true;
+  if (inst.personId) return e.personId === inst.personId && (e.type === 'person.said' || e.type === 'person.trust');
   if (inst.agentId) return e.agentId === inst.agentId && e.type === 'agent.log';
   // 셸 패널: 알림
   return e.type === 'notify' || e.type === 'session.start' || e.type === 'task.activated';
@@ -182,7 +192,18 @@ function relevant(inst: TermInstance, e: SimEvent): boolean {
 function render(inst: TermInstance, e: SimEvent): string | null {
   switch (e.type) {
     case 'command':
-      return promptOf(inst) + e.message;
+      // 객관식 선택은 구조화 명령으로 기록되지만, Agent 패널에는 '▸ 지시' 로그로 보인다
+      if (inst.agentId && /^(do|ask|agent choose)\s/.test(e.message)) return null;
+      return inst.personId ? null : promptOf(inst) + e.message;
+    case 'person.said': {
+      if (e.data?.from === 'player' || e.data?.system) return e.message;
+      const name = inst.sim?.personDef(inst.personId!)?.name ?? '';
+      return c.yellow(c.bold(name)) + c.dim(' ▸ ') + e.message;
+    }
+    case 'person.trust': {
+      const d = e.data?.delta as number;
+      return c.dim(`  (신뢰 ${e.data?.from} → ${e.data?.to} `) + (d > 0 ? c.green(`▲${d}`) : c.red(`▼${-d}`)) + c.dim(')');
+    }
     case 'cli.output':
     case 'agent.log':
       return e.message;

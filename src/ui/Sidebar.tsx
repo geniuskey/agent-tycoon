@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSession } from '../store/session';
+import { TrustMeter } from './terminal/TerminalPane';
 import { AGENT_STATUS, Btn, Progress, SectionTitle, StatusBadge, TASK_STATUS, useSim } from './common';
 
 export default function Sidebar() {
@@ -11,8 +12,38 @@ export default function Sidebar() {
   const agents = sim.agentList();
   const done = tasks.filter((t) => t.status === 'done').length;
 
+  const people = sim.scenario.people ?? [];
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-panel">
+      {people.length > 0 && (
+        <>
+          <SectionTitle right={<span className="text-[11px] text-faint">{people.filter((p) => sim.people[p.id].met).length}/{people.length} 만남</span>}>
+            사람들
+          </SectionTitle>
+          <div className="px-2">
+            {people.map((p) => {
+              const rt = sim.people[p.id];
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => run(`talk ${p.id}`)}
+                  title={p.description}
+                  className="mb-1 block w-full rounded border border-transparent px-2 py-1.5 text-left hover:border-line2 hover:bg-panel2"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${rt.met ? 'bg-amber-400' : 'bg-faint'}`} />
+                    <span className="text-xs font-medium text-fg">{p.name}</span>
+                    <span className="ml-auto">
+                      <TrustMeter value={rt.trust} />
+                    </span>
+                  </div>
+                  <div className="truncate pl-3 text-[11px] text-dim">{p.title}</div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
       <SectionTitle right={<span className="text-[11px] text-faint">{done}/{tasks.length}</span>}>Tasks</SectionTitle>
       <div className="px-2">
         {tasks.map((t) => {

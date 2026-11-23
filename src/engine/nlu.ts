@@ -249,6 +249,28 @@ export function handleNaturalLanguage(sim: Simulation, cmd: PlayerCommand, isRep
   else say(lines);
 }
 
+/** 객관식 지시 실행용: say/reply를 구성해 intent 실행 */
+export function runIntent(sim: Simulation, intent: IntentDef, target: AgentRuntime | undefined, pane: string): void {
+  const say = (lines: string | string[]) => sim.out(pane, lines);
+  const reply = (lines: string[]) => {
+    if (target) for (const l of lines) sim.agentLog(target, `  ${l}`);
+    if (!target || pane !== `agent:${target.id}`) say(lines.map((l) => (target ? c.dim(`[${target.id}] `) : '') + l));
+  };
+  if (intent.roles && target && !intent.assign && !intent.roles.includes(target.role)) {
+    const names = intent.roles.map((r) => sim.roleDef(r)?.name ?? r).join(', ');
+    sim.emit('intent.matched', `역할 불일치: ${intent.id}`, { agentId: target.id, data: { intent: intent.id, wrongRole: true } });
+    reply([c.yellow(`이 지시는 제 역할(${sim.roleDef(target.role)?.name})보다 [${names}] 역할에 적합합니다.`)]);
+    return;
+  }
+  executeIntent(sim, intent, target, pane, say, reply);
+}
+
+export function intentLabel(intent: IntentDef): string {
+  if (intent.label) return intent.label;
+  if (intent.example) return intent.example.replace(/^@[\w-]+\s*/, '');
+  return intent.id;
+}
+
 function executeIntent(
   sim: Simulation,
   intent: IntentDef,

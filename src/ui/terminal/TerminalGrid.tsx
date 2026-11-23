@@ -68,7 +68,7 @@ export default function TerminalGrid() {
                 <Fragment key={p.id}>
                   {ci > 0 && <ResizeHandle dir="h" />}
                   <Panel minSize={15}>
-                    <TerminalPane paneId={p.id} agentId={p.agentId} index={panes.indexOf(p)} />
+                    <TerminalPane paneId={p.id} agentId={p.agentId} personId={p.personId} index={panes.indexOf(p)} />
                   </Panel>
                 </Fragment>
               ))}

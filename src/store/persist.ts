@@ -4,9 +4,12 @@ import type { PlayerCommand } from '../engine/types';
  * 로컬 저장소 (IndexedDB, 실패 시 localStorage).
  * 세션은 (scenarioId, seed, commands, tick)만 저장하고 상태는 결정적 재생으로 복원한다.
  */
+import type { CarryState } from '../engine/types';
+
 export interface PaneLayout {
   id: string;
   agentId?: string;
+  personId?: string;
 }
 
 export interface SessionRecord {
@@ -20,6 +23,10 @@ export interface SessionRecord {
   updatedAt: number;
   submitted: boolean;
   panes: PaneLayout[];
+  /** 캠페인: 이 미션을 시작할 때 이어받은 회사 상태 */
+  carry?: CarryState;
+  /** 캠페인: 제출 시 다음 미션으로 넘긴 회사 상태 */
+  exportCarry?: CarryState;
 }
 
 const DB = 'agent-tycoon';

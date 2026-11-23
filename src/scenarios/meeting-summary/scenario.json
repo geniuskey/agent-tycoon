@@ -698,7 +698,8 @@
       "reply": [
         "대외비 표시 구간은 제외하겠습니다."
       ],
-      "example": "@scribe 대외비 내용은 빼고 회의록 요약해줘"
+      "example": "@scribe 대외비 내용은 빼고 회의록 요약해줘",
+      "label": "[대외비] 구간은 제외"
     },
     {
       "id": "ext-pre",
@@ -721,7 +722,8 @@
       "quality": "good",
       "reply": [
         "외부 협력사는 수신자에서 제외하겠습니다."
-      ]
+      ],
+      "label": "외부 협력사는 수신자에서 제외"
     },
     {
       "id": "careful-pre",
@@ -744,7 +746,8 @@
       "quality": "good",
       "reply": [
         "일정·기한은 녹취 원문과 대조해 정확히 기록하겠습니다."
-      ]
+      ],
+      "label": "일정·기한은 녹취 원문과 대조"
     },
     {
       "id": "fix-summary",
@@ -754,7 +757,24 @@
         "12\\s*월\\s*5"
       ],
       "requires": {
-        "taskDone": "summarize"
+        "all": [
+          {
+            "taskDone": "summarize"
+          },
+          {
+            "observed": "sim://docs/transcript"
+          },
+          {
+            "any": [
+              {
+                "observed": "sim://minutes/summary"
+              },
+              {
+                "observed": "/work/minutes/summary.md"
+              }
+            ]
+          }
+        ]
       },
       "deniedReply": [
         "아직 회의록이 작성되지 않았습니다."
@@ -774,7 +794,8 @@
       "reply": [
         "지적한 내용을 원문과 대조해 정정하겠습니다."
       ],
-      "example": "@scribe 베타 일정이 틀렸어. 녹취 보고 12월 5일로 정정해"
+      "example": "@scribe 베타 일정이 틀렸어. 녹취 보고 12월 5일로 정정해",
+      "label": "회의록의 베타 일정이 녹취와 다르다 — 정정"
     },
     {
       "id": "review",
@@ -789,7 +810,8 @@
       "reply": [
         "회의록과 Action Item을 녹취 원문과 대조하겠습니다."
       ],
-      "example": "@reviewer 회의록을 녹취록과 대조해서 검토해줘"
+      "example": "@reviewer 회의록을 녹취록과 대조해서 검토해줘",
+      "label": "회의록·Action Item을 녹취록과 대조 검토"
     },
     {
       "id": "distribute",
@@ -804,7 +826,8 @@
       "reply": [
         "참석자에게 회의록 메일을 준비하겠습니다."
       ],
-      "example": "@pm 회의록 메일로 내부 참석자에게 공유해줘"
+      "example": "@pm 회의록 메일로 내부 참석자에게 공유해줘",
+      "label": "회의록 메일로 참석자에게 공유"
     },
     {
       "id": "actions",
@@ -817,7 +840,8 @@
       "reply": [
         "Action Item을 추출하겠습니다."
       ],
-      "example": "@pm 녹취록에서 Action Item 정리해줘"
+      "example": "@pm 녹취록에서 Action Item 정리해줘",
+      "label": "녹취록에서 Action Item(담당·기한) 정리"
     },
     {
       "id": "summarize",
@@ -829,7 +853,8 @@
       "reply": [
         "녹취록을 안건별로 요약하겠습니다."
       ],
-      "example": "@scribe 녹취록으로 회의록 요약해줘"
+      "example": "@scribe 녹취록으로 회의록 요약해줘",
+      "label": "녹취록으로 회의록 요약"
     }
   ],
   "evaluation": [

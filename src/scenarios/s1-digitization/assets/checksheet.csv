@@ -1,0 +1,13 @@
+row,date,shift,tool,vacuum_mtorr,temp_c,particle_ea,result,worker,note,quality_flag
+1,2026-11-17,day,ETCH-03,42,171,3,OK,{{#if pii.mask}}W-01{{/if}}{{#if pii.keep}}김민수 22103{{/if}},,
+2,2026-11-17,day,ETCH-07,40,168,2,OK,{{#if pii.mask}}W-01{{/if}}{{#if pii.keep}}김민수 22103{{/if}},,
+3,2026-11-17,night,ETCH-03,43,172,14,{{#if ocr.legend}}NG{{else}}OK{{/if}},{{#if pii.mask}}W-02{{/if}}{{#if pii.keep}}박지훈 23055{{/if}},파티클 재측정,{{#if ocr.legend}}{{else}}X→OK 해석{{/if}}
+4,2026-11-17,night,ETCH-07,41,169,3,OK,{{#if pii.mask}}W-02{{/if}}{{#if pii.keep}}박지훈 23055{{/if}},,
+5,2026-11-18,day,ETCH-03,42,{{#if ocr.confirmed}}10{{else}}{{#if ocr.estimate}}10{{/if}}{{/if}},4,OK,{{#if pii.mask}}W-01{{/if}}{{#if pii.keep}}김민수 22103{{/if}},,{{#if ocr.confirmed}}현장 확인{{else}}{{#if ocr.estimate}}추정값{{else}}LOW_CONFIDENCE{{/if}}{{/if}}
+6,2026-11-18,day,ETCH-07,{{#if ocr.legend}}{{else}}0{{/if}},{{#if ocr.legend}}{{else}}0{{/if}},{{#if ocr.legend}}{{else}}0{{/if}},{{#if ocr.legend}}NOT_MEASURED{{else}}OK{{/if}},{{#if pii.mask}}W-01{{/if}}{{#if pii.keep}}김민수 22103{{/if}},MFC 점검 (PM중),{{#if ocr.legend}}PM{{else}}'-'→0 해석{{/if}}
+7,2026-11-18,night,ETCH-03,44,173,7,{{#if ocr.crossout}}NG{{else}}OK{{/if}},{{#if pii.mask}}W-03{{/if}}{{#if pii.keep}}이하은 23121{{/if}},재확인 후 수정,
+8,2026-11-18,night,ETCH-07,41,{{#if ocr.confirmed}}174{{else}}{{#if ocr.estimate}}170{{/if}}{{/if}},3,OK,{{#if pii.mask}}W-03{{/if}}{{#if pii.keep}}이하은 23121{{/if}},,{{#if ocr.confirmed}}현장 확인{{else}}{{#if ocr.estimate}}추정값{{else}}LOW_CONFIDENCE{{/if}}{{/if}}
+9,2026-11-19,day,ETCH-03,42,{{#if ocr.confirmed}}177{{else}}{{#if ocr.estimate}}171{{/if}}{{/if}},3,OK,{{#if pii.mask}}W-01{{/if}}{{#if pii.keep}}김민수 22103{{/if}},,{{#if ocr.confirmed}}현장 확인{{else}}{{#if ocr.estimate}}추정값{{else}}LOW_CONFIDENCE{{/if}}{{/if}}
+10,2026-11-19,day,ETCH-07,40,168,2,OK,{{#if pii.mask}}W-01{{/if}}{{#if pii.keep}}김민수 22103{{/if}},,
+11,2026-11-19,night,ETCH-03,43,172,3,OK,{{#if pii.mask}}W-02{{/if}}{{#if pii.keep}}박지훈 23055{{/if}},,
+12,2026-11-19,night,ETCH-07,41,169,11,{{#if ocr.legend}}NG{{else}}OK{{/if}},{{#if pii.mask}}W-02{{/if}}{{#if pii.keep}}박지훈 23055{{/if}},,{{#if ocr.legend}}{{else}}X→OK 해석{{/if}}

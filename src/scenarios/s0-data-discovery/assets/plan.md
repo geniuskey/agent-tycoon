@@ -1,0 +1,33 @@
+# 디지털화 계획 (안)
+
+- 작성: {{agent}} · {{time}} · 근거: `/work/inventory.md`
+
+## 우선순위
+{{#if gate.priority=manual-first}}1. **현장 체크시트** — 종이 → 사진/스캔 → 구조화 데이터 (현장 양식은 그대로 유지, 촬영만 추가)
+2. **검사실 불량분류표** — 주차별 시트 → 단일 표 형식, 코드 개정 매핑
+3. 설비 다운타임 메모 — 메일 양식 템플릿화 (설비팀 협의)
+4. MES export — 승인 후 정기 추출 자동화
+
+> 근거: 수작업 시간과 오류가 가장 큰 곳부터. 현장 부담은 늘리지 않는다.{{/if}}{{#if gate.priority=easy-first}}1. **MES export 자동화** — 이미 정형 데이터, 빠르게 성과
+2. 검사실 불량분류표
+3. 현장 체크시트, 다운타임 메모
+
+> 근거: 쉬운 것부터. (단, 수작업 시간 절감 효과는 작음){{/if}}{{#if gate.priority=bigbang}}1. **신규 MES 모듈 도입** + 현장 **태블릿 전면 도입**으로 모든 기록을 한 번에 디지털 입력
+2. 기존 엑셀·종이 양식 폐지
+
+> 근거: 한 번에 전환{{/if}}
+
+## 선행 조건
+{{#if gate.preconditions.access}}- MES export 승인 신청 (데이터 오너 + 정보보호팀)
+{{/if}}{{#if gate.preconditions.pii}}- 체크시트 작업자 정보 마스킹 규칙 확정
+{{/if}}{{#if gate.preconditions.macro}}- 박서준 선임 매크로 규칙 문서화 (계산 규칙 표준화의 출발점)
+{{/if}}{{#if gate.preconditions.code}}- 불량 코드 구/신 매핑 기준 (검사기술팀)
+{{/if}}{{#if gate.preconditions.cloud}}- ⚠ 외부 클라우드 OCR 서비스로 일괄 변환
+{{/if}}{{#if gate.preconditions.tablet}}- ⚠ 현장 태블릿 입력 의무화
+{{/if}}
+## 현장 협조
+{{#if choi.promise_noburden}}- 현장: 기존 종이 양식 유지, 교대 종료 시 사진 촬영만 추가 (최재석 반장 동의){{else}}- 현장 협조 방식 미정{{/if}}
+
+## 다음 단계
+- 1단계: 디지털화 (체크시트·불량분류표)
+- 2단계: 표준화 (코드·명칭·단위 합의)

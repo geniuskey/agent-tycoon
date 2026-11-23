@@ -26,13 +26,15 @@ src/scenarios/<scenario-id>/
 | `learningObjectives[]` | 학습 목표 |
 | `roles[]` | 생성 가능한 Agent 역할 `{ id, name, title, skills[], description }` |
 | `files` | 초기 가상 파일 `{ "/path": { src \| content, restricted?, description? } }` |
-| `pages[]` | 가상 브라우저 화면 `{ url: "sim://…", title, view, source }` — `view`: `markdown` `dashboard` `table` `mail` `text` |
+| `pages[]` | 가상 브라우저 화면 `{ url: "sim://…", title, view, source }` — `view`: `markdown` `dashboard` `table` `mail` `text` `scan`(종이 스캔본 JSON) |
 | `tasks[]` | 업무 DAG (아래) |
 | `intents[]` | 자연어 지시 규칙 (아래) |
 | `evaluation[]` | 학습 피드백 규칙 |
 | `outcomes[]` | 결과물 판정 기준 (요청자 반응) |
 | `hints[]` | `{ when?, text }` — `hint` 명령 |
 | `initialFlags` | 시작 flag (예: 개발 Agent가 만들 버그 `{"bug.filter": true}`) |
+| `people[]` | 가상 인물 (대화·신뢰도). 스키마는 [campaign.md](campaign.md#가상-인물-협의-시뮬레이션) |
+| `campaign` | `{ id, stage, order, requires[], carry: {flags, files, trust}, defaultCarry }` — 캠페인 단계와 이월 규칙 |
 
 ## 2. Task / Step / Gate
 
@@ -102,6 +104,7 @@ src/scenarios/<scenario-id>/
 | `notify` | `level`, `message` | 셸 패널/알림 |
 | `activateTask` | `task` | 숨은 Task 노출, 완료된 Task는 재활성화 |
 | `reopenTask` | `task` | Task를 처음 상태로 되돌림 (재작업) |
+| `trust` | `person`, `delta` | 인물 신뢰도 변경 |
 
 ## 4. 조건식 (Cond)
 
@@ -113,6 +116,7 @@ src/scenarios/<scenario-id>/
 { "taskDone": "analyze-pattern" }
 { "taskStatus": "release", "is": ["failed"] }
 { "fileExists": "/work/report.md" }
+{ "trust": "choi", "gte": 50 }          // 인물 신뢰도
 { "all": [...] }  { "any": [...] }  { "not": ... }
 ```
 
@@ -153,11 +157,20 @@ src/scenarios/<scenario-id>/
 - "~하지 말고", "~도 확인해" 같은 조건 지시는 `modifier: true`로 만든다. 사전 지시로 gate를 피할 수 있게 하면 "예방" 학습이 된다.
 - 지원하지 않는 요청은 매칭되지 않게 둔다. 엔진은 절대 임의로 성공 처리하지 않는다.
 
+## 6-1. 객관식 선택지
+
+- **지시**: `intents[].label`이 선택지 문구. `modifier: true`인 intent는 '조건(복수)'으로 표시. `requires`가 거짓이면 숨김, `hiddenChoice: true`면 자유 입력 전용.
+- **발견 후에만 보이는 선택지**: `requires: { "observed": "sim://fab/monitor" }` — 플레이어가 그 화면/파일을 연 뒤에만 노출.
+- **질문**: `people[].topics[].ask`(없으면 `hint`)가 선택지 문구. 함정 질문(신뢰 하락)도 `ask`를 붙여 섞는다. `patience`(기본 5)를 넘으면 30분 자리 비움.
+- **복수 선택 gate**: `{ "multi": true, "min": 1, "max": 4 }`. 선택한 모든 옵션의 효과 적용, flag `gate.<id>.<option>`=true/false. `quality: good`인데 고르지 않은 옵션은 '빠뜨림'으로 피드백.
+- **함정 설계 원칙**: 정답만 있는 선택지는 학습이 없다. 실무에서 흔한 지름길(검증 생략, 추정으로 채우기, 외부 서비스, 현장 압박)을 그럴듯한 문구로 넣는다.
+
 ## 7. Evaluation / Outcomes
 
 - `outcomes[]`: 요청자 관점의 결과물 판정 `{ id, label, success: Cond, successText, failText }`. 모두 충족 → "그대로 채택".
 - `evaluation[]`: `{ dimension, when, kind: positive|issue, text, suggestion }`. 9개 차원:
-  `decomposition, assignment, parallelism, verification, recovery, duplication, domain, evidence, security`
+  `decomposition, assignment, parallelism, verification, recovery, duplication, domain, evidence, security, collaboration`
+  (`collaboration`은 `people`이 있는 미션에서만 표시)
 - 1–6번 차원과 보안 일부는 엔진이 이벤트 로그로 **자동 계산**한다(배정 역량 일치, 동시 작업, 산출물 열람, gate 품질, 중복/재시도, 미사용 Agent, 제한 파일 접근 …). 시나리오 규칙은 도메인 특화 판단을 더한다.
 
 ## 8. 시나리오 설계 체크리스트

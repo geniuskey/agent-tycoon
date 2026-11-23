@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { CATALOG, DOMAINS, FUNCTIONS, SCENARIOS, TASK_TYPES } from '../scenarios';
+import { CAMPAIGNS, CATALOG, DOMAINS, FUNCTIONS, SCENARIOS, TASK_TYPES, missionsOf } from '../scenarios';
+import type { CarryState, LoadedScenario } from '../engine/types';
 import { useSession } from '../store/session';
 import { deleteSession, exportSession, type SessionRecord } from '../store/persist';
 import { formatSimTime } from '../engine/engine';
@@ -13,11 +14,12 @@ export default function Home() {
   const [fn, setFn] = useState('');
   const [type, setType] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
+  const [selCarry, setSelCarry] = useState<{ carry?: CarryState; label?: string }>({});
   const [seed, setSeed] = useState(() => String(1000 + (Date.now() % 9000)));
 
   const all = useMemo(
     () => [
-      ...SCENARIOS.map((s) => ({ id: s.id, domain: s.domain, function: s.function, taskType: s.taskType, title: s.title, summary: s.briefing.goal, ready: true, difficulty: s.difficulty, est: s.estMinutes })),
+      ...SCENARIOS.filter((s) => !s.campaign).map((s) => ({ id: s.id, domain: s.domain, function: s.function, taskType: s.taskType, title: s.title, summary: s.briefing.goal, ready: true, difficulty: s.difficulty, est: s.estMinutes })),
       ...CATALOG.map((c) => ({ ...c, ready: false, difficulty: 0, est: 0 })),
     ],
     [],
@@ -37,10 +39,11 @@ export default function Home() {
               <span className="font-mono text-lg font-bold text-sky-300">&gt;_ Agent Tycoon</span>
               <SimBadge />
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-50">Don&apos;t do the work. Orchestrate it.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-50">AI가 일할 수 있는 조직을 만든다</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-dim">
-              가상의 반도체 기업에서 업무를 받고, 여러 AI Agent를 CLI로 생성·지휘·검증하며 업무를 완수하는 시뮬레이터입니다. 실제 AI API는 호출하지 않으며,
-              모든 Agent 행동과 데이터는 시나리오 기반 시뮬레이션과 합성 데이터입니다.
+              현실의 출발점은 'AI Agent 여러 개를 지휘하는 것'이 아니라 종이·엑셀·메일·사람 머릿속에 흩어진 데이터입니다.
+              현황 파악 → 디지털화 → 표준화 → 데이터 기반 → 지식화 → Agent 활용 → 오케스트레이션까지, 한 가상 조직을 단계별로 키워가며
+              사람과 협의하고 AI를 검증하는 법을 체험합니다. 실제 AI API는 호출하지 않으며 모든 인물·데이터는 가상입니다.
             </p>
           </div>
         </header>
@@ -59,9 +62,24 @@ export default function Home() {
           </section>
         )}
 
+        {CAMPAIGNS.map((c) => (
+          <CampaignSection
+            key={c.id}
+            campaignId={c.id}
+            sessions={sessions}
+            onPick={(id, carry, label) => {
+              setSelCarry({ carry, label });
+              setSelected(id);
+            }}
+          />
+        ))}
+
         <section>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <h2 className="mr-2 text-xs font-semibold tracking-wider text-faint uppercase">7단계 · 멀티 Agent 오케스트레이션 — 자유 플레이</h2>
+          </div>
+          <p className="mb-3 text-[12px] text-faint">데이터·표준·지식 기반이 이미 갖춰진 조직을 가정한 고급 미션입니다. 캠페인과 별개로 언제든 플레이할 수 있습니다.</p>
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <h2 className="mr-2 text-xs font-semibold tracking-wider text-faint uppercase">시나리오</h2>
             <Filter label="제품 영역" value={domain} onChange={setDomain} options={usedDomains.map((d) => [d, DOMAINS[d] ?? d])} />
             <Filter label="직무" value={fn} onChange={setFn} options={usedFns.map((d) => [d, FUNCTIONS[d] ?? d])} />
             <Filter label="업무 유형" value={type} onChange={setType} options={usedTypes.map((d) => [d, TASK_TYPES[d] ?? d])} />
@@ -74,7 +92,10 @@ export default function Home() {
               <button
                 key={s.id}
                 disabled={!s.ready}
-                onClick={() => setSelected(s.id)}
+                onClick={() => {
+                  setSelCarry({});
+                  setSelected(s.id);
+                }}
                 className={`rounded-lg border p-4 text-left transition-colors ${
                   s.ready ? 'border-line2 bg-panel hover:border-sky-700' : 'cursor-not-allowed border-line/70 bg-panel/40'
                 } ${selected === s.id ? 'border-sky-600' : ''}`}
@@ -107,6 +128,17 @@ export default function Home() {
               <Btn onClick={() => setSelected(null)}>✕</Btn>
             </div>
             <BriefingBody s={sel} />
+            {sel.campaign && (
+              <div className="mt-4 rounded-md border border-line bg-bg px-3 py-2 text-[12px] text-dim">
+                <span className="font-semibold text-fg">이어받는 상태: </span>
+                {selCarry.label ?? '없음 (캠페인 첫 미션)'}
+                {selCarry.carry && Object.keys(selCarry.carry.trust).length > 0 && (
+                  <div className="mt-1 text-[11px] text-faint">
+                    신뢰도 — {Object.entries(selCarry.carry.trust).map(([k, v]) => `${sel.people?.find((p) => p.id === k)?.name ?? k} ${v}`).join(' · ')}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="mt-6 flex items-center gap-3 border-t border-line pt-4">
               <label className="flex items-center gap-2 text-xs text-dim" title="같은 시드와 같은 명령 순서는 항상 같은 결과를 만듭니다">
                 난수 시드
@@ -117,7 +149,7 @@ export default function Home() {
                 />
               </label>
               <span className="text-[11px] text-faint">동일 시드 + 동일 명령 = 동일 결과</span>
-              <Btn variant="primary" className="ml-auto px-4 py-1.5" onClick={() => start(sel.id, Number(seed) || 1)}>
+              <Btn variant="primary" className="ml-auto px-4 py-1.5" onClick={() => start(sel.id, Number(seed) || 1, selCarry.carry)}>
                 업무 시작 →
               </Btn>
             </div>
@@ -179,5 +211,83 @@ function SessionRow({ r, onResume, onReview, onDelete }: { r: SessionRecord; onR
         ✕
       </Btn>
     </div>
+  );
+}
+
+function CampaignSection({
+  campaignId,
+  sessions,
+  onPick,
+}: {
+  campaignId: string;
+  sessions: SessionRecord[];
+  onPick: (scenarioId: string, carry: CarryState | undefined, label: string | undefined) => void;
+}) {
+  const c = CAMPAIGNS.find((x) => x.id === campaignId)!;
+  const doneRec = (id: string) => sessions.find((r) => r.scenarioId === id && r.submitted);
+  const carryFor = (s: LoadedScenario): { carry?: CarryState; label?: string; locked: boolean } => {
+    const req = s.campaign?.requires ?? [];
+    if (!req.length) return { locked: false };
+    const prev = doneRec(req[req.length - 1]);
+    if (prev?.exportCarry) {
+      const found = Object.keys(prev.exportCarry.flags).filter((k) => k.startsWith('found.') && prev.exportCarry!.flags[k]).length;
+      return { carry: prev.exportCarry, label: `이전 미션 결과 (${new Date(prev.updatedAt).toLocaleDateString()}) — 파악한 사항 ${found}개, 산출물 ${Object.keys(prev.exportCarry.files).length}개`, locked: false };
+    }
+    return { carry: s.campaign?.defaultCarry, label: '이전 단계 미완료 — 기본 상태로 시작', locked: true };
+  };
+  return (
+    <section className="mb-10">
+      <div className="mb-1 flex items-baseline gap-3">
+        <h2 className="text-lg font-semibold text-slate-100">캠페인 · {c.title}</h2>
+        <span className="text-[11px] text-faint">{c.company}</span>
+      </div>
+      <p className="mb-4 max-w-3xl text-[13px] leading-relaxed text-dim">{c.summary}</p>
+      <ol className="relative grid gap-2 border-l border-line2 pl-5">
+        {c.stages.map((st) => {
+          const missions = st.freeplay ? [] : missionsOf(c.id, st.stage);
+          const ready = st.status === 'ready';
+          return (
+            <li key={st.stage} className="relative">
+              <span
+                className={`absolute top-3 -left-[27px] flex h-3.5 w-3.5 items-center justify-center rounded-full border text-[8px] ${
+                  missions.length && missions.every((m) => doneRec(m.id)) ? 'border-emerald-500 bg-emerald-500/30' : ready ? 'border-sky-500 bg-sky-500/20' : 'border-line2 bg-bg'
+                }`}
+              />
+              <div className={`rounded-lg border px-4 py-3 ${ready ? 'border-line2 bg-panel' : 'border-line bg-panel/40'}`}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[11px] text-faint">STAGE {st.stage}</span>
+                  <span className={`text-[14px] font-medium ${ready ? 'text-slate-100' : 'text-faint'}`}>{st.title}</span>
+                  <span className="rounded bg-line px-1.5 py-px text-[10.5px] text-dim">플레이어: {st.role}</span>
+                  {!ready && <span className="text-[10.5px] text-faint">준비 중</span>}
+                  {st.freeplay && <span className="text-[10.5px] text-sky-300">아래 자유 플레이 ↓</span>}
+                </div>
+                <div className={`mt-0.5 text-[12px] ${ready ? 'text-dim' : 'text-faint'}`}>{st.summary}</div>
+                {missions.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {missions.map((m) => {
+                      const done = doneRec(m.id);
+                      const cf = carryFor(m);
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => onPick(m.id, cf.carry, cf.label)}
+                          className="flex items-center gap-2 rounded-md border border-line2 bg-bg px-3 py-1.5 text-left hover:border-sky-700"
+                        >
+                          <span className={`text-xs ${done ? 'text-emerald-300' : cf.locked ? 'text-faint' : 'text-sky-300'}`}>{done ? '✔' : cf.locked ? '◌' : '▶'}</span>
+                          <span className="text-[12.5px] text-fg">{m.title.replace(/^\d단계 · /, '')}</span>
+                          <span className="text-[10.5px] text-faint">
+                            {done ? '완료 · 다시 하기' : cf.locked ? '이전 단계 먼저 (기본값으로 시작 가능)' : `약 ${m.estMinutes}분`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }

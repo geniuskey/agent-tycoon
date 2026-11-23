@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { Simulation, replay } from '../engine/engine';
+import { Simulation, exportCarry, replay } from '../engine/engine';
+import type { CarryState } from '../engine/types';
 import { getScenario } from '../scenarios';
 import type { SimEvent } from '../engine/types';
 import {
@@ -38,7 +39,7 @@ interface SessionState {
   uiSeq: number;
 
   refreshSessions: () => Promise<void>;
-  start: (scenarioId: string, seed: number) => void;
+  start: (scenarioId: string, seed: number, carry?: CarryState) => void;
   resume: (rec: SessionRecord) => void;
   restoreActive: () => Promise<boolean>;
   goHome: () => void;
@@ -46,6 +47,7 @@ interface SessionState {
   setSpeed: (s: number) => void;
   input: (paneId: string, text: string) => void;
   openAgentPane: (agentId: string, focus?: boolean) => void;
+  openPersonPane: (personId: string, focus?: boolean) => void;
   addShellPane: () => void;
   closePane: (paneId: string) => void;
   focusPane: (paneId: string) => void;
@@ -87,6 +89,7 @@ export const useSession = create<SessionState>((set, get) => {
       if (e.type !== 'ui.request') continue;
       const action = e.data?.action;
       if (action === 'agent-pane' && e.agentId) get().openAgentPane(e.agentId, false);
+      else if (action === 'person-pane' && e.personId) get().openPersonPane(e.personId, true);
       else if (action === 'open-page') {
         get().navigate(e.data!.url as string);
         set({ rightTab: 'browser' });
@@ -144,10 +147,10 @@ export const useSession = create<SessionState>((set, get) => {
 
     refreshSessions: async () => set({ sessions: await listSessions() }),
 
-    start: (scenarioId, seed) => {
+    start: (scenarioId, seed, carry) => {
       const scenario = getScenario(scenarioId);
       if (!scenario) return;
-      const sim = new Simulation(scenario, seed);
+      const sim = new Simulation(scenario, seed, carry);
       boot(sim, { id: newId(), createdAt: Date.now() });
       set({ showBriefing: true });
       sim.input('brief', { paneId: 'shell-1' });
@@ -157,7 +160,7 @@ export const useSession = create<SessionState>((set, get) => {
     resume: (rec) => {
       const scenario = getScenario(rec.scenarioId);
       if (!scenario) return;
-      const sim = replay(scenario, rec.seed, rec.commands, rec.tick);
+      const sim = replay(scenario, rec.seed, rec.commands, rec.tick, rec.carry);
       boot(sim, rec);
     },
 
@@ -183,7 +186,7 @@ export const useSession = create<SessionState>((set, get) => {
       if (rec) {
         const scenario = getScenario(rec.scenarioId);
         if (!scenario) return;
-        const sim = replay(scenario, rec.seed, rec.commands, rec.tick);
+        const sim = replay(scenario, rec.seed, rec.commands, rec.tick, rec.carry);
         unsub?.();
         unsub = null;
         set({ sim, sessionId: rec.id, createdAt: rec.createdAt, panes: rec.panes, feedbackSessionId: rec.id, screen: 'feedback' });
@@ -199,13 +202,21 @@ export const useSession = create<SessionState>((set, get) => {
       const { sim, panes } = get();
       if (!sim) return;
       const pane = panes.find((p) => p.id === paneId);
-      sim.input(text, { paneId, agentId: pane?.agentId });
+      sim.input(text, { paneId, agentId: pane?.agentId, personId: pane?.personId });
     },
 
     openAgentPane: (agentId, focus = true) => {
       const id = `agent:${agentId}`;
       const { panes } = get();
       if (!panes.some((p) => p.id === id)) set({ panes: [...panes, { id, agentId }] });
+      if (focus) set({ focusedPane: id, maximizedPane: get().maximizedPane ? id : null });
+      get().persist();
+    },
+
+    openPersonPane: (personId, focus = true) => {
+      const id = `person:${personId}`;
+      const { panes } = get();
+      if (!panes.some((p) => p.id === id)) set({ panes: [...panes, { id, personId }] });
       if (focus) set({ focusedPane: id, maximizedPane: get().maximizedPane ? id : null });
       get().persist();
     },
@@ -276,6 +287,8 @@ export const useSession = create<SessionState>((set, get) => {
           updatedAt: Date.now(),
           submitted: sim.submitted,
           panes,
+          carry: sim.carry,
+          exportCarry: sim.submitted && sim.scenario.campaign ? exportCarry(sim) : undefined,
         });
       }, 300);
     },

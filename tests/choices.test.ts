@@ -1,0 +1,106 @@
+import { describe, expect, it } from 'vitest';
+import { Simulation } from '../src/engine/engine';
+import { agentChoices } from '../src/engine/choices';
+import { topicChoices } from '../src/engine/people';
+import { evaluate } from '../src/engine/evaluate';
+import { getScenario } from '../src/scenarios';
+import { lastOutput, lastSaid, runUntil, sh, status, taskStatus } from './helpers';
+
+describe('객관식 지시 (do)', () => {
+  it('지시는 단일 선택, 조건은 복수 선택으로 적용된다', () => {
+    const sim = new Simulation(getScenario('dram-retention')!, 5);
+    sh(sim, 'agent spawn analyst');
+    const ch = agentChoices(sim, 'analyst')!;
+    expect(ch.mode).toBe('instruct');
+    if (ch.mode !== 'instruct') return;
+    expect(ch.instructions.map((i) => i.id)).toContain('validate');
+    expect(ch.modifiers.map((m) => m.id)).toEqual(expect.arrayContaining(['preinstruct-units', 'cautious', 'rush']));
+    // 역할과 맞지 않는 지시에는 역량 경고 메모
+    expect(ch.instructions.find((i) => i.id === 'write-report')?.note).toContain('역량 부족');
+    sh(sim, 'do analyst validate +preinstruct-units +cautious');
+    expect(sim.flags['units.preinstructed']).toBe(true);
+    expect(sim.flags['cause.cautious']).toBe(true);
+    expect(sim.tasks['validate-data'].assignee).toBe('analyst');
+    // 작업 중에는 중단/상태 액션만
+    expect(agentChoices(sim, 'analyst')!.mode).toBe('busy');
+  });
+
+  it('직접 본 화면에 대해서만 버그 지적 선택지가 나타난다 (observed)', () => {
+    const sim = new Simulation(getScenario('fab-equipment-dashboard')!, 6);
+    for (const r of ['pm', 'data-engineer', 'developer']) sh(sim, `agent spawn ${r}`);
+    sh(sim, 'do pm requirements +rule-pre');
+    sh(sim, 'do data-engineer pipeline +no-shared +tz-pre');
+    runUntil(sim, () => taskStatus(sim, 'requirements') === 'done' && taskStatus(sim, 'pipeline') === 'done');
+    sh(sim, 'do developer build');
+    runUntil(sim, () => taskStatus(sim, 'build-dashboard') === 'done');
+    const ids = () => {
+      const ch = agentChoices(sim, 'developer')!;
+      return ch.mode === 'instruct' ? ch.instructions.map((i) => i.id) : [];
+    };
+    expect(ids()).not.toContain('fix-filter');
+    sim.observe('page', 'sim://fab/monitor');
+    expect(ids()).toContain('fix-filter');
+  });
+});
+
+describe('Agent 질문 응답 (choose)', () => {
+  it('단일 선택 질문에 복수 선택은 거부, 복수 선택은 min/max 검증', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 7);
+    sh(sim, 'ask park process');
+    sh(sim, 'agent spawn assistant');
+    sh(sim, 'do assistant inventory');
+    runUntil(sim, () => taskStatus(sim, 'inventory') === 'done');
+    sh(sim, 'do assistant prioritize');
+    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
+    const g = agentChoices(sim, 'assistant')!;
+    expect(g.mode === 'gate' && !g.multi).toBe(true);
+    sh(sim, 'agent choose assistant 1,2');
+    expect(lastOutput(sim, 1)).toContain('하나만');
+    sh(sim, 'agent choose assistant 1');
+    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
+    const m = agentChoices(sim, 'assistant')!;
+    expect(m.mode === 'gate' && m.multi).toBe(true);
+    sh(sim, 'agent choose assistant 1,5');
+    runUntil(sim, () => taskStatus(sim, 'prioritize') === 'done');
+    expect(sim.flags['gate.preconditions.access']).toBe(true);
+    expect(sim.flags['gate.preconditions.cloud']).toBe(true);
+    expect(sim.flags['gate.preconditions.pii']).toBe(false);
+    const sec = evaluate(sim).dimensions.find((d) => d.id === 'security')!;
+    expect(sec.findings.some((f) => f.text.includes('외부 클라우드'))).toBe(true);
+    // 고르지 않은 좋은 선택지는 '빠뜨림'으로 피드백
+    expect(evaluate(sim).dimensions.some((d) => d.findings.some((f) => f.text.includes('빠뜨렸습니다')))).toBe(true);
+  });
+});
+
+describe('객관식 대화 (ask)', () => {
+  it('선택지는 아직 묻지 않은 질문만, 함정 질문 포함', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 8);
+    const before = topicChoices(sim, 'choi').map((t) => t.id);
+    expect(before).toEqual(expect.arrayContaining(['tablet', 'blame', 'pain', 'legend']));
+    sh(sim, 'ask choi pain');
+    sim.advance(5);
+    expect(topicChoices(sim, 'choi').map((t) => t.id)).not.toContain('pain');
+    expect(sim.people['choi'].trust).toBe(45);
+    sh(sim, 'ask choi blame');
+    sim.advance(5);
+    expect(sim.people['choi'].trust).toBe(30);
+  });
+
+  it('한 번에 너무 많이 물으면 자리를 비운다 (인내심)', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 9);
+    for (const t of ['process', 'pain', 'other', 'reassure', 'macro']) {
+      sh(sim, `ask park ${t}`);
+      sim.advance(3);
+    }
+    sh(sim, 'ask park rush');
+    sim.advance(3);
+    expect(lastSaid(sim, 'park', 1)).toContain('일하러 가봐야');
+    sh(sim, 'ask park rush');
+    sim.advance(3);
+    expect(lastSaid(sim, 'park', 1)).toContain('자리를 비웠습니다');
+    sim.advance(35);
+    sh(sim, 'ask park rush');
+    sim.advance(3);
+    expect(sim.people['park'].asked).toContain('rush');
+  });
+});

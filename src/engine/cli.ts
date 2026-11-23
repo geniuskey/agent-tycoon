@@ -2,6 +2,8 @@ import { c, padEnd } from './ansi';
 import type { Simulation } from './engine';
 import { formatSimTime, BUSY_STATUSES } from './engine';
 import { handleNaturalLanguage } from './nlu';
+import { askTopic, handleTalk, peopleText, startTalk } from './people';
+import { doInstruct } from './choices';
 import type { AgentStatus, PlayerCommand, TaskStatus } from './types';
 
 /**
@@ -44,6 +46,8 @@ const COMMANDS: { cmd: string; desc: string }[] = [
   { cmd: 'task list', desc: 'Task 목록과 상태 (의존성 포함)' },
   { cmd: 'task show <task>', desc: 'Task 상세 (입력, 산출물, 필요 역량)' },
   { cmd: 'task graph', desc: 'Task 의존성 그래프(DAG)' },
+  { cmd: 'people', desc: '대화할 수 있는 사람들과 신뢰도' },
+  { cmd: 'talk <person>', desc: '사람과 대화 패널 열기 (인터뷰·협의)' },
   { cmd: 'agent spawn <role> [name]', desc: '새 Agent 생성 (독립 세션 패널 생성)' },
   { cmd: 'agent list', desc: 'Agent 목록과 상태' },
   { cmd: 'agent assign <agent> <task> [--force|--redo]', desc: 'Agent에게 Task 배정' },
@@ -51,6 +55,9 @@ const COMMANDS: { cmd: string; desc: string }[] = [
   { cmd: 'agent logs <agent> [n]', desc: '최근 로그 n줄' },
   { cmd: 'agent inspect <agent>', desc: '상태, 컨텍스트, 이력 상세' },
   { cmd: 'agent reply <agent> <번호|자연어>', desc: '의사결정 요청에 응답' },
+  { cmd: 'agent choose <agent> <n[,n]>', desc: '선택지 번호로 응답 (복수 선택은 쉼표)' },
+  { cmd: 'do <agent> <지시ID> [+조건ID]', desc: '객관식 지시 (패널 선택지와 동일)' },
+  { cmd: 'ask <person> <질문ID>', desc: '객관식 질문 (대화 패널 선택지와 동일)' },
   { cmd: 'agent interrupt <agent>', desc: '작업 중단' },
   { cmd: 'agent resume <agent>', desc: '중단된 작업 재개' },
   { cmd: 'agent retry <agent>', desc: '실패한 단계부터 재시도' },
@@ -69,7 +76,7 @@ const COMMANDS: { cmd: string; desc: string }[] = [
 ];
 
 export function commandNames(): string[] {
-  return ['agent', 'task', 'brief', 'roles', 'ls', 'tree', 'cat', 'diff', 'open', 'pages', 'hint', 'submit', 'clear', 'help'];
+  return ['agent', 'task', 'brief', 'roles', 'people', 'talk', 'ask', 'do', 'ls', 'tree', 'cat', 'diff', 'open', 'pages', 'hint', 'submit', 'clear', 'help'];
 }
 
 export function tokenize(line: string): string[] {
@@ -80,7 +87,7 @@ export function tokenize(line: string): string[] {
   return out;
 }
 
-const READ_ONLY_AFTER_SUBMIT = new Set(['help', 'brief', 'roles', 'task', 'ls', 'tree', 'cat', 'diff', 'open', 'pages', 'clear', 'hint']);
+const READ_ONLY_AFTER_SUBMIT = new Set(['help', 'brief', 'roles', 'people', 'task', 'ls', 'tree', 'cat', 'diff', 'open', 'pages', 'clear', 'hint']);
 
 export function executeCommand(sim: Simulation, cmd: PlayerCommand): void {
   const raw = cmd.text.trim();
@@ -97,6 +104,13 @@ export function executeCommand(sim: Simulation, cmd: PlayerCommand): void {
   }
 
   if (!isCommand) {
+    // 대화 패널 또는 @인물
+    const at = raw.match(/^@([\w-]+)[\s,:]*([\s\S]*)$/);
+    if (at && sim.people[at[1].toLowerCase()] && !sim.agents[at[1].toLowerCase()]) {
+      if (!at[2].trim()) return void startTalk(sim, at[1].toLowerCase(), pane);
+      return handleTalk(sim, at[1].toLowerCase(), at[2].trim(), pane);
+    }
+    if (cmd.personId && sim.people[cmd.personId] && !at) return handleTalk(sim, cmd.personId, raw, pane);
     handleNaturalLanguage(sim, cmd);
     return;
   }
@@ -109,6 +123,25 @@ export function executeCommand(sim: Simulation, cmd: PlayerCommand): void {
       return say(briefText(sim));
     case 'roles':
       return say(rolesText(sim));
+    case 'people':
+      return say(peopleText(sim));
+    case 'ask':
+      if (!args[1] || !args[2]) return say(c.yellow('사용: ask <person> <topicId>  (대화 패널의 선택지를 쓰는 것이 편합니다)'));
+      if (!sim.people[args[1].toLowerCase()]) return say(c.red(`✗ '${args[1]}' 인물 없음`));
+      return askTopic(sim, args[1].toLowerCase(), args[2], pane);
+    case 'do':
+      if (!args[1] || !args[2]) return say(c.yellow('사용: do <agent> <지시ID> [+조건ID ...]  (Agent 패널의 선택지를 쓰는 것이 편합니다)'));
+      return doInstruct(
+        sim,
+        pane,
+        args[1],
+        args[2],
+        args.slice(3).filter((x) => x.startsWith('+')).map((x) => x.slice(1)),
+      );
+    case 'talk':
+      if (!args[1]) return say(peopleText(sim));
+      startTalk(sim, args[1].toLowerCase(), pane);
+      return;
     case 'status':
       return say(statusText(sim, args[1]));
     case 'task':
@@ -148,6 +181,9 @@ function helpText(): string[] {
     c.bold('Agent Tycoon CLI') + c.dim('  — 시뮬레이션 환경 (실제 OS 명령/AI API는 실행되지 않습니다)'),
     '',
     ...COMMANDS.map((x) => `  ${c.cyan(x.cmd.padEnd(w))}${c.dim(x.desc)}`),
+    '',
+    c.bold('사람과 대화'),
+    c.dim("  'talk <id>' 로 대화 패널을 열고 자연스럽게 질문합니다. 질문 방식에 따라 신뢰도가 바뀝니다."),
     '',
     c.bold('자연어 지시 예시'),
     c.dim('  Agent 패널에서 바로 입력하거나, 셸 패널에서 @agent 로 지정합니다.'),
@@ -372,6 +408,14 @@ function agentCmd(sim: Simulation, args: string[], cmd: PlayerCommand, say: (l: 
       if (from && to) res(sim.handoff(from.id, to.id));
       return;
     }
+    case 'choose': {
+      const a = needAgent(args[1]);
+      if (!a) return;
+      const nums = (args[2] ?? '').split(',').map((x) => Number(x.trim()) - 1).filter((n) => Number.isInteger(n) && n >= 0);
+      if (!nums.length) return say(c.yellow('사용: agent choose <agent> <번호[,번호...]>'));
+      const r = sim.resolveGate(a.id, nums, 'choice');
+      return res(r);
+    }
     case 'reply': {
       const a = needAgent(args[1]);
       if (!a) return;
@@ -546,7 +590,8 @@ export function completions(sim: Simulation, line: string): string[] {
   const last = parts[parts.length - 1] ?? '';
   const prev = parts.slice(0, -1);
   let cands: string[] = [];
-  if (prev.length === 0) cands = [...commandNames(), ...sim.agentList().map((a) => '@' + a.id)];
+  if (prev.length === 0) cands = [...commandNames(), ...sim.agentList().map((a) => '@' + a.id), ...Object.keys(sim.people).map((p) => '@' + p)];
+  else if (prev[0] === 'talk' && prev.length === 1) cands = Object.keys(sim.people);
   else if (prev[0] === 'agent' && prev.length === 1)
     cands = ['spawn', 'list', 'assign', 'status', 'logs', 'inspect', 'reply', 'interrupt', 'resume', 'retry', 'restart', 'handoff', 'kill'];
   else if (prev[0] === 'agent' && prev[1] === 'spawn' && prev.length === 2) cands = sim.scenario.roles.map((r) => r.id);
