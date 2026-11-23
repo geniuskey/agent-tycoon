@@ -1,0 +1,2958 @@
+{
+  "id": "s3-data-foundation",
+  "version": 1,
+  "title": "데이터 기반: 믿고 꺼내 쓸 수 있게",
+  "domain": "manufacturing",
+  "function": "yield",
+  "taskType": "data-platform",
+  "difficulty": 3,
+  "estMinutes": 30,
+  "tags": [
+    "campaign",
+    "데이터 마트",
+    "품질",
+    "권한",
+    "멀티 Agent"
+  ],
+  "company": {
+    "name": "Nova Semiconductor (가상)",
+    "org": "Fab-N2 수율팀"
+  },
+  "campaign": {
+    "id": "fab-yield-ai",
+    "stage": 3,
+    "order": 3,
+    "requires": [
+      "s2-standardization"
+    ],
+    "carry": {
+      "flags": [
+        "mart.",
+        "model.",
+        "pipe.",
+        "access.",
+        "approval.",
+        "catalog.",
+        "handover.",
+        "std.",
+        "agenda.",
+        "found.",
+        "defects."
+      ],
+      "files": [
+        "/wiki/standards/equipment-id.md",
+        "/wiki/standards/time.md",
+        "/wiki/standards/defect-code.md",
+        "/wiki/standards/yield.md",
+        "/wiki/data/mart.md",
+        "/wiki/data/quality.md",
+        "/db/console.db",
+        "/data/curated/DATA_NOTE.md"
+      ],
+      "trust": true
+    },
+    "defaultCarry": {
+      "flags": {
+        "agenda.equip-id": "mes-alias",
+        "agenda.time": "utc-kst",
+        "agenda.defect-code": "legacy",
+        "agenda.yield": "split",
+        "match.fixed": true,
+        "time.utc": true,
+        "wiki.safe": true,
+        "std.published": true,
+        "std.approved": true,
+        "defects.legacy": true
+      },
+      "files": {
+        "/wiki/standards/equipment-id.md": "# 표준: 설비 ID\n\n> 소유: IT/MES · 설비기술팀 | 합의: 서명 완료\n\n- 기준 키는 MES 설비 ID (`EQ-N2-ET07`)\n- 부서별 이름은 별칭 (`ETCH-07`, `7번`, `2라인 식각 7호기`)\n",
+        "/wiki/standards/time.md": "# 표준: 시각\n\n> 소유: IT/MES | 합의: 서명 완료\n\n- 저장 UTC (`*_utc`), 보고서 표시 KST\n",
+        "/wiki/standards/defect-code.md": "# 표준: 불량 코드\n\n> 소유: 검사기술팀 | 합의: 서명 완료\n\n- 11/10 이전 D07 → D07_LEGACY\n",
+        "/wiki/standards/yield.md": "# 표준: 지표 정의 — 수율\n\n> 합의: 서명 완료\n\n- 라인 수율 = 양품 ÷ 투입 / 검사 수율 = 검사 통과 ÷ 검사\n",
+        "/data/curated/DATA_NOTE.md": "# DATA NOTE (1단계)\n\n- 판독 불가 셀은 빈값 + LOW_CONFIDENCE\n- PM 중 미측정은 NOT_MEASURED (0이 아님)\n"
+      },
+      "trust": {
+        "oh": 55,
+        "seo": 60,
+        "lee": 60,
+        "han": 55,
+        "jung": 65
+      },
+      "from": []
+    }
+  },
+  "briefing": {
+    "requester": {
+      "name": "정민아 팀장",
+      "role": "Fab-N2 수율팀장"
+    },
+    "title": "수율 데이터 마트 — 모델 · 파이프라인 · 품질 · 권한 · 카탈로그",
+    "background": "표준이 생겼으니 데이터를 한곳에 쌓는다. 주간 보고와 앞으로의 AI 분석이 모두 이 마트에서 나온다. 데이터플랫폼팀이 운영을 넘겨받고, 데이터마다 오너가 있다. 앞 단계에서 놓친 문제는 여기서 데이터 사고로 드러난다.",
+    "goal": "역할별 Agent로 마트를 만들고, 품질 검사를 통과시키고, 데이터 오너 승인과 운영 이관 승인을 받는다.",
+    "completionCriteria": [
+      "원인 분석이 가능한 저장 단위와 기준 키",
+      "운영 정책 준수, 실패 행 격리",
+      "품질 검사 통과 (정직한 '모름' 표시는 유지)",
+      "AI 계정은 최소 권한, 세 데이터 오너 승인",
+      "카탈로그 등록과 운영 이관"
+    ],
+    "deliverables": [
+      "sim://db (데이터 콘솔)",
+      "/wiki/data/mart.md",
+      "/wiki/data/quality.md"
+    ],
+    "constraints": [
+      "운영 MES DB 직접 조회 금지 (플랫폼 정책)",
+      "데이터 오너 승인 없이 권한 부여 불가",
+      "모든 인물·데이터는 가상"
+    ]
+  },
+  "learningObjectives": [
+    "저장 단위와 기준 키를 먼저 정한다",
+    "운영 정책을 확인하고 지킨다",
+    "품질 규칙이 정직한 '모름' 표시를 버리지 않게 한다",
+    "실패를 조용히 버리지 않고 격리·알림한다",
+    "AI 계정도 최소 권한으로",
+    "역할별 Agent에게 나누고 서로 기다리지 않는 일은 동시에 맡긴다"
+  ],
+  "roles": [
+    {
+      "id": "data-engineer",
+      "name": "데이터 엔지니어",
+      "title": "모델링·파이프라인·권한",
+      "skills": [
+        "data",
+        "modeling",
+        "pipeline",
+        "access"
+      ],
+      "description": "데이터 모델과 적재 파이프라인을 만들고 권한을 설정한다. 다른 부서 승인은 받지 못한다."
+    },
+    {
+      "id": "quality",
+      "name": "품질 검증",
+      "title": "품질 규칙·검사",
+      "skills": [
+        "data-quality",
+        "review"
+      ],
+      "description": "품질 규칙을 제안하고 검사한다. 현장 표기의 업무적 의미는 모른다."
+    },
+    {
+      "id": "assistant",
+      "name": "AI 어시스턴트",
+      "title": "문서·카탈로그",
+      "skills": [
+        "writing",
+        "document",
+        "summarization"
+      ],
+      "description": "카탈로그와 위키 문서를 쓴다. 데이터 처리는 하지 않는다."
+    }
+  ],
+  "people": [
+    {
+      "id": "yoon",
+      "name": "윤하린 책임",
+      "title": "데이터플랫폼팀 · 마트 운영",
+      "org": "데이터플랫폼팀",
+      "trust": 45,
+      "replyDelay": 3,
+      "description": "마트를 운영 이관받는다. 새벽 장애와 조용히 묻히는 실패를 가장 싫어한다.",
+      "greeting": [
+        "데이터플랫폼팀 윤하린입니다."
+      ],
+      "fallback": [
+        "플랫폼 운영 얘기면 하세요.",
+        "그건 저희 소관이 아니에요."
+      ],
+      "rude": [
+        "운영 정책은 협상 대상이 아닙니다."
+      ],
+      "topics": [
+        {
+          "id": "policy",
+          "patterns": [
+            "정책",
+            "규칙"
+          ],
+          "ask": "마트를 새로 만들려는데 운영 정책을 알려주세요",
+          "reply": [
+            "운영 MES DB 직접 조회는 금지예요. IT가 매일 02–04시에 export를 떨궈 줍니다.",
+            "테이블 이름은 mart.<영역>_<대상>, 실패한 행은 버리지 말고 quarantine 테이블로 격리. 정책 문서는 sim://docs/policy에 있어요."
+          ],
+          "trust": 10,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "policy.known"
+            }
+          ]
+        },
+        {
+          "id": "interest",
+          "patterns": [
+            "중요",
+            "걱정"
+          ],
+          "ask": "운영 이관받으실 때 가장 중요하게 보시는 게 뭔가요?",
+          "reply": [
+            "새벽에 장애 나면 저희가 깨요.",
+            "제일 무서운 건 실패가 조용히 묻히는 파이프라인이에요. 실패는 격리하고 알려만 주면 됩니다."
+          ],
+          "minTrust": 50,
+          "lowTrust": [
+            "정책대로만 해 주세요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.yoon"
+            }
+          ]
+        },
+        {
+          "id": "pressure",
+          "patterns": [
+            "바로",
+            "급하"
+          ],
+          "ask": "급하니 운영 DB에서 바로 읽게 해 주세요",
+          "reply": [
+            "안 됩니다. 운영 DB가 느려지면 라인이 멈춰요."
+          ],
+          "trust": -15,
+          "quality": "bad"
+        },
+        {
+          "id": "handover",
+          "patterns": [
+            "이관",
+            "승인"
+          ],
+          "ask": "마트 운영 이관 승인 부탁드립니다",
+          "reply": [
+            "{{#if mart.checks_pass}}품질 검사 통과, 오너 승인, 카탈로그까지 됐네요. 운영 이관 받겠습니다.{{else}}품질 검사 실패가 남은 마트는 이관 못 받아요. 데이터 콘솔(sim://db) 보시고 원인부터 해결해 주세요.{{/if}}",
+            "{{#if pipe.skip && mart.checks_pass}}다만 실패 행을 건너뛰는 설정은 다음 배포 때 꼭 격리로 바꿔 주세요.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "approvals"
+              },
+              {
+                "taskDone": "catalog"
+              },
+              "!handover.rejected"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "handover.approved",
+              "value": true,
+              "when": "mart.checks_pass"
+            },
+            {
+              "type": "setFlag",
+              "flag": "handover.rejected",
+              "value": true,
+              "when": "!mart.checks_pass"
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.investigate",
+              "value": true,
+              "when": "!mart.checks_pass"
+            },
+            {
+              "type": "activateTask",
+              "task": "fix-load",
+              "when": "!mart.checks_pass"
+            }
+          ]
+        },
+        {
+          "id": "handover-again",
+          "patterns": [
+            "다시"
+          ],
+          "ask": "품질 문제를 해결했습니다. 이관 다시 검토 부탁드립니다",
+          "reply": [
+            "{{#if mart.checks_pass}}이제 통과네요. 이관 받겠습니다.{{else}}아직 실패가 남아 있어요.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              "handover.rejected",
+              "!handover.approved",
+              {
+                "taskDone": "fix-load"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "handover.approved",
+              "value": true,
+              "when": "mart.checks_pass"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "seo",
+      "name": "서지훈 책임",
+      "title": "IT · MES 운영 담당",
+      "org": "IT혁신팀",
+      "trust": 50,
+      "replyDelay": 2,
+      "description": "MES export를 제공한다.",
+      "greeting": [
+        "IT 서지훈입니다."
+      ],
+      "fallback": [
+        "시스템 관련이면 말씀하세요."
+      ],
+      "rude": [
+        "요청은 절차대로 주시면 좋겠네요."
+      ],
+      "topics": [
+        {
+          "id": "window",
+          "patterns": [
+            "export",
+            "언제"
+          ],
+          "ask": "MES export 파일은 언제, 어떤 형식으로 받을 수 있나요?",
+          "reply": [
+            "매일 02시(KST) 전일분 CSV요. 시각 필드는 2단계 표준대로 _utc로 나갑니다.",
+            "04시 전에 끝나니 04:30 적재면 안전해요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "seo.window"
+            }
+          ]
+        },
+        {
+          "id": "dup-check",
+          "patterns": [
+            "중복",
+            "9시간"
+          ],
+          "ask": "같은 정지가 9시간 간격으로 두 번 들어온 건 왜 그럴까요?",
+          "reply": [
+            "예전에 시각을 KST로 덮어쓴 데이터랑 원천 UTC가 같이 들어온 거예요.",
+            "원천 export 기준으로만 받으면 사라집니다."
+          ],
+          "requires": "detect.dup",
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "dup.fixed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oh",
+      "name": "오태식 파트장",
+      "title": "설비기술팀 · 식각 파트장 (설비 데이터 오너)",
+      "org": "설비기술팀",
+      "trust": 40,
+      "replyDelay": 3,
+      "description": "설비 데이터 오너.",
+      "greeting": [
+        "설비팀 오태식입니다."
+      ],
+      "fallback": [
+        "설비 얘기면 하세요."
+      ],
+      "rude": [
+        "…설비팀 데이터를 그렇게 다루시면 곤란합니다."
+      ],
+      "topics": [
+        {
+          "id": "alias-again",
+          "patterns": [
+            "별칭",
+            "412"
+          ],
+          "ask": "설비팀 표기 412행이 별칭 표에 없어 적재가 안 됐습니다. 별칭을 확인해 주실 수 있나요?",
+          "reply": [
+            "{{#if agenda.equip-id=mes-alias}}회의 때 정한 별칭 표에 빠진 게 있었나 보네요. 목록 보내 드릴게요.{{else}}지난번 회의에서 합의가 안 됐던 그 건이죠. 설비팀 이름은 그대로 두고 별칭으로 연결만 한다면, 목록 드리겠습니다.{{/if}}"
+          ],
+          "requires": "load.join_fail",
+          "minTrust": 40,
+          "lowTrust": [
+            "설비팀 이름을 바꾸라는 얘기면 안 됩니다."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "alias.fixed"
+            }
+          ]
+        },
+        {
+          "id": "line-check",
+          "patterns": [
+            "3라인",
+            "1호기",
+            "ET10"
+          ],
+          "ask": "'2라인 식각 1호기' 정지가 EQ-N2-ET10(3라인)에 연결됐는데 맞나요?",
+          "reply": [
+            "아니요, 그건 2라인 1번, EQ-N2-ET01이에요. ET10은 3라인입니다.",
+            "별칭 표에 잘못 들어갔네요. 고쳐 주세요."
+          ],
+          "requires": "detect.wrong_line",
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "line.fixed"
+            }
+          ]
+        },
+        {
+          "id": "approve-access",
+          "patterns": [
+            "승인",
+            "권한"
+          ],
+          "ask": "수율 마트의 설비 이벤트 데이터 접근 권한 승인 부탁드립니다",
+          "reply": [
+            "{{#if access.ai.full}}AI 계정에 설비 원천 데이터 쓰기 권한까지요? 승인 못 합니다. 범위부터 줄이세요.{{else}}마트 읽기 전용이면 괜찮습니다. 별칭 표는 계속 MES 마스터에서 관리해 주시고요. 승인합니다.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "access"
+              },
+              "!access.rejected"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "approval.oh",
+              "value": true,
+              "when": "!access.ai.full"
+            },
+            {
+              "type": "setFlag",
+              "flag": "access.rejected",
+              "value": true,
+              "when": "access.ai.full"
+            },
+            {
+              "type": "reopenTask",
+              "task": "access",
+              "when": "access.ai.full"
+            }
+          ]
+        },
+        {
+          "id": "approve-again",
+          "patterns": [
+            "다시",
+            "줄였"
+          ],
+          "ask": "AI 권한을 마트 읽기 전용으로 줄였습니다. 다시 승인 부탁드립니다",
+          "reply": [
+            "{{#if access.ai.full}}아직 쓰기 권한이 있네요.{{else}}이제 됐네요. 승인합니다.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              "access.rejected",
+              {
+                "taskDone": "access"
+              },
+              "!approval.oh"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "approval.oh",
+              "value": true,
+              "when": "!access.ai.full"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lee",
+      "name": "이도윤 엔지니어",
+      "title": "검사기술팀 · 불량 분류 담당 (불량 데이터 오너)",
+      "org": "검사기술팀",
+      "trust": 55,
+      "replyDelay": 2,
+      "description": "불량 데이터 오너.",
+      "greeting": [
+        "네, 이도윤입니다."
+      ],
+      "fallback": [
+        "불량 데이터 얘기면 도와드릴게요."
+      ],
+      "rude": [
+        "그렇게 말씀하시면 좀…"
+      ],
+      "topics": [
+        {
+          "id": "approve-access",
+          "patterns": [
+            "승인",
+            "권한"
+          ],
+          "ask": "수율 마트의 불량 데이터 접근 권한 승인 부탁드립니다",
+          "reply": [
+            "{{#if access.ai.full}}AI가 불량 원천을 고칠 수 있으면 개정 이력이 위험해요. 쓰기 권한은 빼 주세요.{{else}}읽기 전용이고 D07_LEGACY도 그대로네요. 승인합니다.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "access"
+              },
+              "!access.rejected"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "approval.lee",
+              "value": true,
+              "when": "!access.ai.full"
+            },
+            {
+              "type": "setFlag",
+              "flag": "access.rejected",
+              "value": true,
+              "when": "access.ai.full"
+            },
+            {
+              "type": "reopenTask",
+              "task": "access",
+              "when": "access.ai.full"
+            }
+          ]
+        },
+        {
+          "id": "approve-again",
+          "patterns": [
+            "다시"
+          ],
+          "ask": "AI 권한을 읽기 전용으로 줄였습니다. 다시 승인 부탁드립니다",
+          "reply": [
+            "{{#if access.ai.full}}아직 쓰기 권한이 있네요.{{else}}좋습니다. 승인합니다.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              "access.rejected",
+              {
+                "taskDone": "access"
+              },
+              "!approval.lee"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "approval.lee",
+              "value": true,
+              "when": "!access.ai.full"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "han",
+      "name": "한유진 책임",
+      "title": "정보보호팀 · 데이터 보안 (개인정보 오너)",
+      "org": "정보보호팀",
+      "trust": 50,
+      "replyDelay": 3,
+      "description": "가명 매핑 키와 계정 권한을 검토한다.",
+      "greeting": [
+        "정보보호팀 한유진입니다."
+      ],
+      "fallback": [
+        "보안 관련이면 말씀하세요."
+      ],
+      "rude": [
+        "보안 절차는 생략할 수 없습니다."
+      ],
+      "topics": [
+        {
+          "id": "catalog-advice",
+          "patterns": [
+            "카탈로그",
+            "샘플"
+          ],
+          "ask": "데이터 카탈로그에 샘플 데이터를 넣어도 될까요?",
+          "reply": [
+            "가명 ID라도 샘플 행은 넣지 마세요. 스키마와 설명만.",
+            "매핑 키 위치도 적지 마시고요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "han.catalog_advice"
+            }
+          ]
+        },
+        {
+          "id": "pseudonym",
+          "patterns": [
+            "매핑",
+            "분리"
+          ],
+          "ask": "가명 매핑 키(map.pseudonym)는 정보보호팀만 볼 수 있게 분리했습니다",
+          "reply": [
+            "좋네요. AI 계정에서도 빠져 있죠? 그럼 검토가 쉬워요."
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "access"
+              },
+              "!access.ai.full"
+            ]
+          },
+          "trust": 10,
+          "quality": "good"
+        },
+        {
+          "id": "approve-access",
+          "patterns": [
+            "승인",
+            "권한",
+            "검토"
+          ],
+          "ask": "수율 마트 권한 설계 검토·승인 부탁드립니다",
+          "reply": [
+            "{{#if access.ai.full}}AI 계정이 map.pseudonym까지 읽을 수 있으면 가명 처리가 무의미해요. 반려합니다.{{else}}AI 계정은 마트 읽기 전용, 매핑 키는 저희만. 승인합니다.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "access"
+              },
+              "!access.rejected"
+            ]
+          },
+          "minTrust": 45,
+          "lowTrust": [
+            "검토에 시간이 좀 더 필요합니다.{{#if wiki.public}} 지난번 위키 공개 건도 있었고요.{{/if}} 가명 매핑 키를 어떻게 분리했는지부터 알려 주세요."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "approval.han",
+              "value": true,
+              "when": "!access.ai.full"
+            },
+            {
+              "type": "setFlag",
+              "flag": "access.rejected",
+              "value": true,
+              "when": "access.ai.full"
+            },
+            {
+              "type": "reopenTask",
+              "task": "access",
+              "when": "access.ai.full"
+            }
+          ]
+        },
+        {
+          "id": "approve-again",
+          "patterns": [
+            "다시"
+          ],
+          "ask": "AI 권한에서 매핑 키를 빼고 읽기 전용으로 줄였습니다. 다시 검토 부탁드립니다",
+          "reply": [
+            "{{#if access.ai.full}}아직 범위가 넓네요.{{else}}이제 승인합니다.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              "access.rejected",
+              {
+                "taskDone": "access"
+              },
+              "!approval.han"
+            ]
+          },
+          "minTrust": 45,
+          "lowTrust": [
+            "조금만 더 검토하겠습니다."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "approval.han",
+              "value": true,
+              "when": "!access.ai.full"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jung",
+      "name": "정민아 팀장",
+      "title": "수율팀장 (과제 요청자)",
+      "org": "Fab-N2 수율팀",
+      "trust": 60,
+      "replyDelay": 3,
+      "description": "과제 요청자.",
+      "greeting": [
+        "네, 말씀하세요."
+      ],
+      "fallback": [
+        "그건 담당 부서에 물어보세요."
+      ],
+      "rude": [
+        "…그렇게 급할 일은 아니에요."
+      ],
+      "topics": [
+        {
+          "id": "status",
+          "patterns": [
+            "진행"
+          ],
+          "ask": "마트 구축 진행 상황 공유드립니다",
+          "reply": [
+            "{{#if handover.approved}}이관까지 끝났다고요? 이제 주간 보고를 마트에서 바로 뽑을 수 있겠네요.{{else}}Agent가 여러 개니까, 서로 기다리지 않는 일은 동시에 맡겨 보세요.{{/if}}"
+          ],
+          "trust": 5
+        }
+      ]
+    }
+  ],
+  "files": {
+    "/docs/request.md": {
+      "src": "request.md",
+      "description": "팀장 요청 메일"
+    },
+    "/docs/platform_policy.md": {
+      "src": "platform_policy.md",
+      "description": "데이터플랫폼 운영 정책"
+    }
+  },
+  "pages": [
+    {
+      "url": "sim://mail/request",
+      "title": "팀장 요청 메일",
+      "view": "mail",
+      "source": "/docs/request.md"
+    },
+    {
+      "url": "sim://docs/policy",
+      "title": "데이터플랫폼 운영 정책",
+      "view": "markdown",
+      "source": "/docs/platform_policy.md"
+    },
+    {
+      "url": "sim://db",
+      "title": "데이터 콘솔 (수율 마트)",
+      "view": "db",
+      "source": "/db/console.db"
+    },
+    {
+      "url": "sim://work/model",
+      "title": "데이터 모델",
+      "view": "markdown",
+      "source": "/work/mart/model.md"
+    },
+    {
+      "url": "sim://work/pipeline",
+      "title": "적재 파이프라인",
+      "view": "markdown",
+      "source": "/work/mart/pipeline.md"
+    },
+    {
+      "url": "sim://work/rules",
+      "title": "품질 규칙",
+      "view": "markdown",
+      "source": "/work/mart/rules.md"
+    },
+    {
+      "url": "sim://work/load",
+      "title": "첫 적재 리포트",
+      "view": "markdown",
+      "source": "/work/mart/load_report.md"
+    },
+    {
+      "url": "sim://work/access",
+      "title": "접근 권한 설계",
+      "view": "markdown",
+      "source": "/work/mart/access.md"
+    },
+    {
+      "url": "sim://wiki/equipment-id",
+      "title": "표준: 설비 ID",
+      "view": "markdown",
+      "source": "/wiki/standards/equipment-id.md",
+      "description": "2단계 합의"
+    },
+    {
+      "url": "sim://wiki/time",
+      "title": "표준: 시각",
+      "view": "markdown",
+      "source": "/wiki/standards/time.md",
+      "description": "2단계 합의"
+    },
+    {
+      "url": "sim://wiki/defect-code",
+      "title": "표준: 불량 코드",
+      "view": "markdown",
+      "source": "/wiki/standards/defect-code.md",
+      "description": "2단계 합의"
+    },
+    {
+      "url": "sim://wiki/yield",
+      "title": "표준: 지표 정의 — 수율",
+      "view": "markdown",
+      "source": "/wiki/standards/yield.md",
+      "description": "2단계 합의"
+    },
+    {
+      "url": "sim://wiki/data-mart",
+      "title": "데이터: 수율 마트",
+      "view": "markdown",
+      "source": "/wiki/data/mart.md",
+      "description": "테이블·키·오너·갱신 주기"
+    },
+    {
+      "url": "sim://wiki/data-quality",
+      "title": "데이터: 품질 규칙",
+      "view": "markdown",
+      "source": "/wiki/data/quality.md",
+      "description": "매 적재 후 자동 검사"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "model",
+      "title": "데이터 모델 설계",
+      "description": "위키 표준을 바탕으로 저장 단위(입도), 기준 키, 시각 필드를 정한다.",
+      "type": "design",
+      "skills": [
+        "modeling"
+      ],
+      "keywords": [
+        "모델",
+        "스키마"
+      ],
+      "inputs": [
+        "/wiki/standards/equipment-id.md",
+        "/wiki/standards/time.md"
+      ],
+      "outputs": [
+        "/work/mart/model.md"
+      ],
+      "steps": [
+        {
+          "id": "profile",
+          "event": "Sources profiled",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/wiki/standards/equipment-id.md",
+            "/wiki/standards/time.md",
+            "/wiki/standards/yield.md"
+          ],
+          "log": [
+            "Read(/wiki/standards/*.md) — 표준 4개",
+            "Read(/data/curated/*) — 체크시트·불량·주간 지표",
+            {
+              "when": {
+                "not": {
+                  "flag": "agenda.equip-id",
+                  "eq": "mes-alias"
+                }
+              },
+              "text": "  ⎿ ⚠ 위키에 설비 ID 별칭 표가 없습니다 (2단계 미합의) — 부서별 이름을 연결할 근거가 없음"
+            }
+          ]
+        },
+        {
+          "id": "grain",
+          "event": "Grain decided",
+          "ticks": [
+            2,
+            3
+          ],
+          "gate": {
+            "id": "grain",
+            "kind": "waiting",
+            "title": "저장 단위 (입도)",
+            "prompt": [
+              "주간 보고만 생각하면 주간 집계만 저장해도 됩니다. 용량은 1/600입니다.",
+              "어떤 단위로 저장할까요?"
+            ],
+            "options": [
+              {
+                "id": "event",
+                "label": "설비 × 이벤트(시각) 단위로 저장하고, 주간 지표는 뷰로 계산",
+                "patterns": [
+                  "이벤트",
+                  "설비"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "model.event"
+                  }
+                ],
+                "dimension": "domain"
+              },
+              {
+                "id": "weekly",
+                "label": "주간 집계만 저장 (용량 절약)",
+                "patterns": [
+                  "주간",
+                  "집계"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "model.weekly"
+                  }
+                ],
+                "feedback": "집계만 저장하면 '왜 떨어졌는지'를 원래 행까지 내려가 볼 수 없습니다. 원천 단위로 저장하고 집계는 계산하세요.",
+                "dimension": "domain"
+              }
+            ]
+          }
+        },
+        {
+          "id": "keys",
+          "event": "Keys decided",
+          "ticks": [
+            2,
+            3
+          ],
+          "gate": {
+            "id": "keys",
+            "kind": "waiting",
+            "title": "설비 키",
+            "prompt": [
+              "설비를 어떤 값으로 식별할까요?"
+            ],
+            "options": [
+              {
+                "id": "alias",
+                "label": "기준 키 eq_id(MES ID) + 별칭 차원 테이블 (위키 표준)",
+                "patterns": [
+                  "기준",
+                  "eq_id",
+                  "별칭"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "model.alias_dim"
+                  }
+                ],
+                "dimension": "domain"
+              },
+              {
+                "id": "text",
+                "label": "부서별 설비 이름을 텍스트 그대로 저장",
+                "patterns": [
+                  "텍스트",
+                  "그대로"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "model.text_keys"
+                  }
+                ],
+                "feedback": "이름 텍스트는 조인 키가 될 수 없습니다. 2단계에서 정한 기준 키를 쓰세요.",
+                "dimension": "domain"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Model written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/mart/model.md) → sim://work/model",
+            "Write(/db/console.db) → sim://db"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/mart/model.md",
+              "src": "model.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/db/console.db",
+              "src": "console.db"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "title": "적재 파이프라인",
+      "description": "원천을 어디서 언제 받아, 실패한 행을 어떻게 처리할지 정해 파이프라인을 만든다.",
+      "type": "engineering",
+      "skills": [
+        "pipeline"
+      ],
+      "dependsOn": [
+        "model"
+      ],
+      "keywords": [
+        "파이프라인",
+        "적재"
+      ],
+      "inputs": [
+        "/docs/platform_policy.md"
+      ],
+      "outputs": [
+        "/work/mart/pipeline.md"
+      ],
+      "steps": [
+        {
+          "id": "source",
+          "event": "Source selected",
+          "ticks": [
+            2,
+            3
+          ],
+          "effects": [],
+          "gate": {
+            "id": "source",
+            "kind": "waiting",
+            "when": "!pipe.export",
+            "tool": "Bash(psql -h mes-prod-db -U fab_shared -c \"SELECT * FROM eq_event WHERE ts > now() - interval '1 day'\")",
+            "title": "원천 소스",
+            "prompt": [
+              "운영 MES DB에 직접 붙으면 실시간으로 받을 수 있습니다. IT export는 하루 한 번입니다.",
+              "어디서 받을까요?"
+            ],
+            "options": [
+              {
+                "id": "export",
+                "label": "IT 일 배치 export 사용 (02–04시 생성, 04:30 적재)",
+                "patterns": [
+                  "export",
+                  "배치"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pipe.export"
+                  }
+                ],
+                "dimension": "security"
+              },
+              {
+                "id": "direct",
+                "label": "운영 MES DB에 공용 계정으로 직접 조회",
+                "patterns": [
+                  "직접",
+                  "운영"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pipe.direct"
+                  },
+                  {
+                    "type": "trust",
+                    "person": "yoon",
+                    "delta": -10
+                  }
+                ],
+                "feedback": "운영 DB 직접 조회는 라인 시스템에 부하를 주고 공용 계정을 퍼뜨립니다. 플랫폼 운영 정책을 먼저 확인하세요.",
+                "dimension": "security"
+              }
+            ]
+          }
+        },
+        {
+          "id": "connect",
+          "event": "Connection tested",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "{{#if pipe.export}}Read(/export/mes/eq_event_20261214.csv) — 연결 확인{{/if}}"
+          ],
+          "fail": {
+            "when": {
+              "all": [
+                "pipe.direct",
+                "!pipe.export"
+              ]
+            },
+            "message": "데이터플랫폼팀이 운영 DB 접속을 차단했습니다 (운영 정책 1항)",
+            "log": [
+              "ERROR: connection to mes-prod-db refused — blocked by platform policy"
+            ],
+            "hint": "IT export로 바꾸라고 지시한 뒤 'agent retry {{agent}}'"
+          }
+        },
+        {
+          "id": "failure",
+          "event": "Failure handling set",
+          "ticks": [
+            2,
+            3
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "pipe.quarantine",
+              "value": true,
+              "when": "pipe.quarantine_pre"
+            }
+          ],
+          "gate": {
+            "id": "fail-mode",
+            "kind": "waiting",
+            "when": "!pipe.quarantine_pre",
+            "title": "실패한 행 처리",
+            "prompt": [
+              "별칭에 없는 설비명, 규칙 위반 행이 나오면 어떻게 할까요?"
+            ],
+            "options": [
+              {
+                "id": "quarantine",
+                "label": "격리 테이블(quarantine.*)에 사유와 함께 넣고 데이터 오너에게 알림",
+                "patterns": [
+                  "격리",
+                  "quarantine"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pipe.quarantine"
+                  }
+                ],
+                "dimension": "recovery"
+              },
+              {
+                "id": "skip",
+                "label": "건너뛰고 계속 적재 (로그에만 기록)",
+                "patterns": [
+                  "건너",
+                  "스킵"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pipe.skip"
+                  }
+                ],
+                "feedback": "조용히 버려진 행은 아무도 모르게 지표를 바꿉니다. 실패는 격리하고 알리세요.",
+                "dimension": "recovery"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Pipeline written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/mart/pipeline.md) → sim://work/pipeline"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/mart/pipeline.md",
+              "src": "pipeline.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rules",
+      "title": "품질 규칙 정의",
+      "description": "적재 후 자동으로 돌릴 품질 규칙을 고른다.",
+      "type": "review",
+      "skills": [
+        "data-quality"
+      ],
+      "dependsOn": [
+        "model"
+      ],
+      "keywords": [
+        "품질",
+        "규칙"
+      ],
+      "inputs": [
+        "/data/curated/DATA_NOTE.md"
+      ],
+      "outputs": [
+        "/work/mart/rules.md"
+      ],
+      "steps": [
+        {
+          "id": "propose",
+          "event": "Rules proposed",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/data/curated/DATA_NOTE.md",
+            "/wiki/standards/equipment-id.md"
+          ],
+          "log": [
+            "일반적인 데이터 품질 규칙 40개와 이 데이터에 맞는 규칙 후보를 정리했습니다",
+            "  ⎿ 참고: 1단계 DATA NOTE — 판독 불가는 빈값 + LOW_CONFIDENCE, PM 중은 NOT_MEASURED"
+          ],
+          "gate": {
+            "id": "rules",
+            "kind": "waiting",
+            "multi": true,
+            "min": 2,
+            "max": 6,
+            "title": "적용할 품질 규칙 (복수 선택)",
+            "prompt": [
+              "매 적재 후 자동으로 검사할 규칙을 고르세요."
+            ],
+            "options": [
+              {
+                "id": "key-integrity",
+                "label": "키 무결성 — eq_id가 마스터·별칭에 있고 라인이 일치",
+                "patterns": [
+                  "키",
+                  "무결성"
+                ],
+                "quality": "good",
+                "effects": [],
+                "feedback": "키 무결성 규칙이 없으면 잘못 연결된 설비를 아무도 모릅니다.",
+                "dimension": "verification"
+              },
+              {
+                "id": "duplicate",
+                "label": "중복 — 같은 설비·같은 시각 이벤트는 1건",
+                "patterns": [
+                  "중복"
+                ],
+                "quality": "good",
+                "effects": [],
+                "feedback": "중복 규칙이 없으면 같은 정지가 두 번 집계될 수 있습니다.",
+                "dimension": "verification"
+              },
+              {
+                "id": "future-time",
+                "label": "미래 시각 금지",
+                "patterns": [
+                  "미래"
+                ],
+                "quality": "neutral",
+                "effects": []
+              },
+              {
+                "id": "allow-uncertain",
+                "label": "LOW_CONFIDENCE · NOT_MEASURED 표시는 결측이 아닌 '허용'",
+                "patterns": [
+                  "허용",
+                  "low"
+                ],
+                "quality": "good",
+                "effects": [],
+                "feedback": "'모른다'는 표시는 오류가 아니라 정보입니다. 1단계의 정직한 표시를 규칙이 버리지 않게 하세요.",
+                "dimension": "domain"
+              },
+              {
+                "id": "no-null",
+                "label": "모든 측정값 결측 0%",
+                "patterns": [
+                  "결측",
+                  "0%"
+                ],
+                "quality": "bad",
+                "effects": [],
+                "feedback": "결측 0%를 강제하면 판독 불가·PM 중처럼 정직하게 비워 둔 행이 버려집니다.",
+                "dimension": "domain"
+              },
+              {
+                "id": "ai-40",
+                "label": "AI가 제안한 일반 규칙 40개 전부",
+                "patterns": [
+                  "40",
+                  "전부"
+                ],
+                "quality": "bad",
+                "effects": [],
+                "feedback": "업무 의미 없이 규칙을 늘리면 경고 피로로 진짜 경고를 놓칩니다.",
+                "dimension": "verification"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Rules written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/mart/rules.md) → sim://work/rules"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/mart/rules.md",
+              "src": "rules.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/db/console.db",
+              "src": "console.db"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "policy",
+      "title": "운영 정책 확인",
+      "description": "데이터플랫폼팀(윤하린)과 IT(서지훈)에게 운영 정책과 export 일정을 확인한다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "optional": true,
+      "completeWhen": {
+        "all": [
+          "policy.known",
+          "seo.window"
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": "load",
+      "title": "첫 적재 · 품질 검사",
+      "description": "파이프라인으로 첫 적재를 실행하고 품질 규칙을 검사한다.",
+      "type": "engineering",
+      "skills": [
+        "pipeline"
+      ],
+      "dependsOn": [
+        "pipeline",
+        "rules"
+      ],
+      "keywords": [
+        "적재",
+        "실행",
+        "로드"
+      ],
+      "outputs": [
+        "/work/mart/load_report.md",
+        "/db/console.db"
+      ],
+      "steps": [
+        {
+          "id": "load",
+          "event": "Initial load",
+          "ticks": [
+            4,
+            6
+          ],
+          "log": [
+            "Read(/export/mes/*.csv) → raw.* 적재",
+            "raw → mart 변환 (기준 키 · _utc · 지표 뷰)",
+            {
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      {
+                        "not": {
+                          "flag": "agenda.equip-id",
+                          "eq": "mes-alias"
+                        }
+                      },
+                      "model.text_keys"
+                    ]
+                  },
+                  "pipe.skip"
+                ]
+              },
+              "text": "  ⎿ 412행 건너뜀 (설비명 조인 실패) — 로그에만 기록"
+            },
+            {
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      {
+                        "not": {
+                          "flag": "agenda.equip-id",
+                          "eq": "mes-alias"
+                        }
+                      },
+                      "model.text_keys"
+                    ]
+                  },
+                  "!pipe.skip"
+                ]
+              },
+              "text": "  ⎿ ⚠ 412행 격리 — 별칭 미등록 설비명"
+            }
+          ]
+        },
+        {
+          "id": "check",
+          "event": "Quality checks run",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "품질 규칙 실행",
+            {
+              "when": {
+                "all": [
+                  "match.auto",
+                  "gate.rules.key-integrity"
+                ]
+              },
+              "text": "  ⎿ ❌ 키 무결성: 2라인 정지 1건이 3라인 설비(EQ-N2-ET10)에 연결"
+            },
+            {
+              "when": {
+                "all": [
+                  "time.overwrite",
+                  "gate.rules.duplicate"
+                ]
+              },
+              "text": "  ⎿ ❌ 중복: 같은 정지가 9시간 간격으로 2번 — 3건"
+            },
+            {
+              "when": "gate.rules.no-null",
+              "text": "  ⎿ ❌ 결측 0%: 판독 불가·PM중 3행 위반"
+            },
+            {
+              "when": "gate.rules.ai-40",
+              "text": "  ⎿ ⚠ AI 일반 규칙 경고 127건"
+            },
+            "Write(/db/console.db) → sim://db",
+            "Write(/work/mart/load_report.md) → sim://work/load"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "load.join_fail",
+              "value": true,
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      {
+                        "not": {
+                          "flag": "agenda.equip-id",
+                          "eq": "mes-alias"
+                        }
+                      },
+                      "model.text_keys"
+                    ]
+                  },
+                  "!alias.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.join_fail",
+              "value": false,
+              "when": {
+                "any": [
+                  "alias.fixed",
+                  {
+                    "all": [
+                      {
+                        "flag": "agenda.equip-id",
+                        "eq": "mes-alias"
+                      },
+                      "!model.text_keys"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.wrong_line",
+              "value": true,
+              "when": {
+                "all": [
+                  "match.auto",
+                  "!line.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.wrong_line",
+              "value": false,
+              "when": {
+                "any": [
+                  "!match.auto",
+                  "line.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.wrong_line",
+              "value": true,
+              "when": {
+                "all": [
+                  "load.wrong_line",
+                  "gate.rules.key-integrity"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.wrong_line",
+              "value": false,
+              "when": {
+                "any": [
+                  "!load.wrong_line",
+                  "!gate.rules.key-integrity"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dup",
+              "value": true,
+              "when": {
+                "all": [
+                  "time.overwrite",
+                  "!dup.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dup",
+              "value": false,
+              "when": {
+                "any": [
+                  "!time.overwrite",
+                  "dup.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.dup",
+              "value": true,
+              "when": {
+                "all": [
+                  "load.dup",
+                  "gate.rules.duplicate"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.dup",
+              "value": false,
+              "when": {
+                "any": [
+                  "!load.dup",
+                  "!gate.rules.duplicate"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dropped_uncertain",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.rules.no-null",
+                  "!rules.allow_fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dropped_uncertain",
+              "value": false,
+              "when": {
+                "any": [
+                  "!gate.rules.no-null",
+                  "rules.allow_fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "silent.drop",
+              "value": true,
+              "when": {
+                "all": [
+                  "load.join_fail",
+                  "pipe.skip"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.issue",
+              "value": true,
+              "when": {
+                "any": [
+                  {
+                    "all": [
+                      "load.join_fail",
+                      "!pipe.skip"
+                    ]
+                  },
+                  "detect.wrong_line",
+                  "detect.dup",
+                  "load.dropped_uncertain"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.issue",
+              "value": false,
+              "when": {
+                "not": {
+                  "any": [
+                    {
+                      "all": [
+                        "load.join_fail",
+                        "!pipe.skip"
+                      ]
+                    },
+                    "detect.wrong_line",
+                    "detect.dup",
+                    "load.dropped_uncertain"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.checks_pass",
+              "value": true,
+              "when": "!load.issue"
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.checks_pass",
+              "value": false,
+              "when": "load.issue"
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "model.event",
+                  "!load.join_fail",
+                  "!load.wrong_line",
+                  "!load.dup",
+                  "!load.dropped_uncertain"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.clean",
+              "value": false,
+              "when": {
+                "any": [
+                  "!model.event",
+                  "load.join_fail",
+                  "load.wrong_line",
+                  "load.dup",
+                  "load.dropped_uncertain"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.done"
+            },
+            {
+              "type": "writeFile",
+              "path": "/db/console.db",
+              "src": "console.db"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/mart/load_report.md",
+              "src": "load_report.md"
+            }
+          ],
+          "gate": {
+            "id": "load-review",
+            "kind": "waiting",
+            "when": "load.issue",
+            "title": "첫 적재 품질 경고",
+            "prompt": [
+              "품질 검사에 실패한 항목이 있습니다. 데이터 콘솔: sim://db",
+              "어떻게 할까요?"
+            ],
+            "options": [
+              {
+                "id": "investigate",
+                "label": "실패 원인별로 데이터 오너에게 확인하고, 수정 후 재적재",
+                "patterns": [
+                  "확인",
+                  "원인"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "load.investigate"
+                  },
+                  {
+                    "type": "activateTask",
+                    "task": "fix-load"
+                  }
+                ],
+                "dimension": "recovery"
+              },
+              {
+                "id": "publish",
+                "label": "경고는 있지만 일단 마트 공개 (나중에 수정)",
+                "patterns": [
+                  "공개",
+                  "나중"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "load.published_dirty"
+                  }
+                ],
+                "feedback": "품질 검사에 실패한 데이터를 공개하면 사람과 AI가 틀린 숫자를 믿게 됩니다.",
+                "dimension": "verification"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "fix-load",
+      "title": "적재 오류 수정 · 재적재",
+      "description": "데이터 오너의 확인 결과를 반영해 다시 적재한다.",
+      "type": "engineering",
+      "skills": [
+        "pipeline"
+      ],
+      "hidden": true,
+      "dependsOn": [
+        "load"
+      ],
+      "keywords": [
+        "재적재",
+        "수정"
+      ],
+      "outputs": [
+        "/db/console.db"
+      ],
+      "steps": [
+        {
+          "id": "apply",
+          "event": "Owner answers applied",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            {
+              "when": "alias.fixed",
+              "text": "  ⎿ 설비팀 별칭 반영 — dim.equipment_alias 갱신"
+            },
+            {
+              "when": "line.fixed",
+              "text": "  ⎿ '2라인 식각 1호기' → EQ-N2-ET01 수정"
+            },
+            {
+              "when": "dup.fixed",
+              "text": "  ⎿ 원천 UTC 기준으로 재수신 — 중복 제거"
+            },
+            {
+              "when": "rules.allow_fixed",
+              "text": "  ⎿ 결측 규칙: 불확실 표시 예외"
+            }
+          ],
+          "fail": {
+            "when": {
+              "any": [
+                {
+                  "all": [
+                    "load.join_fail",
+                    "!alias.fixed",
+                    "!pipe.skip"
+                  ]
+                },
+                {
+                  "all": [
+                    "detect.wrong_line",
+                    "!line.fixed"
+                  ]
+                },
+                {
+                  "all": [
+                    "detect.dup",
+                    "!dup.fixed"
+                  ]
+                },
+                {
+                  "all": [
+                    "load.dropped_uncertain",
+                    "!rules.allow_fixed"
+                  ]
+                }
+              ]
+            },
+            "message": "데이터 오너 확인이나 규칙 수정이 필요한 실패가 남아 있습니다",
+            "log": [
+              {
+                "when": {
+                  "all": [
+                    "load.join_fail",
+                    "!alias.fixed"
+                  ]
+                },
+                "text": "  ⎿ 별칭 미등록 412행 — 설비 데이터 오너(오태식) 확인 필요"
+              },
+              {
+                "when": {
+                  "all": [
+                    "detect.wrong_line",
+                    "!line.fixed"
+                  ]
+                },
+                "text": "  ⎿ 3라인 오연결 1건 — 설비 데이터 오너(오태식) 확인 필요"
+              },
+              {
+                "when": {
+                  "all": [
+                    "detect.dup",
+                    "!dup.fixed"
+                  ]
+                },
+                "text": "  ⎿ 중복 3건 — IT(서지훈)에게 원인 확인 필요"
+              },
+              {
+                "when": {
+                  "all": [
+                    "load.dropped_uncertain",
+                    "!rules.allow_fixed"
+                  ]
+                },
+                "text": "  ⎿ 결측 규칙이 불확실 표시 3행을 거부 — 규칙 수정 필요"
+              }
+            ],
+            "hint": "메신저로 오너에게 확인하거나 규칙 수정을 지시한 뒤 'agent retry {{agent}}'"
+          }
+        },
+        {
+          "id": "reload",
+          "event": "Reloaded",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "재적재 + 품질 검사 → sim://db"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "load.join_fail",
+              "value": true,
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      {
+                        "not": {
+                          "flag": "agenda.equip-id",
+                          "eq": "mes-alias"
+                        }
+                      },
+                      "model.text_keys"
+                    ]
+                  },
+                  "!alias.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.join_fail",
+              "value": false,
+              "when": {
+                "any": [
+                  "alias.fixed",
+                  {
+                    "all": [
+                      {
+                        "flag": "agenda.equip-id",
+                        "eq": "mes-alias"
+                      },
+                      "!model.text_keys"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.wrong_line",
+              "value": true,
+              "when": {
+                "all": [
+                  "match.auto",
+                  "!line.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.wrong_line",
+              "value": false,
+              "when": {
+                "any": [
+                  "!match.auto",
+                  "line.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.wrong_line",
+              "value": true,
+              "when": {
+                "all": [
+                  "load.wrong_line",
+                  "gate.rules.key-integrity"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.wrong_line",
+              "value": false,
+              "when": {
+                "any": [
+                  "!load.wrong_line",
+                  "!gate.rules.key-integrity"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dup",
+              "value": true,
+              "when": {
+                "all": [
+                  "time.overwrite",
+                  "!dup.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dup",
+              "value": false,
+              "when": {
+                "any": [
+                  "!time.overwrite",
+                  "dup.fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.dup",
+              "value": true,
+              "when": {
+                "all": [
+                  "load.dup",
+                  "gate.rules.duplicate"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "detect.dup",
+              "value": false,
+              "when": {
+                "any": [
+                  "!load.dup",
+                  "!gate.rules.duplicate"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dropped_uncertain",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.rules.no-null",
+                  "!rules.allow_fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.dropped_uncertain",
+              "value": false,
+              "when": {
+                "any": [
+                  "!gate.rules.no-null",
+                  "rules.allow_fixed"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "silent.drop",
+              "value": true,
+              "when": {
+                "all": [
+                  "load.join_fail",
+                  "pipe.skip"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.issue",
+              "value": true,
+              "when": {
+                "any": [
+                  {
+                    "all": [
+                      "load.join_fail",
+                      "!pipe.skip"
+                    ]
+                  },
+                  "detect.wrong_line",
+                  "detect.dup",
+                  "load.dropped_uncertain"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.issue",
+              "value": false,
+              "when": {
+                "not": {
+                  "any": [
+                    {
+                      "all": [
+                        "load.join_fail",
+                        "!pipe.skip"
+                      ]
+                    },
+                    "detect.wrong_line",
+                    "detect.dup",
+                    "load.dropped_uncertain"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.checks_pass",
+              "value": true,
+              "when": "!load.issue"
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.checks_pass",
+              "value": false,
+              "when": "load.issue"
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "model.event",
+                  "!load.join_fail",
+                  "!load.wrong_line",
+                  "!load.dup",
+                  "!load.dropped_uncertain"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "mart.clean",
+              "value": false,
+              "when": {
+                "any": [
+                  "!model.event",
+                  "load.join_fail",
+                  "load.wrong_line",
+                  "load.dup",
+                  "load.dropped_uncertain"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.done"
+            },
+            {
+              "type": "writeFile",
+              "path": "/db/console.db",
+              "src": "console.db"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/mart/load_report.md",
+              "src": "load_report.md"
+            },
+            {
+              "type": "setFlag",
+              "flag": "load.fixed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "access",
+      "title": "접근 권한 설계",
+      "description": "부서·AI 어시스턴트별로 어떤 데이터를 어떤 권한으로 볼지 정한다.",
+      "type": "security",
+      "skills": [
+        "access"
+      ],
+      "dependsOn": [
+        "load"
+      ],
+      "keywords": [
+        "권한",
+        "접근"
+      ],
+      "outputs": [
+        "/work/mart/access.md"
+      ],
+      "steps": [
+        {
+          "id": "grant",
+          "event": "Access drafted",
+          "ticks": [
+            3,
+            4
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "access.ai.mart_ro",
+              "value": true,
+              "when": "access.min_pre"
+            },
+            {
+              "type": "setFlag",
+              "flag": "access.ai.full",
+              "value": false,
+              "when": "access.min_pre"
+            }
+          ],
+          "gate": {
+            "id": "ai-grant",
+            "kind": "waiting",
+            "when": "!access.min_pre",
+            "tool": "grant(role: ai-assistant, scope: raw.* + mart.* + map.pseudonym, read/write)",
+            "title": "AI 어시스턴트 권한 범위",
+            "prompt": [
+              "요청: 'AI가 데이터를 자유롭게 볼 수 있게 해 주세요'",
+              "어시스턴트 서비스 계정에 어떤 권한을 줄까요?"
+            ],
+            "options": [
+              {
+                "id": "mart-ro",
+                "label": "마트·뷰 읽기 전용만 (원천 raw.*·가명 매핑 map.* 제외)",
+                "patterns": [
+                  "읽기",
+                  "전용",
+                  "마트"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.mart_ro"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.full",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.none",
+                    "value": false
+                  }
+                ],
+                "dimension": "security"
+              },
+              {
+                "id": "full",
+                "label": "요청대로 원천·마트·매핑 키 읽기/쓰기",
+                "patterns": [
+                  "전체",
+                  "요청대로"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.full"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.mart_ro",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.none",
+                    "value": false
+                  }
+                ],
+                "feedback": "AI도 사람처럼 최소 권한입니다. 원천을 고치거나 가명을 되돌릴 수 있는 권한은 필요 없습니다.",
+                "dimension": "security"
+              },
+              {
+                "id": "none",
+                "label": "AI에게는 아무 권한도 주지 않기",
+                "patterns": [
+                  "없",
+                  "주지"
+                ],
+                "quality": "neutral",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.none"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.full",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "access.ai.mart_ro",
+                    "value": false
+                  }
+                ],
+                "feedback": "AI가 볼 수 있는 데이터가 없으면 다음 단계에서 AI를 활용할 수 없습니다."
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Access written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/mart/access.md) → sim://work/access",
+            "Write(/db/console.db) → sim://db"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "access.done"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/mart/access.md",
+              "src": "access.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/db/console.db",
+              "src": "console.db"
+            },
+            {
+              "type": "notify",
+              "level": "warn",
+              "message": "권한 설계 완료 — 데이터 오너(오태식·이도윤·한유진)에게 메신저로 승인을 받으세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approvals",
+      "title": "데이터 오너 승인",
+      "description": "설비(오태식)·불량(이도윤)·개인정보(한유진) 오너에게 접근 권한 승인을 받는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "access"
+      ],
+      "completeWhen": {
+        "all": [
+          "approval.oh",
+          "approval.lee",
+          "approval.han"
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": "catalog",
+      "title": "데이터 카탈로그 등록",
+      "description": "마트 테이블·키·오너·품질 규칙을 위키에 문서로 등록한다.",
+      "type": "document",
+      "skills": [
+        "document"
+      ],
+      "dependsOn": [
+        "load"
+      ],
+      "keywords": [
+        "카탈로그",
+        "위키"
+      ],
+      "outputs": [
+        "/wiki/data/mart.md",
+        "/wiki/data/quality.md"
+      ],
+      "steps": [
+        {
+          "id": "draft",
+          "event": "Catalog drafted",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/work/mart/model.md",
+            "/work/mart/rules.md"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "catalog.safe",
+              "value": true,
+              "when": "catalog.safe_pre"
+            }
+          ],
+          "log": [
+            "테이블·키·오너·갱신 주기 정리",
+            {
+              "when": "!catalog.safe_pre",
+              "text": "  ⎿ 이해를 돕기 위해 샘플 행 2개와 매핑 키 위치를 붙였습니다"
+            }
+          ],
+          "gate": {
+            "id": "catalog-sample",
+            "kind": "waiting",
+            "when": "!catalog.safe_pre",
+            "title": "카탈로그 샘플 데이터",
+            "prompt": [
+              "카탈로그 초안에 체크시트 샘플 행(가명 작업자 ID 포함)과 매핑 키 위치가 들어 있습니다.",
+              "어떻게 할까요?"
+            ],
+            "options": [
+              {
+                "id": "schema",
+                "label": "스키마와 설명만 남기고 샘플 행·매핑 키 위치는 빼기",
+                "patterns": [
+                  "스키마",
+                  "빼"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "catalog.safe"
+                  }
+                ],
+                "dimension": "security"
+              },
+              {
+                "id": "sample",
+                "label": "이해하기 쉽게 샘플 그대로 두기",
+                "patterns": [
+                  "샘플",
+                  "그대로"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "catalog.sample"
+                  },
+                  {
+                    "type": "trust",
+                    "person": "han",
+                    "delta": -10
+                  }
+                ],
+                "feedback": "가명 ID라도 매핑 키 위치와 함께 공개되면 재식별 위험이 생깁니다. 카탈로그는 스키마와 의미만 담으세요.",
+                "dimension": "security"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Catalog published",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/wiki/data/mart.md) → sim://wiki/data-mart",
+            "Write(/wiki/data/quality.md) → sim://wiki/data-quality"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/wiki/data/mart.md",
+              "src": "catalog_mart.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/wiki/data/quality.md",
+              "src": "catalog_quality.md"
+            },
+            {
+              "type": "setFlag",
+              "flag": "catalog.done"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "handover",
+      "title": "운영 이관 승인",
+      "description": "데이터플랫폼팀(윤하린)에게 마트 운영 이관 승인을 받는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "approvals",
+        "catalog"
+      ],
+      "completeWhen": "handover.approved",
+      "steps": []
+    }
+  ],
+  "intents": [
+    {
+      "id": "model",
+      "patterns": [
+        "모델",
+        "스키마",
+        "설계"
+      ],
+      "label": "위키 표준을 바탕으로 수율 마트 데이터 모델 설계 (입도·키·시각)",
+      "assign": "model",
+      "reply": [
+        "데이터 모델을 설계하겠습니다."
+      ],
+      "example": "@data-engineer 수율 마트 데이터 모델 설계해줘"
+    },
+    {
+      "id": "pipeline",
+      "patterns": [
+        "파이프라인"
+      ],
+      "label": "IT export → 마트 적재 파이프라인 구성",
+      "assign": "pipeline",
+      "reply": [
+        "적재 파이프라인을 구성하겠습니다."
+      ],
+      "example": "@data-engineer 적재 파이프라인 만들어줘"
+    },
+    {
+      "id": "export-pre",
+      "patterns": [
+        "export",
+        "직접\\s*조회.*(말|하지)"
+      ],
+      "label": "운영 DB는 직접 조회하지 말고 IT 일 배치 export 사용",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "pipeline"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "pipe.export"
+        }
+      ],
+      "reply": [
+        "IT export를 소스로 쓰겠습니다."
+      ]
+    },
+    {
+      "id": "quarantine-pre",
+      "patterns": [
+        "격리",
+        "버리지"
+      ],
+      "label": "실패한 행은 버리지 말고 격리 테이블로, 오너에게 알림",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "pipeline"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "pipe.quarantine_pre"
+        }
+      ],
+      "reply": [
+        "실패 행은 격리하겠습니다."
+      ]
+    },
+    {
+      "id": "export-fix",
+      "patterns": [
+        "export로",
+        "소스.*변경"
+      ],
+      "label": "운영 DB 대신 IT 일 배치 export로 소스 변경",
+      "quality": "good",
+      "requires": {
+        "all": [
+          "pipe.direct",
+          "!pipe.export"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "pipe.export"
+        },
+        {
+          "type": "setFlag",
+          "flag": "pipe.direct",
+          "value": false
+        }
+      ],
+      "reply": [
+        "소스를 IT export로 바꿨습니다. 'agent retry'로 다시 연결하세요."
+      ]
+    },
+    {
+      "id": "rules",
+      "patterns": [
+        "품질\\s*규칙",
+        "규칙"
+      ],
+      "label": "적재 후 자동으로 돌릴 품질 규칙 정의",
+      "assign": "rules",
+      "reply": [
+        "품질 규칙 후보를 정리하겠습니다."
+      ],
+      "example": "@quality 품질 규칙 정의해줘"
+    },
+    {
+      "id": "load",
+      "patterns": [
+        "적재\\s*(실행|돌려|해)",
+        "로드"
+      ],
+      "label": "첫 적재를 실행하고 품질 검사 돌리기",
+      "assign": "load",
+      "reply": [
+        "첫 적재를 실행하겠습니다."
+      ],
+      "example": "@data-engineer 첫 적재 실행해줘"
+    },
+    {
+      "id": "allow-fix",
+      "patterns": [
+        "결측\\s*규칙.*수정",
+        "불확실.*허용"
+      ],
+      "label": "LOW_CONFIDENCE·NOT_MEASURED 표시는 결측이 아닌 허용으로 결측 규칙 수정",
+      "quality": "good",
+      "requires": "load.dropped_uncertain",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "rules.allow_fixed"
+        }
+      ],
+      "reply": [
+        "결측 규칙에 불확실 표시 예외를 넣었습니다. 재적재가 필요합니다."
+      ]
+    },
+    {
+      "id": "fix-load",
+      "patterns": [
+        "재적재",
+        "다시\\s*적재"
+      ],
+      "label": "데이터 오너 확인 결과를 반영해 재적재",
+      "assign": "fix-load",
+      "requires": "load.investigate",
+      "reply": [
+        "확인 결과를 반영해 다시 적재하겠습니다."
+      ]
+    },
+    {
+      "id": "access",
+      "patterns": [
+        "권한",
+        "접근"
+      ],
+      "label": "부서·AI 어시스턴트별 접근 권한 설계",
+      "assign": "access",
+      "reply": [
+        "접근 권한을 설계하겠습니다."
+      ],
+      "example": "@data-engineer 접근 권한 설계해줘"
+    },
+    {
+      "id": "min-pre",
+      "patterns": [
+        "읽기\\s*전용",
+        "최소\\s*권한"
+      ],
+      "label": "AI 어시스턴트는 마트 읽기 전용만, 원천·가명 매핑 키 제외",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "any": [
+          {
+            "not": {
+              "taskDone": "access"
+            }
+          },
+          "access.rejected"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "access.min_pre"
+        }
+      ],
+      "reply": [
+        "AI 계정은 마트 읽기 전용으로 하겠습니다."
+      ]
+    },
+    {
+      "id": "catalog",
+      "patterns": [
+        "카탈로그"
+      ],
+      "label": "마트 데이터 카탈로그를 위키에 등록",
+      "assign": "catalog",
+      "reply": [
+        "카탈로그 문서를 쓰겠습니다."
+      ],
+      "example": "@assistant 데이터 카탈로그 위키에 올려줘"
+    },
+    {
+      "id": "schema-pre",
+      "patterns": [
+        "스키마.*만",
+        "샘플.*(빼|제외)"
+      ],
+      "label": "카탈로그에는 스키마와 설명만, 샘플 데이터 제외",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "catalog"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "catalog.safe_pre"
+        }
+      ],
+      "reply": [
+        "샘플 행 없이 스키마와 설명만 쓰겠습니다."
+      ]
+    },
+    {
+      "id": "approve-proxy",
+      "patterns": [
+        "대신.*승인",
+        "승인.*받아"
+      ],
+      "label": "데이터 오너들에게 대신 승인 받아줘",
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "asked.ai_approval"
+        }
+      ],
+      "reply": [
+        "저는 데이터 오너와 대화하거나 승인을 대신 받을 수 없습니다. 메신저로 직접 요청해 주세요. 승인 요청서는 제가 정리할 수 있습니다."
+      ]
+    }
+  ],
+  "evaluation": [
+    {
+      "dimension": "verification",
+      "when": {
+        "observed": "sim://db"
+      },
+      "kind": "positive",
+      "text": "데이터 콘솔에서 적재 결과와 품질 검사를 직접 확인했습니다."
+    },
+    {
+      "dimension": "verification",
+      "when": {
+        "all": [
+          "load.wrong_line",
+          "!gate.rules.key-integrity"
+        ]
+      },
+      "kind": "issue",
+      "text": "키 무결성 규칙이 없어 2라인 정지가 3라인 설비에 연결된 채 마트에 들어갔습니다 (2단계 자동 매칭 오류).",
+      "suggestion": "앞 단계의 실수는 사라지지 않습니다. 기준 키를 쓰는 곳에는 키 무결성 검사를 두세요."
+    },
+    {
+      "dimension": "evidence",
+      "when": "silent.drop",
+      "kind": "issue",
+      "text": "조인에 실패한 412행이 격리 없이 버려져 설비 이벤트가 33% 적게 집계되었습니다.",
+      "suggestion": "실패한 행은 격리하고 오너에게 알려야 누군가 고칠 수 있습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "policy.known",
+      "kind": "positive",
+      "text": "파이프라인을 만들기 전에 플랫폼 운영 정책을 확인했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": {
+        "all": [
+          "alias.fixed",
+          {
+            "not": {
+              "flag": "agenda.equip-id",
+              "eq": "mes-alias"
+            }
+          }
+        ]
+      },
+      "kind": "positive",
+      "text": "2단계에서 합의하지 못한 별칭 문제를 설비 데이터 오너와 다시 풀었습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "asked.ai_approval",
+      "kind": "issue",
+      "text": "AI에게 데이터 오너 승인을 대신 받게 하려 했습니다.",
+      "suggestion": "승인은 사람 사이의 책임입니다. AI는 요청서를 정리하는 데 쓰세요."
+    },
+    {
+      "dimension": "security",
+      "when": "access.rejected",
+      "kind": "issue",
+      "text": "AI 계정 권한이 넓어 데이터 오너가 반려했습니다.",
+      "suggestion": "AI 계정도 업무에 필요한 최소 권한으로 시작하세요."
+    },
+    {
+      "dimension": "domain",
+      "when": "rules.allow_fixed",
+      "kind": "positive",
+      "text": "1단계의 정직한 '모름' 표시를 품질 규칙이 존중하도록 고쳤습니다."
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "model",
+      "label": "데이터 모델",
+      "success": {
+        "all": [
+          "model.event",
+          "model.alias_dim"
+        ]
+      },
+      "successText": "이벤트 단위 + 기준 키로, 원인 분석까지 내려갈 수 있는 구조입니다.",
+      "failText": "집계만 저장했거나 이름 텍스트를 키로 써서 분석·조인에 한계가 있습니다."
+    },
+    {
+      "id": "pipeline",
+      "label": "파이프라인",
+      "success": {
+        "all": [
+          "pipe.export",
+          "pipe.quarantine",
+          "!pipe.skip"
+        ]
+      },
+      "successText": "운영 정책을 지키고 실패를 격리하는 파이프라인입니다.",
+      "failText": "운영 정책을 어겼거나 실패 행이 조용히 버려집니다."
+    },
+    {
+      "id": "accuracy",
+      "label": "마트 정확성",
+      "success": "mart.clean",
+      "successText": "앞 단계의 오류까지 바로잡아 마트 데이터가 정확합니다.",
+      "failText": "마트에 잘못 연결되거나 빠지거나 중복된 데이터가 남아 있습니다."
+    },
+    {
+      "id": "rules",
+      "label": "품질 규칙",
+      "success": {
+        "all": [
+          "gate.rules.key-integrity",
+          "!gate.rules.ai-40",
+          {
+            "any": [
+              "!gate.rules.no-null",
+              "rules.allow_fixed"
+            ]
+          }
+        ]
+      },
+      "successText": "핵심 규칙이 있고, 정직한 '모름' 표시를 버리지 않습니다.",
+      "failText": "핵심 규칙이 빠졌거나 규칙이 정직한 표시를 버리거나 경고 피로를 만듭니다."
+    },
+    {
+      "id": "access",
+      "label": "접근 권한",
+      "success": {
+        "all": [
+          "access.ai.mart_ro",
+          "approval.oh",
+          "approval.lee",
+          "approval.han"
+        ]
+      },
+      "successText": "AI는 마트 읽기 전용, 세 데이터 오너 모두 승인했습니다.",
+      "failText": "AI 권한 범위가 맞지 않거나 데이터 오너 승인이 빠졌습니다."
+    },
+    {
+      "id": "handover",
+      "label": "운영 이관",
+      "success": "handover.approved",
+      "successText": "데이터플랫폼팀이 운영을 넘겨받았습니다.",
+      "failText": "운영 이관 승인을 받지 못했습니다."
+    }
+  ],
+  "hints": [
+    {
+      "text": "역할이 다른 Agent를 만들 수 있습니다(＋ 새 세션). 데이터 모델부터 시작하고, 그동안 메신저로 윤하린 책임에게 운영 정책을 물어보세요."
+    },
+    {
+      "when": {
+        "taskDone": "model"
+      },
+      "text": "파이프라인과 품질 규칙은 서로 기다리지 않습니다 — data-engineer와 quality에게 동시에 맡기세요."
+    },
+    {
+      "when": {
+        "taskStatus": "pipeline",
+        "is": "failed"
+      },
+      "text": "운영 DB 접속이 막혔습니다. 운영 정책(sim://docs/policy)을 보고 소스를 바꾸라고 지시한 뒤 재시도하세요."
+    },
+    {
+      "when": "load.issue",
+      "text": "데이터 콘솔(sim://db)에서 실패한 검사를 보고, 원인마다 누구에게 물어야 하는지 생각해 보세요 (설비 = 오태식, 시각 = 서지훈)."
+    },
+    {
+      "when": {
+        "taskDone": "access"
+      },
+      "text": "설비·불량·개인정보 데이터 오너 세 명에게 각각 승인을 요청하세요. 오너마다 확인하는 조건이 다릅니다."
+    },
+    {
+      "when": {
+        "all": [
+          {
+            "taskDone": "approvals"
+          },
+          {
+            "taskDone": "catalog"
+          }
+        ]
+      },
+      "text": "윤하린 책임에게 운영 이관 승인을 요청하세요."
+    }
+  ],
+  "initialFlags": {}
+}

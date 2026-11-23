@@ -92,7 +92,7 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
         {agentId ? (
           <>
             <AgentAvatar sim={sim} id={agentId} />
-            <span className="font-mono text-[12.5px] font-semibold" style={{ color: idColor }}>
+            <span className="shrink-0 font-mono text-[12.5px] font-semibold whitespace-nowrap" style={{ color: idColor }}>
               {agentId}
             </span>
             {role && <span className="truncate text-faint">{role.name}</span>}

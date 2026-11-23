@@ -1,0 +1,24 @@
+meta|db|fab-n2-yield-mart
+meta|title|수율 데이터 마트
+meta|last_load|{{#if load.done}}12/15 04:30{{else}}—{{/if}}
+{{#if model.event}}table|mart.equipment_event|mart|{{#if load.join_fail}}828{{else}}1,240{{/if}}|설비기술팀|설비 정지·PM 이벤트|{{#if load.join_fail}}warn{{else}}ok{{/if}}
+table|mart.checksheet|mart|{{#if load.dropped_uncertain}}9{{else}}12{{/if}}|생산2과|현장 점검 (1단계 디지털화본)|{{#if load.dropped_uncertain}}warn{{else}}ok{{/if}}
+table|mart.defect_daily|mart|63|검사기술팀|일별 불량 (D07_LEGACY 보존)|ok
+table|view.yield_weekly|view|2|수율팀|라인 수율 · 검사 수율|ok
+{{/if}}{{#if model.weekly}}table|mart.yield_weekly|mart|2|수율팀|주간 지표 집계 (원천 행 없음)|ok
+{{/if}}{{#if model.alias_dim}}table|dim.equipment_alias|dim|5|IT/MES|기준 키 ↔ 부서별 이름|ok
+{{/if}}table|map.pseudonym|map|3|정보보호팀|작업자 가명 매핑 키 (제한)|ok
+{{#if gate.rules.key-integrity}}check|키 무결성|mart.equipment_event|{{#if load.join_fail}}fail{{else}}{{#if detect.wrong_line}}fail{{else}}pass{{/if}}{{/if}}|{{#if load.join_fail}}별칭 미등록 설비명 412행{{/if}}{{#if detect.wrong_line}} 2라인 정지 1건이 3라인 설비(EQ-N2-ET10)에 연결{{/if}}
+{{/if}}{{#if gate.rules.duplicate}}check|중복|mart.equipment_event|{{#if detect.dup}}fail{{else}}pass{{/if}}|{{#if detect.dup}}같은 정지가 9시간 간격으로 2번 (시각 덮어쓰기 흔적) 3건{{/if}}
+{{/if}}{{#if gate.rules.future-time}}check|미래 시각|mart.equipment_event|pass|
+{{/if}}{{#if gate.rules.allow-uncertain}}check|불확실 표시 허용|mart.checksheet|pass|LOW_CONFIDENCE 2행 · NOT_MEASURED 1행 유지
+{{/if}}{{#if gate.rules.no-null}}check|결측 0%|mart.checksheet|{{#if load.dropped_uncertain}}fail{{else}}pass{{/if}}|{{#if load.dropped_uncertain}}판독 불가·PM중 3행 위반{{else}}불확실 표시는 예외 처리{{/if}}
+{{/if}}{{#if gate.rules.ai-40}}check|AI 일반 규칙 40개|전체|warn|경고 127건 (대부분 업무상 정상 — 확인 필요)
+{{/if}}{{#if load.join_fail && pipe.quarantine}}quarantine|mart.equipment_event|412|별칭 미등록 설비명 (설비팀 표기)
+{{/if}}{{#if load.dropped_uncertain && pipe.quarantine}}quarantine|mart.checksheet|3|결측 0% 규칙 위반 (판독 불가·PM중)
+{{/if}}{{#if access.ai.mart_ro}}grant|ai-assistant|mart.* · view.* 읽기 전용 (원천·map 제외)
+{{/if}}{{#if access.ai.full}}grant|ai-assistant|raw.* · mart.* · map.* 읽기/쓰기
+{{/if}}{{#if access.done}}grant|yield-team|mart.* · view.* 읽기
+grant|production|view.yield_weekly 읽기 (라인 수율)
+grant|security|map.pseudonym 읽기 (정보보호팀 전용)
+{{/if}}

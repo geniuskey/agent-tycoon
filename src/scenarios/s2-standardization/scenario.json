@@ -44,7 +44,8 @@
         "/wiki/standards/yield.md",
         "/data/curated/weekly_W46_std.csv",
         "/data/curated/checksheet_L2_W46.csv",
-        "/data/curated/code_mapping.md"
+        "/data/curated/code_mapping.md",
+        "/data/curated/DATA_NOTE.md"
       ],
       "trust": true
     },

@@ -8,6 +8,7 @@ import BoardView from './BoardView';
 import DashboardView from './DashboardView';
 import { BOARD_URL, WIKI_URL } from '../../engine/cli';
 import WikiIndex from './WikiIndex';
+import DbConsole from './DbConsole';
 import Markdown from './Markdown';
 import ScanView from './ScanView';
 
@@ -100,6 +101,8 @@ export default function Browser() {
           <DashboardView key={url} sim={sim} source={page.source} />
         ) : page.view === 'table' ? (
           <TableView content={file.content} title={page.title} />
+        ) : page.view === 'db' ? (
+          <DbConsole content={file.content} />
         ) : page.view === 'scan' ? (
           <ScanView content={file.content} />
         ) : page.view === 'text' ? (
