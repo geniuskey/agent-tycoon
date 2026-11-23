@@ -207,9 +207,9 @@
           ],
           "requires": "spec.done",
           "repeatable": true,
-          "minTrust": 45,
+          "minTrust": 60,
           "lowTrust": [
-            "…생각해 볼게요."
+            "…매주 30분이라는데, 결국 AI가 틀린 거 치우는 일만 제 몫 아니에요? 생각해 볼게요."
           ],
           "trust": 3,
           "quality": "good",
@@ -227,6 +227,26 @@
               "when": {
                 "not": "spec.human_review"
               }
+            }
+          ]
+        },
+        {
+          "id": "owner",
+          "patterns": [
+            "소유자",
+            "제안"
+          ],
+          "ask": "지식 패키지 소유자는 계속 선임님이에요. Agent는 수정을 '제안'만 하고, 반영 여부는 선임님이 정합니다.",
+          "reply": [
+            "제가 승인해야 들어간다는 거죠? …그럼 얘기가 좀 다르네요.",
+            "AI가 제 규칙을 마음대로 바꾸는 게 제일 싫었거든요."
+          ],
+          "trust": 8,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.owner"
             }
           ]
         }
@@ -264,6 +284,10 @@
           "repeatable": true,
           "trust": 3,
           "quality": "good",
+          "minTrust": 50,
+          "lowTrust": [
+            "Agent 계정이요? 사람 계정 빌려 쓰자던 분이 이번엔 제대로 하실지 모르겠네요. 감사 계획부터 보여 주세요."
+          ],
           "effects": [
             {
               "type": "setFlag",
@@ -316,6 +340,25 @@
               "path": "/agents/report-agent.md",
               "src": "spec.txt",
               "when": "spec.done"
+            }
+          ]
+        },
+        {
+          "id": "audit",
+          "patterns": [
+            "로그",
+            "분기"
+          ],
+          "ask": "실행 로그는 1년 보존하고, 분기마다 Agent 권한을 정보보호팀과 같이 검토하겠습니다.",
+          "reply": [
+            "분기 검토까지요? 좋네요. 그 정도면 믿고 볼 수 있죠."
+          ],
+          "trust": 12,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "han.audit"
             }
           ]
         }
@@ -376,6 +419,7 @@
       "trust": 60,
       "replyDelay": 2,
       "description": "불량 급증 알림 후보에 대한 현장 의견.",
+      "optional": true,
       "greeting": [
         "네, 이도윤입니다."
       ],
@@ -406,8 +450,7 @@
             }
           ]
         }
-      ],
-      "optional": true
+      ]
     }
   ],
   "groups": [
@@ -2412,7 +2455,6 @@
         "evalset"
       ],
       "optional": true,
-      "review": false,
       "keywords": [
         "다시"
       ],
@@ -4219,6 +4261,18 @@
       "when": "lee.alarm",
       "kind": "positive",
       "text": "알림 자동화 후보를 현장 담당자에게 확인했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "park.owner",
+      "kind": "positive",
+      "text": "지식 소유권은 사람에게 두고 Agent는 제안만 하게 해, 검토자의 걱정을 풀었습니다."
+    },
+    {
+      "dimension": "security",
+      "when": "han.audit",
+      "kind": "positive",
+      "text": "Agent 계정의 실행 로그 보존과 정기 권한 검토를 약속했습니다."
     },
     {
       "dimension": "domain",

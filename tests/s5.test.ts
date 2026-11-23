@@ -4,7 +4,7 @@ import { evaluate } from '../src/engine/evaluate';
 import { agentChoices } from '../src/engine/choices';
 import type { CarryState } from '../src/engine/types';
 import { getScenario } from '../src/scenarios';
-import { runUntil, sh, taskStatus, waitReply } from './helpers';
+import { lastSaid, runUntil, sh, taskStatus, waitReply } from './helpers';
 
 const scenario = getScenario('s5-single-agent')!;
 const base = scenario.campaign!.defaultCarry!;
@@ -122,5 +122,17 @@ describe('5단계 단일 Agent', () => {
     expect(modIds(sim)).not.toContain('fix-w51-yield'); // 마트와 대조하기 전에는 모른다
     sim.observe('page', 'sim://mart/yield');
     expect(modIds(sim)).toContain('fix-w51-yield');
+  });
+
+  it('박서준 선임은 신뢰가 낮으면 검토를 거절하고, 검토자 역할을 인정하면 맡는다', () => {
+    const sim = start(46, { ...base, trust: { ...base.trust, park: 45 } });
+    sh(sim, `agent spawn ${A}`);
+    sh(sim, `do ${A} w51 ${BRIEF}`);
+    finish(sim, 'w51');
+    ask(sim, 'park', 'review-w51');
+    expect(sim.flags['park.noted.51']).toBeUndefined();
+    expect(lastSaid(sim, 'park', 1)).toContain('할 일 없다면서요');
+    ask(sim, 'park', 'role', 'review-w51');
+    expect(sim.flags['park.noted.51']).toBe(true);
   });
 });

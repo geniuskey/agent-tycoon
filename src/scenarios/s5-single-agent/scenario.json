@@ -137,6 +137,26 @@
       ],
       "topics": [
         {
+          "id": "role",
+          "patterns": [
+            "검토자",
+            "기준"
+          ],
+          "ask": "AI 초안이 맞는지는 선임님 규칙이 기준이에요. 게시 전 검토는 선임님이 맡아 주셔야 해요.",
+          "reply": [
+            "…검토자요? 제 규칙대로 계산됐는지 보는 거면, 그건 제가 제일 잘 알죠.",
+            "알겠어요. 초안 나오면 보내 주세요."
+          ],
+          "trust": 10,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.review_role"
+            }
+          ]
+        },
+        {
           "id": "review-w51",
           "patterns": [
             "w51",
@@ -157,6 +177,10 @@
               "type": "setFlag",
               "flag": "park.noted.51"
             }
+          ],
+          "minTrust": 55,
+          "lowTrust": [
+            "…AI가 쓴 거 AI가 검토하면 되잖아요. 저는 이제 할 일 없다면서요."
           ]
         },
         {
@@ -180,6 +204,10 @@
               "type": "setFlag",
               "flag": "park.noted.52"
             }
+          ],
+          "minTrust": 55,
+          "lowTrust": [
+            "…AI가 쓴 거 AI가 검토하면 되잖아요. 저는 이제 할 일 없다면서요."
           ]
         }
       ]
@@ -233,6 +261,12 @@
       "trust": 55,
       "replyDelay": 2,
       "description": "불량 원인 판단.",
+      "optional": {
+        "all": [
+          "!w51.had.cause",
+          "!w52.had.cause"
+        ]
+      },
       "greeting": [
         "네, 이도윤입니다."
       ],
@@ -273,13 +307,7 @@
             }
           ]
         }
-      ],
-      "optional": {
-        "all": [
-          "!w51.had.cause",
-          "!w52.had.cause"
-        ]
-      }
+      ]
     },
     {
       "id": "jung",
@@ -3891,6 +3919,12 @@
       },
       "kind": "positive",
       "text": "원래 담당자(박서준 선임)를 검토자로 참여시켰습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "park.review_role",
+      "kind": "positive",
+      "text": "AI 초안의 기준이 원래 담당자의 규칙임을 인정하고 검토자 역할을 맡겼습니다."
     },
     {
       "dimension": "evidence",

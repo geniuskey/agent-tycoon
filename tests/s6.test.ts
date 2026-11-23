@@ -4,7 +4,7 @@ import { evaluate } from '../src/engine/evaluate';
 import { meetingState } from '../src/engine/groups';
 import type { CarryState } from '../src/engine/types';
 import { getScenario } from '../src/scenarios';
-import { runUntil, sh, taskStatus, waitReply } from './helpers';
+import { lastSaid, runUntil, sh, taskStatus, waitReply } from './helpers';
 
 const scenario = getScenario('s6-agent-design')!;
 const base = scenario.campaign!.defaultCarry!;
@@ -191,5 +191,23 @@ describe('6단계 Agent 설계', () => {
     meet(sim, GO);
     expect(sim.groups['golive'].agenda['golive'].status).toBe('held');
     expect(sim.flags['golive.go']).toBeUndefined();
+  });
+
+  it('신뢰가 낮으면 검토자·정보보호가 응하지 않고, 걱정을 풀어 주면 응한다', () => {
+    const sim = start(67, { ...base, trust: { ...base.trust, park: 55 } });
+    setup(sim);
+    select(sim);
+    sh(sim, 'do assistant spec');
+    finish(sim, 'assistant', 'spec', GOOD_SPEC);
+    ask(sim, 'park', 'role');
+    expect(sim.flags['park.agreed']).toBeUndefined();
+    ask(sim, 'han', 'mine'); // 사람 계정 빌려 쓰기 → 신뢰 하락
+    ask(sim, 'han', 'svc');
+    expect(sim.flags['han.approved']).toBeUndefined();
+    expect(lastSaid(sim, 'han', 1)).toContain('감사 계획');
+    ask(sim, 'han', 'audit', 'svc');
+    expect(sim.flags['han.approved']).toBe(true);
+    ask(sim, 'park', 'owner', 'role');
+    expect(sim.flags['park.agreed']).toBe(true);
   });
 });
