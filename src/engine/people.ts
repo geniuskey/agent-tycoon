@@ -204,7 +204,7 @@ function respondTopic(sim: Simulation, id: string, topic: TopicDef): void {
   const def = sim.personDef(id)!;
   const p = sim.people[id];
   const say = (lines: string[]) => sim.personSay(id, lines);
-  const repeat = p.asked.includes(topic.id);
+  const repeat = p.asked.includes(topic.id) && !topic.repeatable;
   if (topic.minTrust !== undefined && p.trust < topic.minTrust) {
     say(sim.resolveLines(topic.lowTrust ?? ['…그건 나중에 얘기하죠.']));
     sim.emit('intent.matched', `대화(보류): ${def.name} · ${topic.id}`, { personId: id, data: { topic: topic.id, deflected: true } });
@@ -214,7 +214,7 @@ function respondTopic(sim: Simulation, id: string, topic: TopicDef): void {
     say(sim.resolveLines(topic.repeat ?? ['아까 말씀드린 그대로예요.']));
     return;
   }
-  p.asked.push(topic.id);
+  if (!p.asked.includes(topic.id)) p.asked.push(topic.id);
   sim.emit('intent.matched', `대화: ${def.name} · ${topic.id}`, { personId: id, data: { topic: topic.id, quality: topic.quality ?? 'neutral' } });
   say(sim.resolveLines(topic.reply));
   if (topic.trust) sim.changeTrust(id, topic.trust, 'player');
@@ -244,7 +244,7 @@ export function topicChoices(sim: Simulation, id: string): { id: string; label: 
   if (!def || !p) return [];
   const h = (s: string) => [...s].reduce((a, ch) => (Math.imul(a, 31) + ch.charCodeAt(0)) >>> 0, 7);
   return def.topics
-    .filter((t) => (t.ask || t.hint) && !p.asked.includes(t.id) && !p.inbox.some((m) => m.topic === t.id) && sim.cond(t.requires))
+    .filter((t) => (t.ask || t.hint) && (t.repeatable || !p.asked.includes(t.id)) && !p.inbox.some((m) => m.topic === t.id) && sim.cond(t.requires))
     .map((t) => ({ id: t.id, label: (t.ask ?? t.hint)!, k: h(def.id + t.id) }))
     .sort((a, b) => a.k - b.k)
     .map(({ id: tid, label }) => ({ id: tid, label }));

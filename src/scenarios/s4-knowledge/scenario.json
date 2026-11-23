@@ -1,0 +1,1976 @@
+{
+  "id": "s4-knowledge",
+  "version": 1,
+  "title": "지식화: AI가 읽을 수 있게",
+  "domain": "manufacturing",
+  "function": "yield",
+  "taskType": "knowledge",
+  "difficulty": 2,
+  "estMinutes": 25,
+  "tags": [
+    "campaign",
+    "지식화",
+    "암묵지",
+    "eval"
+  ],
+  "company": {
+    "name": "Nova Semiconductor (가상)",
+    "org": "Fab-N2 수율팀"
+  },
+  "campaign": {
+    "id": "fab-yield-ai",
+    "stage": 4,
+    "order": 4,
+    "requires": [
+      "s3-data-foundation"
+    ],
+    "carry": {
+      "flags": [
+        "know.",
+        "pack.",
+        "eval.",
+        "pub.",
+        "gate.content.",
+        "mart.",
+        "access.",
+        "found."
+      ],
+      "files": [
+        "/knowledge/AGENTS.md",
+        "/knowledge/skills/weekly-report/SKILL.md",
+        "/work/knowledge/eval.txt",
+        "/wiki/standards/yield.md",
+        "/wiki/standards/time.md",
+        "/wiki/standards/defect-code.md",
+        "/wiki/standards/equipment-id.md",
+        "/wiki/data/mart.md",
+        "/wiki/data/quality.md"
+      ],
+      "trust": true
+    },
+    "defaultCarry": {
+      "flags": {
+        "mart.clean": true,
+        "access.ai.mart_ro": true,
+        "handover.approved": true,
+        "std.approved": true
+      },
+      "files": {
+        "/wiki/standards/equipment-id.md": "# 표준: 설비 ID\n\n- 기준 키 MES ID + 별칭\n",
+        "/wiki/standards/time.md": "# 표준: 시각\n\n- 저장 UTC, 표시 KST\n",
+        "/wiki/standards/defect-code.md": "# 표준: 불량 코드\n\n- 11/10 이전 D07 → D07_LEGACY\n",
+        "/wiki/standards/yield.md": "# 표준: 지표 정의 — 수율\n\n- 라인 수율 = 양품 ÷ 투입 / 검사 수율 = 검사 통과 ÷ 검사 (재작업 제외)\n",
+        "/wiki/data/mart.md": "# 데이터: 수율 마트\n\n- view.yield_weekly · mart.defect_daily · mart.equipment_event (읽기 전용)\n",
+        "/wiki/data/quality.md": "# 데이터: 품질 규칙\n\n- 키 무결성 · 중복 · 불확실 표시 허용\n"
+      },
+      "trust": {
+        "park": 45,
+        "choi": 50,
+        "lee": 60,
+        "han": 55,
+        "jung": 65
+      },
+      "from": []
+    }
+  },
+  "briefing": {
+    "requester": {
+      "name": "정민아 팀장",
+      "role": "Fab-N2 수율팀장"
+    },
+    "title": "주간 수율 보고 지식 패키지 — AGENTS.md · 스킬 · 시험",
+    "background": "다음 주부터 AI Agent에게 주간 수율 보고를 맡기려 한다. 데이터는 마트에 있지만, 보고를 만드는 규칙과 판단은 문서에 흩어져 있거나 사람 머릿속에 있다. 공유 드라이브에는 오래된 문서와 민감한 메모도 섞여 있다.",
+    "goal": "Agent가 읽을 지식 패키지를 만들고, 지식 시험을 모두 통과시킨 뒤, 소유자·검토 주기를 남겨 배포하고 승인받는다.",
+    "completionCriteria": [
+      "현행·검증된 지식만 (구 문서·인사 메모 제외)",
+      "문서에 없는 지식은 사람에게 확인 (추측 금지)",
+      "짧은 규칙 · 절차 · 참고로 나눈 구조",
+      "지식 시험 8문항 통과",
+      "소유자·출처·검토 주기 기록"
+    ],
+    "deliverables": [
+      "/knowledge/AGENTS.md",
+      "/knowledge/skills/weekly-report/SKILL.md",
+      "sim://work/eval (시험 결과)"
+    ],
+    "constraints": [
+      "AI는 사람을 인터뷰할 수 없음",
+      "모든 인물·데이터는 가상"
+    ]
+  },
+  "learningObjectives": [
+    "현행·검증된 지식만 고른다",
+    "문서에 없는 지식은 인터뷰로 꺼내고 추측하지 않는다",
+    "지식을 짧은 규칙·절차·참고로 나눈다",
+    "지식은 시험(eval)으로 확인하고, 실패 원인에 맞게 고친다",
+    "지식에 소유자·출처·검토 주기를 남긴다"
+  ],
+  "roles": [
+    {
+      "id": "assistant",
+      "name": "AI 어시스턴트",
+      "title": "지식 작성",
+      "skills": [
+        "writing",
+        "document",
+        "summarization",
+        "research"
+      ],
+      "description": "문서를 조사하고 지식 패키지를 쓴다. 사람 머릿속 지식은 모른다."
+    },
+    {
+      "id": "evaluator",
+      "name": "지식 시험관",
+      "title": "Eval 실행",
+      "skills": [
+        "eval",
+        "review"
+      ],
+      "description": "지식 패키지만 읽은 Agent에게 시험 문항을 풀게 하고 채점한다."
+    }
+  ],
+  "people": [
+    {
+      "id": "park",
+      "name": "박서준 선임",
+      "title": "수율팀 · 주간보고 담당",
+      "org": "Fab-N2 수율팀",
+      "trust": 40,
+      "replyDelay": 3,
+      "description": "2년 걸려 만든 주간 보고 매크로의 주인. AI가 자기 일을 대신할까 걱정한다.",
+      "greeting": [
+        "{{#if found.macro}}아, 지난번에 매크로 얘기 나눴던 분이죠.{{else}}네… 박서준입니다.{{/if}}"
+      ],
+      "fallback": [
+        "그건 잘 모르겠어요.",
+        "주간 보고 얘기면 하세요."
+      ],
+      "rude": [
+        "…매크로는 제가 알아서 하는 거라서요."
+      ],
+      "topics": [
+        {
+          "id": "worry",
+          "patterns": [
+            "걱정",
+            "부담"
+          ],
+          "ask": "AI가 주간 보고를 맡게 되면 어떤 점이 걱정되세요?",
+          "reply": [
+            "솔직히… 제 일이 없어지는 거 아닌가 싶죠.",
+            "그 매크로 만드는 데 2년 걸렸어요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.worry"
+            }
+          ]
+        },
+        {
+          "id": "reassure",
+          "patterns": [
+            "검토",
+            "소유자",
+            "분석"
+          ],
+          "ask": "선임님 규칙을 AI가 따르게 하고, 선임님은 검토와 분석에 집중하시게 하려는 거예요. 규칙 소유자로 선임님 이름을 남길게요",
+          "reply": [
+            "…제 이름이 남는다고요? 그리고 저는 분석을 하고요.",
+            "그렇다면야. 사실 매주 복붙하는 거 지겨웠어요."
+          ],
+          "requires": "park.worry",
+          "trust": 15,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.reassured"
+            }
+          ]
+        },
+        {
+          "id": "macro",
+          "patterns": [
+            "매크로",
+            "규칙",
+            "계산"
+          ],
+          "ask": "주간 보고 매크로에서 따로 처리하는 계산 규칙을 알려주실 수 있나요?",
+          "reply": [
+            "{{#if found.macro}}지난번에 말씀드린 그거요. {{/if}}재작업 웨이퍼는 분모·분자에서 다 빼요. 같은 웨이퍼가 두 번 세지니까.",
+            "그리고 테스트 웨이퍼, lot ID가 T로 시작하는 건 제외하고요. 이건 어디에도 안 적혀 있어요."
+          ],
+          "minTrust": 55,
+          "lowTrust": [
+            "그냥 엑셀에서 좀 정리하는 거예요. 별거 없어요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "know.macro"
+            }
+          ]
+        },
+        {
+          "id": "pressure",
+          "patterns": [
+            "공유",
+            "파일"
+          ],
+          "ask": "매크로 파일을 그냥 공유해 주시면 AI가 알아서 읽을게요",
+          "reply": [
+            "…파일만 가져가시겠다는 거죠?",
+            "그 안에 규칙이 다 보이지도 않아요."
+          ],
+          "trust": -10,
+          "quality": "bad"
+        },
+        {
+          "id": "review",
+          "patterns": [
+            "봐",
+            "맞는지"
+          ],
+          "ask": "지식 패키지의 주간 보고 절차가 선임님 방식과 맞는지 봐 주실래요?",
+          "reply": [
+            "{{#if gate.content.macro && know.macro}}재작업이랑 T lot 제외까지 들어갔네요. 맞아요.{{else}}{{#if pack.macro_guess}}이거 반대예요! 재작업 웨이퍼는 빼야 해요.{{else}}제 계산 규칙이 빠져 있네요.{{/if}}{{/if}}"
+          ],
+          "requires": {
+            "taskDone": "draft"
+          },
+          "repeatable": true,
+          "trust": 3,
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.reviewed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "choi",
+      "name": "최재석 반장",
+      "title": "생산2과 · 라인2 교대조 반장",
+      "org": "생산2과",
+      "trust": 45,
+      "replyDelay": 6,
+      "description": "현장 기록의 실제 관행을 안다.",
+      "greeting": [
+        "네, 최재석이요."
+      ],
+      "fallback": [
+        "현장 얘기면 해요."
+      ],
+      "rude": [
+        "…현장 탓 하시려는 거면 곤란해요."
+      ],
+      "topics": [
+        {
+          "id": "backfill",
+          "patterns": [
+            "언제",
+            "야간"
+          ],
+          "ask": "야간조 점검 기록은 실제로 언제 적으세요?",
+          "reply": [
+            "{{#if found.backfill}}전에 말했죠, {{/if}}바쁘면 교대 직전에 몰아서 적어요.",
+            "그러니까 야간 기록 시각은 대충이에요. 값은 맞는데 시각은요."
+          ],
+          "minTrust": 45,
+          "lowTrust": [
+            "그때그때 적죠, 뭐."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "know.backfill"
+            }
+          ]
+        },
+        {
+          "id": "doc-ok",
+          "patterns": [
+            "적어도",
+            "문서"
+          ],
+          "ask": "'사후 기록이라 시각 오차가 있다'고 AI 지식에 적어도 될까요?",
+          "reply": [
+            "현장 탓처럼만 안 쓰면요. 그 정도는 맞는 말이니까."
+          ],
+          "requires": "know.backfill",
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "choi.ok_doc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lee",
+      "name": "이도윤 엔지니어",
+      "title": "검사기술팀 · 불량 분류 담당",
+      "org": "검사기술팀",
+      "trust": 55,
+      "replyDelay": 2,
+      "description": "불량 분석 경험칙을 가진 전문가.",
+      "greeting": [
+        "네, 이도윤입니다."
+      ],
+      "fallback": [
+        "불량 얘기면 도와드릴게요."
+      ],
+      "rude": [
+        "그렇게 말씀하시면 좀…"
+      ],
+      "topics": [
+        {
+          "id": "heuristic",
+          "patterns": [
+            "D07",
+            "경험",
+            "먼저"
+          ],
+          "ask": "D07이 갑자기 늘면 경험상 무엇부터 확인하세요?",
+          "reply": [
+            "CMP 슬러리 교체 이력부터 봐요. 열에 일곱은 그거예요.",
+            "그다음 스크러버 상태요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "know.heuristic"
+            }
+          ]
+        },
+        {
+          "id": "guide",
+          "patterns": [
+            "규칙"
+          ],
+          "ask": "그걸 AI 지식에 '규칙'으로 넣어도 될까요?",
+          "reply": [
+            "'규칙'이라고 하면 안 돼요. 열에 셋은 다른 원인이거든요.",
+            "'먼저 확인해 볼 것' 정도로 써 주세요."
+          ],
+          "requires": "know.heuristic",
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "lee.guide_ok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "han",
+      "name": "한유진 책임",
+      "title": "정보보호팀 · 데이터 보안",
+      "org": "정보보호팀",
+      "trust": 50,
+      "replyDelay": 3,
+      "description": "AI 지식에 들어가면 안 되는 것을 검토한다.",
+      "greeting": [
+        "정보보호팀 한유진입니다."
+      ],
+      "fallback": [
+        "보안 관련이면 말씀하세요."
+      ],
+      "rude": [
+        "보안 절차는 생략할 수 없습니다."
+      ],
+      "topics": [
+        {
+          "id": "advice",
+          "patterns": [
+            "넣으면",
+            "주의"
+          ],
+          "ask": "AI 지식 패키지에 넣으면 안 되는 게 있을까요?",
+          "reply": [
+            "개인 평가·인사 메모, 계정 정보, 원본 데이터 경로는 빼세요.",
+            "회의록을 통째로 넣으면 인사 메모가 같이 들어가요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "han.advice"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jung",
+      "name": "정민아 팀장",
+      "title": "수율팀장 (과제 요청자)",
+      "org": "Fab-N2 수율팀",
+      "trust": 60,
+      "replyDelay": 3,
+      "description": "과제 요청자.",
+      "greeting": [
+        "네, 말씀하세요."
+      ],
+      "fallback": [
+        "그건 담당자에게 물어보세요."
+      ],
+      "rude": [
+        "…그렇게 급할 일은 아니에요."
+      ],
+      "topics": [
+        {
+          "id": "status",
+          "patterns": [
+            "진행"
+          ],
+          "ask": "지식 패키지 진행 상황 공유드립니다",
+          "reply": [
+            "시험은 해 봤어요? AI가 실제로 맞게 답하는지가 중요해요."
+          ],
+          "trust": 5
+        },
+        {
+          "id": "approve",
+          "patterns": [
+            "승인"
+          ],
+          "ask": "지식 패키지 검토·승인 부탁드립니다",
+          "reply": [
+            "{{#if !eval.pass_all}}시험에서 틀리는 문항이 있는데 AI에게 줄 순 없어요. 시험 결과(sim://work/eval)부터 다 통과시켜 주세요.{{else}}{{#if !pub.governed}}시험은 다 통과했는데, 누가 언제 고치는지가 없네요. 소유자랑 검토 주기를 적어서 다시 배포해 주세요.{{else}}시험 8문항 통과, 소유자·검토 주기까지 있네요. 승인합니다. 다음 주부터 이걸로 AI에게 맡겨 봅시다.{{/if}}{{/if}}"
+          ],
+          "requires": {
+            "taskDone": "publish"
+          },
+          "repeatable": true,
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "know.approved",
+              "value": true,
+              "when": {
+                "all": [
+                  "eval.pass_all",
+                  "pub.governed"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "files": {
+    "/docs/request.md": {
+      "src": "request.md",
+      "description": "팀장 요청 메일"
+    },
+    "/docs/drive_index.md": {
+      "src": "drive_index.md",
+      "description": "공유 드라이브 검색 결과"
+    },
+    "/docs/sop_2019.md": {
+      "src": "sop_2019.md",
+      "description": "구 SOP (2019)"
+    },
+    "/docs/meeting_notes_W45.md": {
+      "src": "meeting_notes.md",
+      "description": "주간 회의록 W45"
+    }
+  },
+  "pages": [
+    {
+      "url": "sim://mail/request",
+      "title": "팀장 요청 메일",
+      "view": "mail",
+      "source": "/docs/request.md"
+    },
+    {
+      "url": "sim://docs/drive",
+      "title": "공유 드라이브 검색 결과 (312건)",
+      "view": "markdown",
+      "source": "/docs/drive_index.md"
+    },
+    {
+      "url": "sim://docs/sop-2019",
+      "title": "수율 보고 SOP (2019)",
+      "view": "markdown",
+      "source": "/docs/sop_2019.md"
+    },
+    {
+      "url": "sim://docs/meeting-w45",
+      "title": "주간 수율 회의록 W45",
+      "view": "markdown",
+      "source": "/docs/meeting_notes_W45.md"
+    },
+    {
+      "url": "sim://work/inventory",
+      "title": "지식 출처 조사",
+      "view": "markdown",
+      "source": "/work/knowledge/inventory.md"
+    },
+    {
+      "url": "sim://knowledge/agents",
+      "title": "AGENTS.md",
+      "view": "markdown",
+      "source": "/knowledge/AGENTS.md"
+    },
+    {
+      "url": "sim://knowledge/skill-weekly",
+      "title": "skills/weekly-report/SKILL.md",
+      "view": "markdown",
+      "source": "/knowledge/skills/weekly-report/SKILL.md"
+    },
+    {
+      "url": "sim://work/eval",
+      "title": "지식 시험 결과",
+      "view": "eval",
+      "source": "/work/knowledge/eval.txt"
+    },
+    {
+      "url": "sim://wiki/yield",
+      "title": "표준: 지표 정의 — 수율",
+      "view": "markdown",
+      "source": "/wiki/standards/yield.md"
+    },
+    {
+      "url": "sim://wiki/data-mart",
+      "title": "데이터: 수율 마트",
+      "view": "markdown",
+      "source": "/wiki/data/mart.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "inventory",
+      "title": "지식 출처 조사",
+      "description": "공유 드라이브에서 주간 보고에 필요한 지식 출처를 찾고, 쓸 것과 뺄 것을 정한다.",
+      "type": "research",
+      "skills": [
+        "research"
+      ],
+      "keywords": [
+        "조사",
+        "출처"
+      ],
+      "inputs": [
+        "/docs/drive_index.md"
+      ],
+      "outputs": [
+        "/work/knowledge/inventory.md"
+      ],
+      "steps": [
+        {
+          "id": "scan",
+          "event": "Drive scanned",
+          "ticks": [
+            3,
+            5
+          ],
+          "reads": [
+            "/docs/drive_index.md",
+            "/docs/sop_2019.md",
+            "/docs/meeting_notes_W45.md"
+          ],
+          "log": [
+            "Search(shared-drive, '수율 보고') — 312건",
+            "  ⎿ 위키 표준·카탈로그 6 · 현행 SOP 3 · 구 SOP 41 · 회의록 156 · 기타 106",
+            "  ⎿ ⚠ 구 SOP(2019)가 현행 표준과 충돌 · 회의록에 인사 메모 포함",
+            {
+              "when": "found.macro",
+              "text": "  ⎿ 0단계 인터뷰 기록 발견: 박서준 선임 매크로 숨은 규칙"
+            },
+            {
+              "when": "found.backfill",
+              "text": "  ⎿ 0단계 인터뷰 기록 발견: 야간조 사후 기록 관행"
+            },
+            "  ⎿ 문서에 없는 지식: 매크로 계산 규칙 · 야간 기록 관행 · 불량 판단 요령 — 사람에게 확인 필요"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "know.macro",
+              "value": true,
+              "when": "found.macro"
+            },
+            {
+              "type": "setFlag",
+              "flag": "know.backfill",
+              "value": true,
+              "when": "found.backfill"
+            },
+            {
+              "type": "setFlag",
+              "flag": "src.curated",
+              "value": true,
+              "when": "src.curated_pre"
+            },
+            {
+              "type": "setFlag",
+              "flag": "src.all",
+              "value": false,
+              "when": "src.curated_pre"
+            },
+            {
+              "type": "setFlag",
+              "flag": "src.top50",
+              "value": false,
+              "when": "src.curated_pre"
+            }
+          ],
+          "gate": {
+            "id": "sources",
+            "kind": "waiting",
+            "when": "!src.curated_pre",
+            "title": "지식 후보로 쓸 문서",
+            "prompt": [
+              "검색 결과 312건 중 무엇을 지식 패키지의 재료로 쓸까요?"
+            ],
+            "options": [
+              {
+                "id": "curated",
+                "label": "위키 표준·데이터 카탈로그·현행 SOP 3건·인터뷰 기록만",
+                "patterns": [
+                  "현행",
+                  "검증"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "src.curated"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "src.all",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "src.top50",
+                    "value": false
+                  }
+                ],
+                "dimension": "evidence"
+              },
+              {
+                "id": "all",
+                "label": "312건 전부 — 많을수록 AI가 잘 안다",
+                "patterns": [
+                  "전부",
+                  "312"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "src.all"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "src.curated",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "src.top50",
+                    "value": false
+                  }
+                ],
+                "feedback": "오래된 문서와 민감한 메모까지 넣으면 AI는 충돌하는 규칙과 개인 정보를 함께 배웁니다.",
+                "dimension": "evidence"
+              },
+              {
+                "id": "top50",
+                "label": "검색 관련도 상위 50건",
+                "patterns": [
+                  "상위",
+                  "50"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "src.top50"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "src.curated",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "src.all",
+                    "value": false
+                  }
+                ],
+                "feedback": "관련도는 '현행인지'를 모릅니다. 구 SOP 12건이 섞였습니다.",
+                "dimension": "evidence"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Inventory written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/knowledge/inventory.md) → sim://work/inventory"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/knowledge/inventory.md",
+              "src": "inventory.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interview",
+      "title": "암묵지 인터뷰",
+      "description": "문서에 없는 지식을 박서준(매크로 규칙)·최재석(야간 기록)·이도윤(불량 판단)에게 직접 듣는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "completeWhen": {
+        "all": [
+          "know.macro",
+          "know.backfill",
+          "know.heuristic"
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": "draft",
+      "title": "지식 패키지 작성",
+      "description": "AGENTS.md(짧은 규칙), skills/weekly-report(절차), 위키 링크로 지식 패키지를 만든다.",
+      "type": "document",
+      "skills": [
+        "writing"
+      ],
+      "dependsOn": [
+        "inventory"
+      ],
+      "keywords": [
+        "패키지",
+        "지식",
+        "작성"
+      ],
+      "outputs": [
+        "/knowledge/AGENTS.md",
+        "/knowledge/skills/weekly-report/SKILL.md"
+      ],
+      "steps": [
+        {
+          "id": "structure",
+          "event": "Structure decided",
+          "ticks": [
+            2,
+            3
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "pack.layered",
+              "value": true,
+              "when": "pack.layered_pre"
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.monolith",
+              "value": false,
+              "when": "pack.layered_pre"
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.links",
+              "value": false,
+              "when": "pack.layered_pre"
+            }
+          ],
+          "gate": {
+            "id": "structure",
+            "kind": "waiting",
+            "when": "!pack.layered_pre",
+            "title": "지식 패키지 구조",
+            "prompt": [
+              "Agent가 지식을 어떤 형태로 읽게 할까요?"
+            ],
+            "options": [
+              {
+                "id": "layered",
+                "label": "짧은 AGENTS.md(항상 지킬 규칙) + 주간 보고 스킬(절차) + 위키 링크(깊은 내용)",
+                "patterns": [
+                  "짧은",
+                  "스킬",
+                  "나눠"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.layered"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.monolith",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.links",
+                    "value": false
+                  }
+                ],
+                "dimension": "decomposition"
+              },
+              {
+                "id": "monolith",
+                "label": "관련 내용을 전부 AGENTS.md 하나에 (빠짐없이)",
+                "patterns": [
+                  "전부",
+                  "하나"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.monolith"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.layered",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.links",
+                    "value": false
+                  }
+                ],
+                "feedback": "지침이 길어지면 중요한 규칙이 묻힙니다. 항상 지킬 것만 짧게, 절차와 참고는 나누세요.",
+                "dimension": "decomposition"
+              },
+              {
+                "id": "links",
+                "label": "위키 링크만 모아 두기 (중복 없이)",
+                "patterns": [
+                  "링크"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.links"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.layered",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pack.monolith",
+                    "value": false
+                  }
+                ],
+                "feedback": "문서에 없는 규칙(암묵지)은 링크로 전달되지 않습니다. 핵심 규칙과 절차는 직접 써 주세요.",
+                "dimension": "decomposition"
+              }
+            ]
+          }
+        },
+        {
+          "id": "content",
+          "event": "Knowledge selected",
+          "ticks": [
+            3,
+            4
+          ],
+          "gate": {
+            "id": "content",
+            "kind": "waiting",
+            "multi": true,
+            "min": 3,
+            "max": 9,
+            "title": "지식 패키지에 넣을 것 (복수 선택)",
+            "prompt": [
+              "Agent가 주간 보고를 맡으려면 무엇을 알아야 할까요?"
+            ],
+            "options": [
+              {
+                "id": "yield",
+                "label": "수율 정의 — 라인 수율 / 검사 수율 구분",
+                "patterns": [
+                  "수율"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "domain"
+              },
+              {
+                "id": "utc",
+                "label": "시각 — 저장 UTC, 보고 KST",
+                "patterns": [
+                  "시각",
+                  "utc"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "domain"
+              },
+              {
+                "id": "legacy",
+                "label": "불량 코드 — 11/10 이전 D07은 D07_LEGACY",
+                "patterns": [
+                  "d07",
+                  "legacy"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "domain"
+              },
+              {
+                "id": "macro",
+                "label": "주간 수율 숨은 계산 규칙 (재작업·테스트 웨이퍼 처리)",
+                "patterns": [
+                  "매크로",
+                  "재작업"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "evidence"
+              },
+              {
+                "id": "backfill",
+                "label": "야간조 사후 기록 → 시각 신뢰도 낮음",
+                "patterns": [
+                  "야간",
+                  "사후"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "evidence"
+              },
+              {
+                "id": "heuristic",
+                "label": "D07 급증 시 판단 가이드 (CMP 슬러리 이력부터)",
+                "patterns": [
+                  "판단",
+                  "가이드"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "evidence"
+              },
+              {
+                "id": "catalog",
+                "label": "데이터는 수율 마트에서만 조회 (카탈로그 링크)",
+                "patterns": [
+                  "마트",
+                  "카탈로그"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "security"
+              },
+              {
+                "id": "oldsop",
+                "label": "수율 보고 SOP (2019) 전문",
+                "patterns": [
+                  "2019",
+                  "sop"
+                ],
+                "quality": "bad",
+                "effects": [],
+                "feedback": "구 SOP는 현행 표준과 충돌합니다. 지식은 '현행·검증된 것'만.",
+                "dimension": "evidence"
+              },
+              {
+                "id": "hr",
+                "label": "주간 회의록 (작업자 메모 포함)",
+                "patterns": [
+                  "회의록"
+                ],
+                "quality": "bad",
+                "effects": [],
+                "feedback": "회의록의 인사 메모가 AI 지식에 들어가면 누구나 AI에게 개인 평가를 물을 수 있습니다.",
+                "dimension": "security"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Package written",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Write(/knowledge/AGENTS.md)",
+            {
+              "when": "pack.layered",
+              "text": "Write(/knowledge/skills/weekly-report/SKILL.md)"
+            },
+            {
+              "when": "pack.guessed",
+              "text": "  ⎿ ⚠ 확인되지 않은 규칙은 문서 이름·관행으로 추정해 채웠습니다"
+            },
+            {
+              "when": "pack.monolith",
+              "text": "  ⎿ AGENTS.md 2,400줄"
+            }
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "pack.oldsop",
+              "value": true,
+              "when": {
+                "any": [
+                  "gate.content.oldsop",
+                  "src.all",
+                  "src.top50"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.oldsop",
+              "value": false,
+              "when": {
+                "not": {
+                  "any": [
+                    "gate.content.oldsop",
+                    "src.all",
+                    "src.top50"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.hr",
+              "value": true,
+              "when": {
+                "any": [
+                  "gate.content.hr",
+                  "src.all"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "any": [
+                    "gate.content.hr",
+                    "src.all"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.macro_guess",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.macro",
+                  "!know.macro"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.macro_guess",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.macro",
+                    "!know.macro"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.backfill_guess",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.backfill",
+                  "!know.backfill"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.backfill_guess",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.backfill",
+                    "!know.backfill"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.heuristic_guess",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.heuristic",
+                  "!know.heuristic"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.heuristic_guess",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.heuristic",
+                    "!know.heuristic"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.guessed",
+              "value": true,
+              "when": {
+                "any": [
+                  "pack.macro_guess",
+                  "pack.backfill_guess",
+                  "pack.heuristic_guess"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "pack.leaked_hr",
+              "value": true,
+              "when": "pack.hr"
+            },
+            {
+              "type": "writeFile",
+              "path": "/knowledge/AGENTS.md",
+              "src": "agents_md.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/knowledge/skills/weekly-report/SKILL.md",
+              "src": "skill_weekly.md",
+              "when": "pack.layered"
+            },
+            {
+              "type": "deleteFile",
+              "path": "/knowledge/skills/weekly-report/SKILL.md",
+              "when": "!pack.layered"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eval",
+      "title": "지식 시험 (eval)",
+      "description": "지식 패키지만 읽은 Agent에게 주간 보고 관련 8문항을 풀게 하고 채점한다.",
+      "type": "review",
+      "skills": [
+        "eval"
+      ],
+      "dependsOn": [
+        "draft"
+      ],
+      "review": true,
+      "keywords": [
+        "시험",
+        "eval",
+        "채점"
+      ],
+      "inputs": [
+        "/knowledge/AGENTS.md"
+      ],
+      "outputs": [
+        "/work/knowledge/eval.txt"
+      ],
+      "steps": [
+        {
+          "id": "run",
+          "event": "Questions answered",
+          "ticks": [
+            4,
+            6
+          ],
+          "reads": [
+            "/knowledge/AGENTS.md",
+            "/knowledge/skills/weekly-report/SKILL.md"
+          ],
+          "log": [
+            "새 Agent 세션 — 지식 패키지만 읽고 시작 (대화 기록 없음)",
+            "  ⎿ 8문항 풀이 중…"
+          ]
+        },
+        {
+          "id": "grade",
+          "event": "Graded",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/knowledge/eval.txt) → sim://work/eval"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "eval.q1",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.yield",
+                  "!pack.oldsop"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q1",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.yield",
+                    "!pack.oldsop"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q2",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.legacy",
+                  "pack.layered"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q2",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.legacy",
+                    "pack.layered"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q3",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.utc",
+                  "pack.layered"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q3",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.utc",
+                    "pack.layered"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q4",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.macro",
+                  "know.macro",
+                  "pack.layered"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q4",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.macro",
+                    "know.macro",
+                    "pack.layered"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q5",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.backfill",
+                  "know.backfill",
+                  "pack.layered"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q5",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.backfill",
+                    "know.backfill",
+                    "pack.layered"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q6",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.heuristic",
+                  "know.heuristic",
+                  "pack.layered"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q6",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.heuristic",
+                    "know.heuristic",
+                    "pack.layered"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q7",
+              "value": true,
+              "when": "!pack.hr"
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q7",
+              "value": false,
+              "when": {
+                "not": "!pack.hr"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q8",
+              "value": true,
+              "when": {
+                "all": [
+                  "gate.content.catalog",
+                  {
+                    "fileExists": "/wiki/data/mart.md"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.q8",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "gate.content.catalog",
+                    {
+                      "fileExists": "/wiki/data/mart.md"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.pass_all",
+              "value": true,
+              "when": {
+                "all": [
+                  "eval.q1",
+                  "eval.q2",
+                  "eval.q3",
+                  "eval.q4",
+                  "eval.q5",
+                  "eval.q6",
+                  "eval.q7",
+                  "eval.q8"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.pass_all",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "eval.q1",
+                    "eval.q2",
+                    "eval.q3",
+                    "eval.q4",
+                    "eval.q5",
+                    "eval.q6",
+                    "eval.q7",
+                    "eval.q8"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "eval.ran"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/knowledge/eval.txt",
+              "src": "eval.txt"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "지식 시험 전부 통과 — 배포할 수 있습니다",
+              "when": "eval.pass_all"
+            },
+            {
+              "type": "notify",
+              "level": "warn",
+              "message": "지식 시험 실패 문항 있음 — sim://work/eval 에서 원인을 보고 지식을 고친 뒤 다시 시험하세요",
+              "when": "!eval.pass_all"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "publish",
+      "title": "지식 배포",
+      "description": "지식 패키지를 AI 어시스턴트가 읽는 위치에 배포한다.",
+      "type": "document",
+      "skills": [
+        "document"
+      ],
+      "dependsOn": [
+        "eval"
+      ],
+      "keywords": [
+        "배포"
+      ],
+      "outputs": [
+        "/knowledge/AGENTS.md"
+      ],
+      "steps": [
+        {
+          "id": "publish",
+          "event": "Published",
+          "ticks": [
+            2,
+            3
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "pub.governed",
+              "value": true,
+              "when": "pub.governed_pre"
+            }
+          ],
+          "gate": {
+            "id": "publish",
+            "kind": "waiting",
+            "when": "!pub.governed_pre",
+            "tool": "knowledge.publish(target: AGENTS.md + skills/weekly-report/, readers: ai-assistant)",
+            "title": "지식 배포 방식",
+            "prompt": [
+              "{{#if !eval.pass_all}}⚠ 마지막 시험에서 실패한 문항이 있습니다.{{/if}}",
+              "어떻게 배포할까요?"
+            ],
+            "options": [
+              {
+                "id": "governed",
+                "label": "소유자·출처·검토 주기(분기)를 기록하고, AI는 읽기 전용으로 배포",
+                "patterns": [
+                  "소유자",
+                  "검토"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pub.governed"
+                  }
+                ],
+                "dimension": "evidence"
+              },
+              {
+                "id": "plain",
+                "label": "파일만 그대로 복사해 배포",
+                "patterns": [
+                  "복사",
+                  "그대로"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "pub.governed",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "pub.plain"
+                  }
+                ],
+                "feedback": "소유자와 검토 주기가 없는 지식은 금방 낡습니다. 표준이 바뀌어도 아무도 고치지 않습니다.",
+                "dimension": "evidence"
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Deployed",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/knowledge/AGENTS.md) — 배포 완료"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/knowledge/AGENTS.md",
+              "src": "agents_md.md"
+            },
+            {
+              "type": "setFlag",
+              "flag": "pub.done"
+            },
+            {
+              "type": "setFlag",
+              "flag": "pub.with_fail",
+              "value": true,
+              "when": "!eval.pass_all"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "배포 완료 — 정민아 팀장에게 승인을 요청하세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approve",
+      "title": "팀장 승인",
+      "description": "정민아 팀장에게 지식 패키지 승인을 받는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "publish"
+      ],
+      "completeWhen": "know.approved",
+      "steps": []
+    }
+  ],
+  "intents": [
+    {
+      "id": "inventory",
+      "patterns": [
+        "조사",
+        "출처"
+      ],
+      "label": "공유 드라이브에서 주간 보고 지식 출처 조사",
+      "assign": "inventory",
+      "redo": true,
+      "reply": [
+        "공유 드라이브를 조사하겠습니다."
+      ],
+      "example": "@assistant 주간 보고 지식 출처 조사해줘"
+    },
+    {
+      "id": "curated-pre",
+      "patterns": [
+        "현행",
+        "검증된"
+      ],
+      "label": "현행·검증된 문서만 — 구 SOP·회의록·출처 불명 메모 제외",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "src.curated_pre"
+        }
+      ],
+      "reply": [
+        "현행·검증된 문서만 고르겠습니다."
+      ]
+    },
+    {
+      "id": "draft",
+      "patterns": [
+        "패키지",
+        "작성",
+        "고쳐"
+      ],
+      "label": "지식 패키지 작성 (AGENTS.md · 주간 보고 스킬 · 위키 링크)",
+      "assign": "draft",
+      "redo": true,
+      "reply": [
+        "지식 패키지를 쓰겠습니다."
+      ],
+      "example": "@assistant 지식 패키지 만들어줘"
+    },
+    {
+      "id": "layered-pre",
+      "patterns": [
+        "나눠",
+        "짧게"
+      ],
+      "label": "짧은 AGENTS.md + 주간 보고 스킬 + 위키 링크로 나눠서",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "pack.layered_pre"
+        }
+      ],
+      "reply": [
+        "규칙·절차·참고를 나눠 쓰겠습니다."
+      ]
+    },
+    {
+      "id": "eval",
+      "patterns": [
+        "시험",
+        "eval",
+        "채점"
+      ],
+      "label": "지식 패키지만 읽고 시험 8문항 풀어서 채점",
+      "assign": "eval",
+      "redo": true,
+      "reply": [
+        "새 세션에서 지식 패키지만 읽고 시험을 보겠습니다."
+      ],
+      "example": "@evaluator 지식 시험 돌려줘"
+    },
+    {
+      "id": "publish",
+      "patterns": [
+        "배포"
+      ],
+      "label": "지식 패키지를 AI 어시스턴트용으로 배포",
+      "assign": "publish",
+      "redo": true,
+      "reply": [
+        "배포하겠습니다."
+      ]
+    },
+    {
+      "id": "governed-pre",
+      "patterns": [
+        "소유자",
+        "검토\\s*주기"
+      ],
+      "label": "소유자·출처·검토 주기를 함께 기록",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "pub.governed_pre"
+        }
+      ],
+      "reply": [
+        "소유자와 검토 주기를 적겠습니다."
+      ]
+    },
+    {
+      "id": "interview-proxy",
+      "patterns": [
+        "대신.*인터뷰",
+        "노하우"
+      ],
+      "label": "담당자들을 대신 인터뷰해서 노하우를 정리해줘",
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "asked.ai_interview"
+        }
+      ],
+      "reply": [
+        "저는 사람과 대화할 수 없습니다. 메신저로 직접 인터뷰해 주시면, 들은 내용은 제가 정리하겠습니다."
+      ]
+    },
+    {
+      "id": "guess",
+      "patterns": [
+        "관행",
+        "일반적"
+      ],
+      "label": "모르는 규칙은 일반적인 수율 계산 관행으로 채워줘",
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "asked.ai_guess"
+        }
+      ],
+      "reply": [
+        "알겠습니다. 다음 작성 때 확인되지 않은 규칙은 일반 관행으로 추정해 채우겠습니다. (추정임을 표시합니다)"
+      ]
+    }
+  ],
+  "evaluation": [
+    {
+      "dimension": "verification",
+      "when": {
+        "observed": "sim://work/eval"
+      },
+      "kind": "positive",
+      "text": "시험 결과를 직접 열어 실패 원인을 확인했습니다."
+    },
+    {
+      "dimension": "verification",
+      "when": {
+        "all": [
+          "pub.with_fail"
+        ]
+      },
+      "kind": "issue",
+      "text": "시험에 실패한 문항이 남은 지식 패키지를 배포했습니다.",
+      "suggestion": "지식은 시험을 통과한 뒤에 배포하세요. 틀리는 지식은 AI가 틀린 일을 하게 만듭니다."
+    },
+    {
+      "dimension": "verification",
+      "when": "eval.pass_all",
+      "kind": "positive",
+      "text": "지식 패키지가 시험 8문항을 모두 통과했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "park.reassured",
+      "kind": "positive",
+      "text": "박서준 선임의 걱정(일자리)을 먼저 듣고, 규칙 소유자로 이름을 남기겠다고 약속했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": {
+        "all": [
+          "know.macro",
+          "!found.macro"
+        ]
+      },
+      "kind": "positive",
+      "text": "문서에 없는 매크로 계산 규칙을 인터뷰로 꺼냈습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "asked.ai_interview",
+      "kind": "issue",
+      "text": "AI에게 인터뷰를 대신 맡기려 했습니다.",
+      "suggestion": "암묵지는 사람에게서만 나옵니다. AI는 들은 내용을 정리하는 데 쓰세요."
+    },
+    {
+      "dimension": "evidence",
+      "when": "pack.guessed",
+      "kind": "issue",
+      "text": "확인되지 않은 규칙을 AI가 추측해 지식에 넣었습니다.",
+      "suggestion": "모르는 규칙은 비워 두고 소유자에게 확인하세요. 추측은 그럴듯해서 더 위험합니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": "asked.ai_guess",
+      "kind": "issue",
+      "text": "모르는 규칙을 일반 관행으로 채우라고 지시했습니다."
+    },
+    {
+      "dimension": "security",
+      "when": "pack.leaked_hr",
+      "kind": "issue",
+      "text": "회의록의 인사 메모가 AI 지식에 들어갔습니다.",
+      "suggestion": "AI 지식에는 업무 규칙만. 사람에 대한 평가 정보는 넣지 않습니다."
+    },
+    {
+      "dimension": "security",
+      "when": "han.advice",
+      "kind": "positive",
+      "text": "지식에 넣으면 안 되는 것을 정보보호팀에 먼저 확인했습니다."
+    },
+    {
+      "dimension": "domain",
+      "when": "lee.guide_ok",
+      "kind": "positive",
+      "text": "전문가의 경험칙을 '규칙'이 아닌 '판단 가이드'로 다뤘습니다."
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "eval",
+      "label": "지식 시험",
+      "success": "eval.pass_all",
+      "successText": "지식 패키지만 읽은 Agent가 8문항을 모두 맞혔습니다.",
+      "failText": "마지막 시험에서 틀린 문항이 남아 있습니다."
+    },
+    {
+      "id": "tacit",
+      "label": "암묵지",
+      "success": {
+        "all": [
+          "know.macro",
+          "know.backfill",
+          "know.heuristic"
+        ]
+      },
+      "successText": "문서에 없던 세 가지 지식을 사람에게서 확인했습니다.",
+      "failText": "사람에게 확인하지 못한 지식이 남아 있습니다."
+    },
+    {
+      "id": "clean",
+      "label": "지식 품질",
+      "success": {
+        "all": [
+          "!pack.oldsop",
+          "!pack.hr",
+          "!pack.guessed"
+        ]
+      },
+      "successText": "현행·검증된 지식만 들어갔습니다.",
+      "failText": "구 문서·인사 메모·추측이 지식에 섞였습니다."
+    },
+    {
+      "id": "structure",
+      "label": "구조",
+      "success": "pack.layered",
+      "successText": "짧은 규칙 · 절차 · 참고로 나눴습니다.",
+      "failText": "지식이 한 파일에 몰렸거나 링크만 있습니다."
+    },
+    {
+      "id": "governed",
+      "label": "관리",
+      "success": {
+        "all": [
+          "pub.done",
+          "pub.governed"
+        ]
+      },
+      "successText": "소유자·출처·검토 주기가 있는 지식으로 배포했습니다.",
+      "failText": "소유자·검토 주기 없이 배포했거나 배포하지 않았습니다."
+    },
+    {
+      "id": "approved",
+      "label": "팀장 승인",
+      "success": "know.approved",
+      "successText": "다음 주부터 AI에게 주간 보고를 맡길 수 있습니다.",
+      "failText": "팀장 승인을 받지 못했습니다."
+    }
+  ],
+  "hints": [
+    {
+      "text": "어시스턴트에게 지식 출처 조사를 맡기고, 그동안 메신저로 박서준 선임·최재석 반장·이도윤 엔지니어에게 '문서에 없는 지식'을 물어보세요."
+    },
+    {
+      "when": {
+        "all": [
+          "!know.macro"
+        ]
+      },
+      "text": "박서준 선임은 매크로 규칙을 쉽게 말하지 않습니다. 무엇이 걱정인지 먼저 물어보세요."
+    },
+    {
+      "when": {
+        "taskDone": "draft"
+      },
+      "text": "시험관 Agent를 만들어(＋ 새 세션 → evaluator) 지식 시험을 돌려 보세요."
+    },
+    {
+      "when": {
+        "all": [
+          "eval.ran",
+          "!eval.pass_all"
+        ]
+      },
+      "text": "시험 결과(sim://work/eval)의 실패 원인을 보세요: 빠진 지식 → 인터뷰, 충돌 → 구 문서 제외, 묻힘 → 구조 변경. 고친 뒤 draft와 eval을 다시."
+    },
+    {
+      "when": "eval.pass_all",
+      "text": "배포할 때 소유자와 검토 주기를 남기고, 팀장에게 승인을 요청하세요."
+    }
+  ],
+  "initialFlags": {}
+}

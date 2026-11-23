@@ -190,6 +190,8 @@ export interface TopicDef {
   hint?: string;
   /** 객관식 선택지로 표시할 플레이어의 질문/발언 (없으면 hint) */
   ask?: string;
+  /** 여러 번 물을 수 있다 (예: '다시 승인 요청') — 물을 때마다 reply와 effects가 다시 적용된다 */
+  repeatable?: boolean;
   quality?: 'good' | 'bad' | 'neutral';
 }
 
@@ -336,7 +338,7 @@ export interface ScenarioCampaign {
 export interface PageDef {
   url: string;
   title: string;
-  view: 'markdown' | 'dashboard' | 'table' | 'mail' | 'text' | 'scan' | 'db';
+  view: 'markdown' | 'dashboard' | 'table' | 'mail' | 'text' | 'scan' | 'db' | 'eval';
   source: string;
   description?: string;
 }
