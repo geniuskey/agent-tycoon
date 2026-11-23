@@ -263,6 +263,7 @@ export function runIntent(sim: Simulation, intent: IntentDef, target: AgentRunti
     reply([c.yellow(`이 지시는 제 역할(${sim.roleDef(target.role)?.name})보다 [${names}] 역할에 적합합니다.`)]);
     return;
   }
+  if (intent.recommendedBy && sim.flags[`org.${intent.recommendedBy}`]) sim.setFlag(`org.followed.${intent.recommendedBy}`, true, 'player');
   executeIntent(sim, intent, target, pane, say, reply);
 }
 

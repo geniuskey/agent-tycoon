@@ -106,6 +106,12 @@ export function validateScenario(s: LoadedScenario): string[] {
   };
   s.tasks.forEach((t) => visit(t.id, []));
 
+  // 사내 공통 지침: 추천 참조는 정의된 원칙이어야 한다
+  const orgIds = new Set((s.foundation ?? []).map((r) => r.id));
+  for (const i of s.intents) if (i.recommendedBy && !orgIds.has(i.recommendedBy)) e(`intent ${i.id}: recommendedBy '${i.recommendedBy}' 원칙 없음`);
+  for (const t of s.tasks)
+    for (const st of t.steps)
+      for (const o of st.gate?.options ?? []) if (o.recommendedBy && !orgIds.has(o.recommendedBy)) e(`gate ${st.gate!.id}.${o.id}: recommendedBy '${o.recommendedBy}' 원칙 없음`);
   for (const i of s.intents) {
     i.patterns.forEach((p) => checkRegex(p, `intent ${i.id}`));
     if (i.assign && !taskIds.has(i.assign)) e(`intent ${i.id}: task '${i.assign}' 없음`);

@@ -3,12 +3,13 @@
  * 각 단계는 앞 단계의 결과만으로 시작한다 (defaultCarry를 쓰지 않음).
  */
 import { describe, expect, it } from 'vitest';
-import { carriedTrust, exportCarry, formatSimTime, Simulation } from '../src/engine/engine';
+import { activeFoundation, carriedTrust, exportCarry, formatSimTime, Simulation } from '../src/engine/engine';
+import { agentChoices } from '../src/engine/choices';
 import { evaluate } from '../src/engine/evaluate';
 import { meetingState } from '../src/engine/groups';
 import type { CarryState } from '../src/engine/types';
 import { getScenario } from '../src/scenarios';
-import { runUntil, sh, status, talk, taskStatus, to, waitReply } from './helpers';
+import { lastOutput, runUntil, sh, status, talk, taskStatus, to, waitReply } from './helpers';
 
 const ask = (sim: Simulation, person: string, ...topics: string[]) => {
   for (const t of topics) {
@@ -350,5 +351,61 @@ describe('캠페인 전체 플레이 — 실수가 다음 단계로 이어진다
     finish(d, 'report-agent', 'shadow');
     expect(d.flags['sh.et13_guess']).toBe(true);
     expect(d.tasks['incident'].visible).toBe(true);
+  });
+});
+
+describe('7단계 연결 — 캠페인 결과가 사내 공통 지침이 된다', () => {
+  let campaignCarry: CarryState | undefined;
+  const fullCarry = () => {
+    if (campaignCarry) return campaignCarry;
+    let sim = s0();
+    sh(sim, 'submit');
+    for (const play of STAGES) {
+      sim = play(exportCarry(sim));
+      sh(sim, 'submit');
+    }
+    return (campaignCarry = exportCarry(sim));
+  };
+
+  it('캠페인을 마치면 세 미션 모두 지침 원칙이 켜지고, 회사 상태는 섞이지 않는다', () => {
+    const carry = fullCarry();
+    for (const id of ['fab-equipment-dashboard', 'dram-retention', 'meeting-summary']) {
+      const sc = getScenario(id)!;
+      const sim = new Simulation(sc, 7, carry);
+      expect(activeFoundation(sc, carry).length).toBe(sc.foundation!.length);
+      expect(sim.files.get('/org/AGENTS.md')!.content).toContain('사내 공통 지침');
+      for (const r of sc.foundation!) expect(sim.flags[`org.${r.id}`]).toBe(true);
+      expect(sim.flags['kb.hypo_rule']).toBeUndefined(); // 캠페인 플래그는 그대로 들어오지 않는다
+    }
+    // 캠페인 없이 시작하면 지침이 없다
+    const plain = new Simulation(getScenario('meeting-summary')!, 7);
+    expect(plain.files.has('/org/AGENTS.md')).toBe(false);
+  });
+
+  it('지침은 함정을 없애지 않고 추천만 한다 — 판단은 그대로 나오고, 추천을 따르면 평가에 반영된다', () => {
+    const sim = new Simulation(getScenario('meeting-summary')!, 8, fullCarry());
+    for (const r of ['scribe', 'pm']) sh(sim, `agent spawn ${r}`);
+    to(sim, 'scribe', '회의록 요약해');
+    runUntil(sim, () => sim.agents['scribe'].gate?.gateId === 'confidential');
+    const card = agentChoices(sim, 'scribe');
+    expect(card?.mode === 'gate' && card.options.find((o) => o.id === 'exclude')?.note).toContain('사내 지침');
+    expect(lastOutput(sim, 40)).toContain('사내 지침에 따라 추천');
+    sh(sim, 'agent choose scribe 1');
+    expect(sim.flags['org.followed.sensitive']).toBe(true);
+    const pos = evaluate(sim).dimensions.flatMap((d) => d.findings.filter((f) => f.kind === 'positive').map((f) => f.text));
+    expect(pos.some((t) => t.includes('사내 지침을 활용'))).toBe(true);
+  });
+
+  it('6단계를 하지 않았으면 그 원칙(외부 발송 검토)은 지침에 없다', () => {
+    let sim = s0();
+    sh(sim, 'submit');
+    for (const play of [s1, s2, s3, s4, s5]) {
+      sim = play(exportCarry(sim));
+      sh(sim, 'submit');
+    }
+    const sc = getScenario('meeting-summary')!;
+    const ids = activeFoundation(sc, exportCarry(sim)).map((r) => r.id);
+    expect(ids).toContain('sensitive');
+    expect(ids).not.toContain('external');
   });
 });

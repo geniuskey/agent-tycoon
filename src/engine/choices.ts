@@ -52,7 +52,7 @@ export function agentChoices(sim: Simulation, agentId: string): AgentChoices | n
     return {
       mode: 'gate',
       gate,
-      options: gate.options.map((o) => ({ id: o.id, label: o.label })),
+      options: gate.options.map((o) => ({ id: o.id, label: o.label, note: o.recommendedBy && sim.flags[`org.${o.recommendedBy}`] ? '📘 사내 지침 추천' : undefined })),
       multi: !!gate.multi,
       min: gate.min ?? 1,
       max: gate.max ?? (gate.multi ? gate.options.length : 1),
@@ -72,7 +72,7 @@ export function agentChoices(sim: Simulation, agentId: string): AgentChoices | n
     if (i.hiddenChoice || !sim.cond(i.requires)) continue;
     if (i.modifier) {
       if (i.roles && !i.roles.includes(a.role)) continue;
-      modifiers.push({ id: i.id, label: intentLabel(i) });
+      modifiers.push({ id: i.id, label: intentLabel(i), note: i.recommendedBy && sim.flags[`org.${i.recommendedBy}`] ? '📘 사내 지침 추천' : undefined });
       continue;
     }
     if (i.assign) {

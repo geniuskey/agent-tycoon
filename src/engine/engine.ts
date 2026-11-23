@@ -11,6 +11,7 @@ import type {
   Cond,
   Effect,
   FlagValue,
+  FoundationRule,
   GateDef,
   LoadedScenario,
   LogLine,
@@ -18,6 +19,7 @@ import type {
   NotifyLevel,
   PlayerCommand,
   RoleDef,
+  ScenarioDef,
   SimEvent,
   StepDef,
   TaskDef,
@@ -135,7 +137,16 @@ export class Simulation {
         description: def.description,
       });
     }
-    if (carry) {
+    if (carry && scenario.foundation && !scenario.campaign) {
+      // 자유 플레이: 회사 상태를 그대로 섞지 않고, 사내 공통 지침으로만 이어 받는다
+      const active = activeFoundation(scenario, carry);
+      for (const r of active) this.flags[`org.${r.id}`] = true;
+      if (active.length) {
+        this.flags['org.loaded'] = true;
+        const content = orgAgentsMd(active);
+        this.files.set(ORG_AGENTS, { path: ORG_AGENTS, content, restricted: false, createdBy: 'carry', versions: [{ content, tick: 0, by: 'carry' }], description: '사내 공통 지침 (캠페인 결과)' });
+      }
+    } else if (carry) {
       Object.assign(this.flags, carry.flags);
       for (const [path, content] of Object.entries(carry.files)) {
         this.files.set(path, { path, content, restricted: false, createdBy: 'carry', versions: [{ content, tick: 0, by: 'carry' }], description: '이전 단계 산출물' });
@@ -696,6 +707,7 @@ export class Simulation {
       c.dim(`  ⎿ ${def.description}`),
       c.dim(`  ⎿ 계획: ${remaining.join(' → ')}`),
     ];
+    if (this.flags['org.loaded']) lines.push(c.dim(`  ⎿ Read(${ORG_AGENTS}) — 사내 공통 지침`));
     if (a.mismatch) lines.push(c.yellow(`  ⎿ 주의: 역량 부족 상태로 진행 (속도 ×${MISMATCH_FACTOR})`));
     this.schedule(a, lines);
   }
@@ -786,6 +798,11 @@ export class Simulation {
     this.notifyPlayer('warn', `${a.id}: '${def.id}' 계획 승인 요청`, { agentId: a.id, taskId: t.id });
   }
 
+  /** 사내 지침이 있어 Agent가 추천하는 선택지 */
+  recommended(gate: GateDef) {
+    return gate.options.filter((o) => o.recommendedBy && this.flags[`org.${o.recommendedBy}`]);
+  }
+
   private raiseGate(a: AgentRuntime, step: StepDef, gate: GateDef): void {
     const t = this.tasks[a.taskId!];
     a.gate = { taskId: t.id, stepId: step.id, gateId: gate.id };
@@ -797,6 +814,10 @@ export class Simulation {
     if (gate.tool) this.agentLog(a, c.bold(`⏺ ${gate.tool}`));
     this.agentLog(a, `${icon}: ${c.bold(gate.title)}`);
     for (const l of this.resolveLines(gate.prompt, a)) this.agentLog(a, `  ${l}`);
+    for (const o of this.recommended(gate)) {
+      const rule = this.scenario.foundation?.find((r) => r.id === o.recommendedBy);
+      this.agentLog(a, c.green(`  📘 사내 지침에 따라 추천: ${o.label}`) + (rule ? c.dim(` — ${rule.text}`) : ''));
+    }
     const kind = gate.multi ? `복수 선택 ${gate.min ?? 1}~${gate.max ?? gate.options.length}개` : '단일 선택';
     this.agentLog(a, c.cyan(`  ▾ 선택지 ${gate.options.length}개 (${kind}) — 아래 선택 카드에서 고르세요`));
     this.emit('gate.opened', `${a.id}: ${gate.title}`, { agentId: a.id, taskId: t.id, data: { gate: gate.id, kind: gate.kind } });
@@ -861,6 +882,7 @@ export class Simulation {
     const ids = opts.map((o) => o.id);
     this.setFlag(`gate.${gate.id}`, gate.multi ? ids.slice().sort().join(',') : ids[0], 'player');
     if (gate.multi) for (const o of gate.options) this.setFlag(`gate.${gate.id}.${o.id}`, ids.includes(o.id), 'player');
+    for (const o of this.recommended(gate)) this.setFlag(`org.${ids.includes(o.id) ? 'followed' : 'ignored'}.${o.recommendedBy}`, true, 'player');
     const missed = gate.multi ? gate.options.filter((o) => o.quality === 'good' && !ids.includes(o.id)).map((o) => o.id) : [];
     const label = opts.map((o) => o.label).join(', ');
     this.emit('gate.resolved', `${a.id}: ${gate.title} → ${label}`, {
@@ -1080,6 +1102,25 @@ export function carriedTrust(base: number, carried: number | undefined): number 
   if (carried === undefined) return base;
   if (carried <= base) return carried;
   return Math.min(TRUST_CARRY_CAP, Math.max(base, Math.round(base + (carried - base) * TRUST_CARRY_KEEP)));
+}
+
+export const ORG_AGENTS = '/org/AGENTS.md';
+/** 캠페인 이월 상태에서 이 미션에 해당하는 사내 지침 원칙 */
+export function activeFoundation(scenario: ScenarioDef, carry: CarryState | undefined): FoundationRule[] {
+  if (!carry || !scenario.foundation) return [];
+  const ctx: CondContext = { flags: carry.flags, tasks: {}, fileExists: (p) => p in carry.files };
+  return scenario.foundation.filter((r) => evalCond(r.when, ctx));
+}
+function orgAgentsMd(rules: FoundationRule[]): string {
+  return [
+    '# AGENTS.md — Nova Semiconductor 사내 공통 지침',
+    '',
+    '> Fab-N2 수율팀의 AI 전환에서 정착한 원칙이 사내 표준이 됐습니다. 모든 Agent가 작업 전에 읽습니다.',
+    '> 지침은 **추천**입니다. 최종 판단은 담당자가 합니다.',
+    '',
+    ...rules.map((r) => `- ${r.text} (출처: ${r.from})`),
+    '',
+  ].join('\n');
 }
 
 /** 미션 종료 시 다음 미션으로 넘길 회사 상태 */

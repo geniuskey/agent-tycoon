@@ -232,6 +232,14 @@ export function evaluate(sim: Simulation): Feedback {
   if (!dup && redo + restarts <= 1 && !repeatFails && !unused.length && real.length)
     add('duplication', 'positive', '중복 배정이나 불필요한 재작업 없이 진행했습니다.');
 
+  // ── 사내 공통 지침 (7단계: 캠페인 결과를 이어 받은 미션) ──
+  for (const r of sim.scenario.foundation ?? []) {
+    if (!sim.flags[`org.${r.id}`]) continue;
+    if (sim.flags[`org.ignored.${r.id}`] && !sim.flags[`org.followed.${r.id}`])
+      add('domain', 'issue', `사내 지침이 추천한 원칙을 따르지 않았습니다: ${r.text}`, '지침은 앞 단계에서 같은 실수를 겪고 만든 규칙입니다. 다르게 판단했다면 근거를 남기세요.');
+    else if (sim.flags[`org.followed.${r.id}`]) add('domain', 'positive', `사내 지침을 활용했습니다: ${r.text}`);
+  }
+
   // ── 10. 이해관계자 협업 (인물이 있는 미션) ──
   const people = sim.scenario.people ?? [];
   if (people.length) {

@@ -3,7 +3,7 @@ import { CAMPAIGNS, CATALOG, DOMAINS, FUNCTIONS, SCENARIOS, TASK_TYPES, missions
 import type { CarryState, LoadedScenario } from '../engine/types';
 import { useSession } from '../store/session';
 import { deleteSession, exportSession, type SessionRecord } from '../store/persist';
-import { carriedTrust, formatSimTime } from '../engine/engine';
+import { activeFoundation, carriedTrust, formatSimTime } from '../engine/engine';
 import { Btn, SimBadge } from './common';
 import { BriefingBody } from './Briefing';
 
@@ -26,6 +26,21 @@ export default function Home() {
   );
   const shown = all.filter((s) => (!domain || s.domain === domain) && (!fn || s.function === fn) && (!type || s.taskType === type));
   const sel = SCENARIOS.find((s) => s.id === selected);
+  /** 캠페인에서 가장 멀리 간 제출 기록 — 자유 플레이 미션의 사내 공통 지침이 된다 */
+  const orgCarry = useMemo(() => {
+    const stageOf = (id: string) => SCENARIOS.find((s) => s.id === id)?.campaign?.stage ?? -1;
+    const recs = sessions.filter((r) => r.submitted && r.exportCarry && stageOf(r.scenarioId) >= 0);
+    recs.sort((a, b) => stageOf(b.scenarioId) - stageOf(a.scenarioId) || b.updatedAt - a.updatedAt);
+    return recs[0] ? { carry: recs[0].exportCarry!, stage: stageOf(recs[0].scenarioId) } : undefined;
+  }, [sessions]);
+  const pickFreeplay = (id: string) => {
+    const s = SCENARIOS.find((x) => x.id === id);
+    if (s?.foundation && orgCarry) {
+      const n = activeFoundation(s, orgCarry.carry).length;
+      setSelCarry({ carry: orgCarry.carry, label: `캠페인 ${orgCarry.stage}단계까지의 결과 — 사내 공통 지침 원칙 ${n}/${s.foundation.length}개 (/org/AGENTS.md)` });
+    } else setSelCarry({});
+    setSelected(id);
+  };
   const usedDomains = [...new Set(all.map((s) => s.domain))];
   const usedFns = [...new Set(all.map((s) => s.function))];
   const usedTypes = [...new Set(all.map((s) => s.taskType))];
@@ -79,7 +94,7 @@ export default function Home() {
             <h2 className="mr-2 text-lg font-semibold text-strong">자유 플레이 · 멀티 Agent 오케스트레이션</h2>
             <span className="font-mono text-[11px] text-sky-300">STAGE 7</span>
           </div>
-          <p className="mb-4 max-w-3xl text-[13px] leading-relaxed text-dim">데이터·표준·지식 기반이 이미 갖춰진 조직을 가정한 고급 미션입니다. 캠페인과 별개로 언제든 플레이할 수 있습니다.</p>
+          <p className="mb-4 max-w-3xl text-[13px] leading-relaxed text-dim">데이터·표준·지식 기반이 갖춰진 조직의 고급 미션입니다. 언제든 플레이할 수 있고, 캠페인을 진행했다면 그 결과가 사내 공통 지침이 되어 Agent가 추천에 활용합니다.</p>
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Filter label="제품 영역" value={domain} onChange={setDomain} options={usedDomains.map((d) => [d, DOMAINS[d] ?? d])} />
             <Filter label="직무" value={fn} onChange={setFn} options={usedFns.map((d) => [d, FUNCTIONS[d] ?? d])} />
@@ -93,10 +108,7 @@ export default function Home() {
               <button
                 key={s.id}
                 disabled={!s.ready}
-                onClick={() => {
-                  setSelCarry({});
-                  setSelected(s.id);
-                }}
+                onClick={() => pickFreeplay(s.id)}
                 className={`rounded-lg border text-left transition-colors ${
                   s.ready ? 'border-line2 bg-panel p-4 hover:border-sky-600 hover:bg-panel2' : 'cursor-not-allowed border-dashed border-line px-4 py-3'
                 } ${selected === s.id ? 'border-sky-600' : ''}`}
@@ -129,6 +141,24 @@ export default function Home() {
               <Btn onClick={() => setSelected(null)}>✕</Btn>
             </div>
             <BriefingBody s={sel} />
+            {sel.foundation && !sel.campaign && (
+              <div className="mt-4 rounded-md border border-line bg-bg px-3 py-2 text-[12px] text-dim">
+                <span className="font-semibold text-fg">사내 공통 지침: </span>
+                {selCarry.label ?? '없음 — 캠페인을 진행하면 수율팀에서 정착한 원칙이 사내 지침(AGENTS.md)이 되어 이 미션의 Agent가 추천에 활용합니다.'}
+                {selCarry.carry && (
+                  <ul className="mt-1 list-disc pl-4 text-[11px] text-faint">
+                    {sel.foundation.map((r) => {
+                      const on = activeFoundation(sel, selCarry.carry).some((x) => x.id === r.id);
+                      return (
+                        <li key={r.id} className={on ? 'text-emerald-300/90' : 'line-through opacity-60'}>
+                          {r.text} <span className="text-faint">({r.from}{on ? '' : ' — 캠페인에서 만들지 못함'})</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
             {sel.campaign && (
               <div className="mt-4 rounded-md border border-line bg-bg px-3 py-2 text-[12px] text-dim">
                 <span className="font-semibold text-fg">이어받는 상태: </span>

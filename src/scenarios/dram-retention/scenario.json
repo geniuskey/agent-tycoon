@@ -152,6 +152,13 @@
       "title": "설비 PM 이력",
       "view": "table",
       "source": "/data/equipment_pm_log.csv"
+    },
+    {
+      "url": "sim://org/agents",
+      "title": "사내 공통 지침 (AGENTS.md)",
+      "view": "markdown",
+      "source": "/org/AGENTS.md",
+      "description": "캠페인을 마치면 수율팀에서 정착한 원칙이 사내 지침으로 생깁니다"
     }
   ],
   "tasks": [
@@ -270,7 +277,8 @@
                     "type": "setFlag",
                     "flag": "units.ok"
                   }
-                ]
+                ],
+                "recommendedBy": "quality"
               },
               {
                 "id": "exclude",
@@ -682,7 +690,8 @@
                     "flag": "cause.claim",
                     "value": "hypothesis"
                   }
-                ]
+                ],
+                "recommendedBy": "hypo"
               },
               {
                 "id": "etch",
@@ -1054,7 +1063,8 @@
                 "dimension": "security",
                 "log": [
                   "고객 정보는 제외하고 내부 영향(wafer 7장, lot 3개)만 기술합니다."
-                ]
+                ],
+                "recommendedBy": "access"
               },
               {
                 "id": "request",
@@ -1299,7 +1309,8 @@
         "알겠습니다. 원인은 가설로 정리하고, 검증이 필요한 사항을 명시하겠습니다."
       ],
       "modifier": true,
-      "label": "원인은 단정하지 말고 가설로 정리"
+      "label": "원인은 단정하지 말고 가설로 정리",
+      "recommendedBy": "hypo"
     },
     {
       "id": "preinstruct-units",
@@ -1331,7 +1342,8 @@
       "roles": [
         "analyst"
       ],
-      "label": "tester별 측정 단위도 확인"
+      "label": "tester별 측정 단위도 확인",
+      "recommendedBy": "quality"
     },
     {
       "id": "no-customer",
@@ -1350,7 +1362,8 @@
       ],
       "modifier": true,
       "example": "@reporter 고객 정보는 제외하고 보고서 초안 작성해",
-      "label": "고객·출하 정보는 제외"
+      "label": "고객·출하 정보는 제외",
+      "recommendedBy": "access"
     },
     {
       "id": "rush",
@@ -1658,6 +1671,32 @@
         "is": "failed"
       },
       "text": "교차 검증이 실패했습니다. 실패 로그의 원인을 해결(데이터 재검증 → 재분석)한 뒤 agent retry 하세요."
+    }
+  ],
+  "foundation": [
+    {
+      "id": "quality",
+      "when": "mart.checks_pass",
+      "text": "분석 전에 단위·코드·키 정합성을 품질 규칙으로 먼저 검사한다.",
+      "from": "3단계 데이터 기반 — 품질 규칙"
+    },
+    {
+      "id": "hypo",
+      "when": {
+        "any": [
+          "kb.hypo_rule",
+          "kb.cause",
+          "eval.q6"
+        ]
+      },
+      "text": "원인은 단정하지 않는다. 데이터로 뒷받침되는 가설과 확인할 담당자를 함께 쓴다.",
+      "from": "4·5단계 지식화·단일 Agent"
+    },
+    {
+      "id": "access",
+      "when": "access.ai.mart_ro",
+      "text": "권한 밖 데이터는 우회하지 않고 요청 절차로. AI는 최소 권한.",
+      "from": "3단계 데이터 기반 — 접근 권한"
     }
   ]
 }

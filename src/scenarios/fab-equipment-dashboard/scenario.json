@@ -159,6 +159,13 @@
       "title": "배포 노트",
       "view": "markdown",
       "source": "/work/release_notes.md"
+    },
+    {
+      "url": "sim://org/agents",
+      "title": "사내 공통 지침 (AGENTS.md)",
+      "view": "markdown",
+      "source": "/org/AGENTS.md",
+      "description": "캠페인을 마치면 수율팀에서 정착한 원칙이 사내 지침으로 생깁니다"
     }
   ],
   "tasks": [
@@ -398,7 +405,8 @@
                 "dimension": "security",
                 "log": [
                   "export 파일 기반으로 진행합니다. README의 계정 정보 정리를 IT에 요청하도록 메모합니다."
-                ]
+                ],
+                "recommendedBy": "db"
               },
               {
                 "id": "shared",
@@ -1152,7 +1160,8 @@
       "reply": [
         "설비 로거별 시간대(tz 컬럼)를 확인하고 KST로 통일하겠습니다."
       ],
-      "label": "로거별 시간대(UTC/KST) 확인"
+      "label": "로거별 시간대(UTC/KST) 확인",
+      "recommendedBy": "time"
     },
     {
       "id": "no-shared",
@@ -1170,7 +1179,8 @@
       "reply": [
         "알겠습니다. 승인된 export 파일만 사용하겠습니다."
       ],
-      "label": "공용 계정·운영 DB는 사용 금지"
+      "label": "공용 계정·운영 DB는 사용 금지",
+      "recommendedBy": "db"
     },
     {
       "id": "realtime",
@@ -1533,6 +1543,30 @@
         "is": "failed"
       },
       "text": "배포 실패 로그의 품질 게이트 사유를 해결한 뒤 agent retry 하세요."
+    }
+  ],
+  "foundation": [
+    {
+      "id": "time",
+      "when": {
+        "any": [
+          "agenda.time",
+          "time.utc"
+        ]
+      },
+      "text": "시각은 저장 UTC · 표시 KST. 로거·설비별 시간대를 먼저 확인한다.",
+      "from": "2단계 표준화 — 시각 표준"
+    },
+    {
+      "id": "db",
+      "when": {
+        "any": [
+          "access.ai.mart_ro",
+          "tools.safe"
+        ]
+      },
+      "text": "운영 DB 직접 조회·공용 계정 금지. 승인된 export·마트·전용 서비스 계정만 쓴다.",
+      "from": "3단계 데이터 기반 · 6단계 Agent 설계"
     }
   ]
 }

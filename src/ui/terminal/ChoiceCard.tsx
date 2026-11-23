@@ -248,7 +248,7 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
         <>
           <div className="px-1 pt-2 text-[10.5px] tracking-wide text-faint">프롬프트에 덧붙일 조건 — 복수 선택 (선택사항)</div>
           {mods.map((m, j) => (
-            row(primary.length + j, m.label, undefined, true, m.id)
+            row(primary.length + j, m.label, m.note, true, m.id)
           ))}
         </>
       )}

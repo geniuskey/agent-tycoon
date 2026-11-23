@@ -82,6 +82,8 @@ export interface GateOption {
   feedback?: string;
   /** 피드백이 반영될 평가 항목 (기본: recovery) */
   dimension?: DimensionId;
+  /** 사내 공통 지침(foundation) 원칙 id — 그 원칙이 있으면 Agent가 이 선택지를 추천한다 */
+  recommendedBy?: string;
 }
 
 export interface GateDef {
@@ -168,6 +170,8 @@ export interface IntentDef {
    * 예) "원인은 단정하지 말고(modifier) 패턴을 분석해(primary)"
    */
   modifier?: boolean;
+  /** 사내 공통 지침(foundation) 원칙 id — 그 원칙이 있으면 프롬프트 카드에 '사내 지침 추천'으로 표시 */
+  recommendedBy?: string;
 }
 
 // ───────────────────────────── People (가상 인물) ─────────────────────────────
@@ -414,6 +418,21 @@ export interface ScenarioDef {
   hints: { when?: Cond; text: string }[];
   /** 시나리오 시작 시 설정되는 flag */
   initialFlags?: Record<string, FlagValue>;
+  /** 캠페인 결과를 사내 공통 지침으로 이어 받는다 (캠페인 밖 자유 플레이 미션) */
+  foundation?: FoundationRule[];
+}
+
+/**
+ * 사내 공통 지침 원칙 (7단계 자유 플레이) — 캠페인 이월 상태(carry)에서 when이 참이면 /org/AGENTS.md에 들어가고
+ * flag `org.<id>`가 켜진다. 원칙은 함정을 없애지 않고, 해당 선택지·조건을 Agent가 추천하게 한다.
+ */
+export interface FoundationRule {
+  id: string;
+  /** carry.flags 기준 조건 */
+  when: Cond;
+  text: string;
+  /** 어느 캠페인 단계에서 왔는지 (지침 파일에 표시) */
+  from: string;
 }
 
 /** 로더가 assets(src 참조)를 해석한 시나리오 */
