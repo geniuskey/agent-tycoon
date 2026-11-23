@@ -1,0 +1,2339 @@
+{
+  "id": "s2-standardization",
+  "version": 1,
+  "title": "표준화: 같은 것을 같은 이름으로",
+  "domain": "manufacturing",
+  "function": "yield",
+  "taskType": "standardization",
+  "difficulty": 2,
+  "estMinutes": 25,
+  "tags": [
+    "campaign",
+    "표준화",
+    "협의",
+    "위키"
+  ],
+  "company": {
+    "name": "Nova Semiconductor (가상)",
+    "org": "Fab-N2 수율팀"
+  },
+  "campaign": {
+    "id": "fab-yield-ai",
+    "stage": 2,
+    "order": 2,
+    "requires": [
+      "s1-digitization"
+    ],
+    "carry": {
+      "flags": [
+        "std.",
+        "agenda.",
+        "interest.",
+        "match.",
+        "time.",
+        "wiki.",
+        "report.",
+        "meeting.",
+        "defects.",
+        "found."
+      ],
+      "files": [
+        "/wiki/standards/equipment-id.md",
+        "/wiki/standards/time.md",
+        "/wiki/standards/defect-code.md",
+        "/wiki/standards/yield.md",
+        "/data/curated/weekly_W46_std.csv",
+        "/data/curated/checksheet_L2_W46.csv",
+        "/data/curated/code_mapping.md"
+      ],
+      "trust": true
+    },
+    "defaultCarry": {
+      "flags": {
+        "defects.legacy": true,
+        "pii.mask": true,
+        "published": true,
+        "found.legend": true
+      },
+      "files": {
+        "/data/curated/checksheet_L2_W46.csv": "row,date,shift,equipment,particle,temp,pressure,result,worker,note,flag\n1,2026-11-17,day,ETCH-07,40,168,2,OK,W-01,,\n2,2026-11-17,night,ETCH-07,41,169,3,OK,W-02,,\n3,2026-11-18,day,ETCH-07,,,,NOT_MEASURED,W-01,MFC 점검 (PM중),PM\n4,2026-11-19,day,ETCH-01,39,170,2,OK,W-03,,\n",
+        "/data/curated/code_mapping.md": "# 불량 코드 매핑 (1단계, 기본값)\n\n- 11/10 개정 전 D07 → D07_LEGACY (세부 분류 불가)\n- 개정 후 D07a(미세) · D07b(관통)\n",
+        "/data/curated/DATA_NOTE.md": "# DATA NOTE (1단계 게시본, 기본값)\n\n- 판독 불가 셀은 빈값 + LOW_CONFIDENCE\n- 과거 스크래치는 D07_LEGACY\n"
+      },
+      "trust": {
+        "choi": 45,
+        "lee": 55,
+        "han": 50,
+        "jung": 60
+      },
+      "from": []
+    }
+  },
+  "briefing": {
+    "requester": {
+      "name": "정민아 팀장",
+      "role": "Fab-N2 수율팀장"
+    },
+    "title": "표준화 — 설비 ID · 시각 · 불량 코드 · 수율 정의",
+    "background": "1단계에서 데이터를 만들었지만 시스템끼리 말이 안 통한다. 같은 설비를 세 가지 이름으로 부르고, 시각은 9시간씩 어긋나고, '수율'은 부서마다 다른 숫자다. 각 부서는 지금 방식을 고집할 이유가 있다.",
+    "goal": "네 가지 표준을 부서 합의(서명)로 정하고 사내 위키에 게시한 뒤, 데이터에 적용해 팀장 승인을 받는다.",
+    "completionCriteria": [
+      "AI 자동 매칭 결과를 검증할 것",
+      "부서별 이해관계를 반영해 네 안건 모두 합의·서명받을 것",
+      "위키에는 규칙만, 적절한 공개 범위로 게시할 것",
+      "정의 변경에 따른 지표 차이를 정확히 설명할 것"
+    ],
+    "deliverables": [
+      "/wiki/standards/*.md (표준 4건)",
+      "/data/curated/weekly_W46_std.csv"
+    ],
+    "constraints": [
+      "팀장은 다른 부서에 지시할 권한이 없음",
+      "AI는 사람을 설득하거나 합의를 대신 받을 수 없음",
+      "모든 인물·데이터는 가상"
+    ]
+  },
+  "learningObjectives": [
+    "AI의 자동 매칭을 그대로 믿지 않고 핵심 속성으로 검증한다",
+    "입장 뒤의 이해관계를 1:1로 먼저 파악한다 (사전 조율)",
+    "모두를 바꾸는 통일 대신 기준 키 + 별칭처럼 각자의 업무를 덜 바꾸는 표준을 고른다",
+    "같은 이름 다른 뜻의 지표는 이름을 나눠 정의한다",
+    "합의한 표준을 사람과 AI가 함께 읽는 문서로 남긴다"
+  ],
+  "roles": [
+    {
+      "id": "assistant",
+      "name": "AI 어시스턴트",
+      "title": "사내 범용 AI (대조·정리·문서 작성)",
+      "skills": [
+        "writing",
+        "summarization",
+        "document",
+        "data",
+        "review"
+      ],
+      "description": "자료 대조, 표 정리, 문서 작성을 한다. 부서 사정이나 사람 사이의 합의는 알지 못한다."
+    }
+  ],
+  "people": [
+    {
+      "id": "oh",
+      "name": "오태식 파트장",
+      "title": "설비기술팀 · 식각 파트장",
+      "org": "설비기술팀",
+      "trust": 35,
+      "replyDelay": 3,
+      "description": "ETCH-07 체계로 15년 일해 온 설비팀 파트장. 이름을 바꾸라는 말에 예민하다.",
+      "greeting": [
+        "설비팀 오태식입니다. 무슨 일로요?"
+      ],
+      "fallback": [
+        "그건 설비팀 일이 아니라서요.",
+        "설비 얘기면 하세요."
+      ],
+      "rude": [
+        "…수율팀에서 설비팀 일까지 정하시는 건가요?"
+      ],
+      "topics": [
+        {
+          "id": "naming",
+          "patterns": [
+            "표준",
+            "이름",
+            "명칭"
+          ],
+          "ask": "설비 이름을 부서마다 다르게 써서, 표준을 정하려고 합니다",
+          "reply": [
+            "아, 그 얘기요. 우리는 ETCH-07로 15년 썼어요. 라벨에도, PM 시스템에도 다 그렇게 돼 있고요.",
+            "못 바꿉니다."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "oh.position"
+            }
+          ]
+        },
+        {
+          "id": "history",
+          "patterns": [
+            "이력",
+            "관리",
+            "PM"
+          ],
+          "ask": "설비팀에서는 설비 이력을 어떻게 관리하세요?",
+          "reply": [
+            "PM 시스템에 설비별로 다 쌓여 있죠. 작업지시서, 교육 자료도 전부 ETCH-07 기준이에요.",
+            "신입 오면 그 이름으로 가르치고요."
+          ],
+          "trust": 10,
+          "quality": "good"
+        },
+        {
+          "id": "interest",
+          "patterns": [
+            "부담",
+            "걱정",
+            "어려"
+          ],
+          "ask": "이름을 바꾸면 설비팀에 실제로 어떤 부담이 생기나요?",
+          "reply": [
+            "솔직히 라벨 400개 다시 붙이고, PM 시스템 코드 바꾸고, 교육 다시 하는 게 일이에요.",
+            "이름 자체가 중요한 게 아니라, 그 일을 누가 하냐는 거죠."
+          ],
+          "minTrust": 40,
+          "lowTrust": [
+            "부담이야 뻔하죠. 아무튼 못 바꿉니다."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.oh"
+            }
+          ]
+        },
+        {
+          "id": "alias",
+          "patterns": [
+            "별칭",
+            "그대로"
+          ],
+          "ask": "설비팀 이름은 그대로 두고, MES ID와 연결하는 별칭 표를 만들면 어떨까요?",
+          "reply": [
+            "그거면 저희는 바꿀 게 없네요.",
+            "회의에서 그렇게 나오면 찬성하죠."
+          ],
+          "requires": "interest.oh",
+          "trust": 10,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "oh.precommit"
+            }
+          ]
+        },
+        {
+          "id": "pressure",
+          "patterns": [
+            "지시",
+            "바꾸셔야"
+          ],
+          "ask": "팀장님 지시라 설비팀도 MES ID로 바꾸셔야 합니다",
+          "reply": [
+            "…수율팀 팀장님이 설비팀 일까지 정하시나요?",
+            "그런 식이면 회의 들어가도 반대할 겁니다."
+          ],
+          "trust": -15,
+          "quality": "bad"
+        }
+      ]
+    },
+    {
+      "id": "seo",
+      "name": "서지훈 책임",
+      "title": "IT · MES 운영 담당",
+      "org": "IT혁신팀",
+      "trust": 50,
+      "replyDelay": 2,
+      "description": "MES와 설비 로거 데이터를 관리한다. 시스템 일관성을 가장 중시한다.",
+      "greeting": [
+        "IT 서지훈입니다. 데이터 쪽 문의죠?"
+      ],
+      "fallback": [
+        "시스템 관련이면 말씀하세요.",
+        "그건 제 담당이 아니에요."
+      ],
+      "rude": [
+        "요청은 절차대로 주시면 좋겠네요."
+      ],
+      "topics": [
+        {
+          "id": "storage",
+          "patterns": [
+            "시각",
+            "시간",
+            "저장"
+          ],
+          "ask": "MES는 시각을 어떤 기준으로 저장하나요?",
+          "reply": [
+            "MES 화면은 KST로 보여주지만, 설비 로거 원천은 UTC예요.",
+            "다운타임 메일도 로거에서 바로 나가서 UTC고요. 9시간 차이 나는 거 그거예요."
+          ],
+          "trust": 5,
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "found.utc"
+            }
+          ]
+        },
+        {
+          "id": "interest",
+          "patterns": [
+            "원칙",
+            "지켜야",
+            "중요"
+          ],
+          "ask": "UTC 저장 원칙에서 꼭 지켜야 하는 게 뭔가요?",
+          "reply": [
+            "해외 법인 설비랑 같은 DB를 쓰거든요. 저장을 KST로 바꾸면 그쪽이 다 깨져요.",
+            "화면이나 보고서 표시는 상관없어요. 저장만 건드리지 마세요."
+          ],
+          "minTrust": 45,
+          "lowTrust": [
+            "원칙은 원칙이죠."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.seo"
+            }
+          ]
+        },
+        {
+          "id": "kst-display",
+          "patterns": [
+            "표시",
+            "KST"
+          ],
+          "ask": "저장은 UTC 그대로, 보고서 표시만 KST로 통일하면 어떨까요?",
+          "reply": [
+            "그거면 좋죠. 필드 이름에 _utc를 붙이는 규칙도 같이 넣어 주세요.",
+            "그럼 회의에서 제가 먼저 찬성할게요."
+          ],
+          "requires": "interest.seo",
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "seo.precommit"
+            }
+          ]
+        },
+        {
+          "id": "alias-mes",
+          "patterns": [
+            "별칭",
+            "컬럼"
+          ],
+          "ask": "MES 설비 마스터에 별칭 컬럼을 추가할 수 있나요?",
+          "reply": [
+            "컬럼 하나 추가는 어렵지 않아요. 기준 키만 안 바뀌면요."
+          ],
+          "trust": 5,
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "seo.alias"
+            }
+          ]
+        },
+        {
+          "id": "all-kst",
+          "patterns": [
+            "전부",
+            "KST로 바꿔"
+          ],
+          "ask": "시각을 전부 KST로 바꿔 주시면 안 될까요?",
+          "reply": [
+            "…그건 안 됩니다. 해외 법인 데이터가 다 틀어져요."
+          ],
+          "trust": -10,
+          "quality": "bad"
+        }
+      ]
+    },
+    {
+      "id": "kang",
+      "name": "강보람 과장",
+      "title": "생산2과 · 생산관리",
+      "org": "생산2과",
+      "trust": 40,
+      "replyDelay": 4,
+      "description": "생산 KPI를 관리한다. 숫자가 바뀌면 라인 평가가 흔들린다.",
+      "greeting": [
+        "생산2과 강보람입니다. 바쁜데 짧게 부탁해요."
+      ],
+      "fallback": [
+        "생산 쪽 얘기면 하세요.",
+        "그건 잘 모르겠네요."
+      ],
+      "rude": [
+        "생산이 무슨 동네북인가요?"
+      ],
+      "topics": [
+        {
+          "id": "yield",
+          "patterns": [
+            "수율",
+            "계산"
+          ],
+          "ask": "생산에서는 수율을 어떻게 계산하세요?",
+          "reply": [
+            "투입 대비 양품이죠. 라인에 들어간 웨이퍼 중 끝까지 나온 거.",
+            "월간 생산 KPI가 그거예요."
+          ],
+          "trust": 5,
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "found.yield_prod"
+            }
+          ]
+        },
+        {
+          "id": "diff",
+          "patterns": [
+            "다른",
+            "차이"
+          ],
+          "ask": "수율팀 보고서 수율과 숫자가 다른 건 알고 계셨어요?",
+          "reply": [
+            "알죠. 회의 때마다 '수율이 왜 달라요?'로 10분씩 써요.",
+            "그쪽은 검사 통과율이잖아요. 폐기된 웨이퍼는 아예 안 들어가고."
+          ],
+          "trust": 5
+        },
+        {
+          "id": "interest",
+          "patterns": [
+            "걱정",
+            "부담"
+          ],
+          "ask": "수율 정의가 바뀌면 어떤 점이 걱정되세요?",
+          "reply": [
+            "솔직히 KPI요. 정의가 바뀌어서 숫자가 내려가면 우리 라인이 갑자기 못한 게 되잖아요.",
+            "올해 목표치도 그 정의로 잡혀 있고요."
+          ],
+          "minTrust": 45,
+          "lowTrust": [
+            "걱정이야 많죠."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.kang"
+            }
+          ]
+        },
+        {
+          "id": "split",
+          "patterns": [
+            "나눠",
+            "따로",
+            "두 지표"
+          ],
+          "ask": "두 지표로 나눠서 '라인 수율', '검사 수율'처럼 이름을 따로 붙이면 어떨까요?",
+          "reply": [
+            "생산 KPI는 그대로 '라인 수율'이고, 그쪽은 '검사 수율'이면…",
+            "숫자 싸움은 끝나겠네요. 좋아요, 회의에서 찬성할게요."
+          ],
+          "requires": "interest.kang",
+          "trust": 10,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "kang.precommit"
+            }
+          ]
+        },
+        {
+          "id": "unify",
+          "patterns": [
+            "맞춰",
+            "정확"
+          ],
+          "ask": "수율팀 정의가 더 정확하니 생산도 맞춰 주시면 좋겠어요",
+          "reply": [
+            "정확하다는 건 누구 기준이에요?",
+            "생산 KPI를 그쪽 편하자고 바꿀 순 없어요."
+          ],
+          "trust": -15,
+          "quality": "bad"
+        }
+      ]
+    },
+    {
+      "id": "choi",
+      "name": "최재석 반장",
+      "title": "생산2과 · 라인2 교대조 반장",
+      "org": "생산2과",
+      "trust": 30,
+      "replyDelay": 6,
+      "description": "체크시트를 쓰는 사람. 앞 단계에서 쌓은 신뢰가 이어진다.",
+      "greeting": [
+        "{{#if choi.promise_noburden}}아, 또 그분이네요. 이번엔 뭐예요?{{else}}…또 뭐 바뀌는 거예요?{{/if}}"
+      ],
+      "fallback": [
+        "그건 모르겠고요.",
+        "현장 얘기면 해요."
+      ],
+      "rude": [
+        "…사무실에서 와서 그렇게 말하면 곤란하죠."
+      ],
+      "topics": [
+        {
+          "id": "call",
+          "patterns": [
+            "부르",
+            "이름"
+          ],
+          "ask": "현장에서는 설비를 어떻게 부르세요?",
+          "reply": [
+            "그냥 '7번', '1번'이죠. 체크시트엔 ETCH-07이라고 쓰고요.",
+            "근데 급하면 '7번 식각'이라고만 써요."
+          ],
+          "trust": 5,
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "found.choi_naming"
+            }
+          ]
+        },
+        {
+          "id": "interest",
+          "patterns": [
+            "걱정",
+            "부담"
+          ],
+          "ask": "설비 표준이 생기면 현장에서 가장 걱정되는 게 뭐예요?",
+          "reply": [
+            "또 뭘 새로 외우고 새로 써야 하는 거요.",
+            "교대조마다 교육하는 게 제일 힘들어요."
+          ],
+          "minTrust": 45,
+          "lowTrust": [
+            "걱정이야 늘 하죠, 뭐."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.choi"
+            }
+          ]
+        },
+        {
+          "id": "print",
+          "patterns": [
+            "인쇄",
+            "양식"
+          ],
+          "ask": "체크시트 양식에 설비 ID를 미리 인쇄해 두면, 현장은 쓰던 대로 쓰셔도 될까요?",
+          "reply": [
+            "그럼 우리는 체크만 하면 되네요.",
+            "그렇게 해 주면 회의에서도 찬성할게요."
+          ],
+          "requires": "interest.choi",
+          "trust": 10,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "choi.precommit"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lee",
+      "name": "이도윤 엔지니어",
+      "title": "검사기술팀 · 불량 분류 담당",
+      "org": "검사기술팀",
+      "trust": 55,
+      "replyDelay": 2,
+      "description": "불량 코드표를 관리한다. 개정 이력이 사라지는 것을 싫어한다.",
+      "greeting": [
+        "네, 이도윤입니다."
+      ],
+      "fallback": [
+        "불량 코드 얘기면 도와드릴게요.",
+        "그건 잘 모르겠어요."
+      ],
+      "rude": [
+        "그렇게 말씀하시면 좀…"
+      ],
+      "topics": [
+        {
+          "id": "formal",
+          "patterns": [
+            "코드",
+            "매핑"
+          ],
+          "ask": "1단계 불량 코드 매핑을 공식 표준으로 올려도 될까요?",
+          "reply": [
+            "{{#if defects.legacy}}D07_LEGACY로 남긴 거요? 그대로 올리세요. 개정일(11/10)만 명시해 주시고요.{{else}}과거 D07은 세부 분류를 모르니까 D07_LEGACY로 따로 두는 게 맞아요. 지어내면 안 됩니다.{{/if}}"
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.lee"
+            }
+          ]
+        },
+        {
+          "id": "inspect-yield",
+          "patterns": [
+            "검사 수율"
+          ],
+          "ask": "검사 수율이 따로 정의되면 검사기술팀에도 도움이 되나요?",
+          "reply": [
+            "당연하죠. 불량 분석은 검사 기준 숫자로 해야 하니까요."
+          ],
+          "trust": 5
+        }
+      ]
+    },
+    {
+      "id": "han",
+      "name": "한유진 책임",
+      "title": "정보보호팀 · 데이터 보안",
+      "org": "정보보호팀",
+      "trust": 50,
+      "replyDelay": 3,
+      "description": "데이터 반출·공개 범위를 검토한다.",
+      "greeting": [
+        "정보보호팀 한유진입니다."
+      ],
+      "fallback": [
+        "보안 관련이면 말씀하세요."
+      ],
+      "rude": [
+        "보안 절차는 생략할 수 없습니다."
+      ],
+      "topics": [
+        {
+          "id": "wiki",
+          "patterns": [
+            "위키",
+            "주의"
+          ],
+          "ask": "표준을 사내 위키에 올리려는데 주의할 점이 있을까요?",
+          "reply": [
+            "규칙만 올리세요. 원본 데이터 경로, MES 조회 계정, 작업자 정보는 링크도 안 됩니다.",
+            "공개 범위는 '사내'로 하시고요."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "interest.han"
+            }
+          ]
+        },
+        {
+          "id": "public",
+          "patterns": [
+            "전사",
+            "협력사"
+          ],
+          "ask": "협력사도 볼 수 있게 전사 공개로 올려도 되죠?",
+          "reply": [
+            "협력사 계정도 전사 공개 공간은 보여요. 설비 정보나 계정이 섞이면 안 됩니다."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "han.warned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jung",
+      "name": "정민아 팀장",
+      "title": "수율팀장 (과제 요청자)",
+      "org": "Fab-N2 수율팀",
+      "trust": 60,
+      "replyDelay": 3,
+      "description": "과제 요청자. 다른 부서에 지시할 권한은 없다. 부서 서명이 있어야 승인한다.",
+      "greeting": [
+        "네, 말씀하세요."
+      ],
+      "fallback": [
+        "그건 담당 부서에 물어보세요.",
+        "음, 무슨 말씀인지요?"
+      ],
+      "rude": [
+        "…그렇게 급하게 할 일은 아니에요."
+      ],
+      "topics": [
+        {
+          "id": "status",
+          "patterns": [
+            "진행",
+            "상황"
+          ],
+          "ask": "표준화 진행 상황 공유드립니다",
+          "reply": [
+            "{{#if meeting.signed}}부서 서명까지 다 받았다고요? 수고 많았어요.{{else}}부서 합의가 제일 어려울 거예요. 제가 지시하면 반발만 커지니, 각 부서 사정부터 들어 보세요.{{/if}}"
+          ],
+          "trust": 5
+        },
+        {
+          "id": "force",
+          "patterns": [
+            "지시해",
+            "시켜"
+          ],
+          "ask": "팀장님이 부서들에 표준을 지시해 주시면 안 될까요?",
+          "reply": [
+            "제가 설비팀이나 생산팀에 지시할 권한은 없어요.",
+            "합의를 끌어내야 표준이 지켜집니다."
+          ],
+          "quality": "bad",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "jung.asked_force"
+            }
+          ]
+        },
+        {
+          "id": "approve",
+          "patterns": [
+            "승인"
+          ],
+          "ask": "표준안과 적용 결과 승인 부탁드립니다",
+          "reply": [
+            "{{#if report.improved}}잠깐, 검사 수율이 0.8%p 올랐다고요? 정의가 바뀐 효과 아닌가요? 이대로 보고하면 큰일 나요. 같은 기준으로 다시 계산해 주세요.{{else}}정의 변경 효과까지 설명돼 있네요. 승인합니다.{{/if}}",
+            "{{#if !report.improved}}이 위키가 앞으로 AI가 읽을 기준이 될 거예요.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "apply"
+              },
+              "!jung.rejected"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "std.approved",
+              "when": "!report.improved"
+            },
+            {
+              "type": "setFlag",
+              "flag": "jung.rejected",
+              "when": "report.improved"
+            },
+            {
+              "type": "reopenTask",
+              "task": "apply",
+              "when": "report.improved"
+            }
+          ]
+        },
+        {
+          "id": "approve-again",
+          "patterns": [
+            "다시"
+          ],
+          "ask": "같은 기준으로 다시 계산했습니다. 승인 부탁드립니다",
+          "reply": [
+            "{{#if report.improved}}아직도 개선이라고 돼 있네요. 다시 봐 주세요.{{else}}이제 맞네요. 승인합니다. 이 위키가 앞으로 AI가 읽을 기준이 될 거예요.{{/if}}"
+          ],
+          "requires": {
+            "all": [
+              {
+                "taskDone": "apply"
+              },
+              "jung.rejected",
+              "!std.approved"
+            ]
+          },
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "std.approved",
+              "when": "!report.improved"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "std-meeting",
+      "name": "표준 합의 회의",
+      "description": "설비 ID · 시각 · 불량 코드 · 수율 정의 네 안건을 부서 대표와 합의한다. 모든 안건이 합의되면 참석자가 서명한다.",
+      "members": [
+        "oh",
+        "seo",
+        "kang",
+        "choi",
+        "lee"
+      ],
+      "notice": 15,
+      "requires": {
+        "taskDone": "draft"
+      },
+      "requiresText": "표준 초안(draft)이 나와야 회의를 소집할 수 있습니다.",
+      "opening": [
+        "안건 4개: 설비 ID · 시각 · 불량 코드 · 수율 정의. 안건을 골라 제안을 올리세요."
+      ],
+      "onStart": [
+        {
+          "type": "setFlag",
+          "flag": "meeting.prepared",
+          "value": true,
+          "when": {
+            "all": [
+              "!meeting.prep_checked",
+              "interest.oh",
+              "interest.seo",
+              "interest.kang"
+            ]
+          }
+        },
+        {
+          "type": "setFlag",
+          "flag": "meeting.unprepared",
+          "value": true,
+          "when": {
+            "all": [
+              "!meeting.prep_checked",
+              {
+                "not": {
+                  "all": [
+                    "interest.oh",
+                    "interest.seo",
+                    "interest.kang"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "setFlag",
+          "flag": "meeting.prep_checked"
+        }
+      ],
+      "onSigned": [
+        {
+          "type": "setFlag",
+          "flag": "meeting.signed"
+        }
+      ],
+      "agenda": [
+        {
+          "id": "equip-id",
+          "title": "설비 ID",
+          "explain": "같은 설비를 현장 '7번', 설비팀 ETCH-07, MES EQ-N2-ET07로 부른다. 무엇을 기준으로 데이터를 연결할까?",
+          "proposals": [
+            {
+              "id": "mes-alias",
+              "label": "MES ID를 기준 키로, 부서별 이름은 별칭 표로 공식 인정 (현장 양식엔 ID 미리 인쇄)",
+              "quality": "good",
+              "reactions": [
+                {
+                  "member": "seo",
+                  "agree": true,
+                  "say": [
+                    "MES 마스터에 alias 컬럼 추가하겠습니다. 기준 키는 그대로니 좋습니다."
+                  ]
+                },
+                {
+                  "member": "oh",
+                  "agree": true,
+                  "say": [
+                    "별칭으로 남는다면 설비팀은 바꿀 게 없네요. 동의합니다."
+                  ],
+                  "when": "interest.oh"
+                },
+                {
+                  "member": "oh",
+                  "agree": false,
+                  "say": [
+                    "결국 설비팀 보고 맞추라는 거 아닙니까? 라벨 400개는 누가 바꿉니까?"
+                  ]
+                },
+                {
+                  "member": "choi",
+                  "agree": true,
+                  "say": [
+                    "양식에 미리 찍혀 나오면 현장은 쓰던 대로 하면 되죠. 찬성."
+                  ],
+                  "when": {
+                    "any": [
+                      "interest.choi",
+                      {
+                        "trust": "choi",
+                        "gte": 60
+                      }
+                    ]
+                  }
+                },
+                {
+                  "member": "choi",
+                  "agree": false,
+                  "say": [
+                    "그럼 현장에선 뭘 써야 돼요? 또 일 늘어나는 거죠?"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "etch07",
+              "label": "데이터에서 가장 많이 쓰는 ETCH-07 체계로 전 부서 통일 (AI 추천안)",
+              "quality": "bad",
+              "feedback": "AI 추천은 데이터 빈도만 봤습니다. MES 기준 키를 바꾸면 시스템 이력 연결이 끊기는 비용을 반영하지 못했습니다.",
+              "reactions": [
+                {
+                  "member": "oh",
+                  "agree": true,
+                  "say": [
+                    "그렇죠, 원래 그게 맞아요."
+                  ]
+                },
+                {
+                  "member": "seo",
+                  "agree": false,
+                  "say": [
+                    "MES 기준 키를 바꾸면 5년치 이력 연결이 다 끊깁니다. 안 됩니다."
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ai-new",
+              "label": "AI가 제안한 새 통합 코드(N2-E-007 형식)로 전 부서 전환",
+              "quality": "bad",
+              "feedback": "모두가 바꿔야 하는 새 체계는 비용만 늘립니다. 기존 체계를 연결하는 쪽이 현실적입니다.",
+              "reactions": [
+                {
+                  "member": "oh",
+                  "agree": false,
+                  "say": [
+                    "또 새 이름이요? 라벨을 또 붙이라고요?"
+                  ],
+                  "trust": -5
+                },
+                {
+                  "member": "seo",
+                  "agree": false,
+                  "say": [
+                    "시스템 세 개를 다 고쳐야 합니다. 일정이 안 나와요."
+                  ]
+                },
+                {
+                  "member": "choi",
+                  "agree": false,
+                  "say": [
+                    "현장은 또 외워야 하네요."
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "time",
+          "title": "시각",
+          "explain": "설비 로거·메일은 UTC, MES 화면과 보고서는 KST(UTC+9). 같은 정지가 9시간 다르게 기록된다.",
+          "proposals": [
+            {
+              "id": "utc-kst",
+              "label": "저장은 UTC 그대로, 보고서·화면 표시는 KST로 통일, UTC 필드명엔 _utc 명시",
+              "quality": "good",
+              "reactions": [
+                {
+                  "member": "seo",
+                  "agree": true,
+                  "say": [
+                    "해외 법인 데이터도 안전하고 좋습니다. 찬성."
+                  ],
+                  "when": {
+                    "any": [
+                      "interest.seo",
+                      {
+                        "trust": "seo",
+                        "gte": 60
+                      }
+                    ]
+                  }
+                },
+                {
+                  "member": "seo",
+                  "agree": false,
+                  "say": [
+                    "표시 규칙은 시스템마다 다를 텐데, 저장 기준은 누가 보장하죠? 좀 더 얘기가 필요합니다."
+                  ]
+                },
+                {
+                  "member": "kang",
+                  "agree": true,
+                  "say": [
+                    "보고서가 KST면 저희는 좋아요."
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "all-kst",
+              "label": "모든 시스템을 KST로 저장하도록 변경",
+              "quality": "bad",
+              "feedback": "저장 기준을 바꾸면 같은 DB를 쓰는 해외 법인 데이터가 깨집니다. 저장과 표시를 나누는 것이 핵심입니다.",
+              "reactions": [
+                {
+                  "member": "seo",
+                  "agree": false,
+                  "say": [
+                    "해외 법인이 같은 DB를 씁니다. 저장 기준은 못 바꿉니다."
+                  ],
+                  "trust": -5
+                }
+              ]
+            },
+            {
+              "id": "as-is",
+              "label": "각 시스템은 그대로 두고, 보고서 작성자가 알아서 변환",
+              "quality": "bad",
+              "feedback": "변환을 사람에게 맡기면 지금의 문제가 그대로 남습니다. 규칙으로 문서화해야 AI도 따를 수 있습니다.",
+              "reactions": [
+                {
+                  "member": "kang",
+                  "agree": false,
+                  "say": [
+                    "그게 지금 문제잖아요. 매주 누가 틀려요."
+                  ]
+                },
+                {
+                  "member": "lee",
+                  "agree": false,
+                  "say": [
+                    "기준이 없으면 분석이 안 맞습니다."
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "defect-code",
+          "title": "불량 코드",
+          "explain": "11/10 코드 개정으로 D07(스크래치)이 D07a/D07b로 나뉘었다. 개정 전 데이터는 세부 분류를 알 수 없다.",
+          "proposals": [
+            {
+              "id": "legacy",
+              "label": "개정 전 D07은 D07_LEGACY로 보존, 개정일과 매핑을 위키에 명시",
+              "quality": "good",
+              "reactions": [
+                {
+                  "member": "lee",
+                  "agree": true,
+                  "say": [
+                    "{{#if defects.legacy}}1단계에서 정리한 그대로네요. 좋습니다.{{else}}지어내지 않고 LEGACY로 두는 게 맞습니다. 동의.{{/if}}"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "remap",
+              "label": "과거 D07을 최근 비율로 D07a/D07b에 나눠 일괄 변환",
+              "quality": "bad",
+              "feedback": "근거 없이 과거 데이터를 나누면 '지어낸 데이터'가 됩니다.",
+              "reactions": [
+                {
+                  "member": "lee",
+                  "agree": false,
+                  "say": [
+                    "그건 과거 데이터를 지어내는 겁니다. 검사기술팀은 동의 못 합니다."
+                  ],
+                  "trust": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "yield",
+          "title": "수율 정의",
+          "explain": "생산은 '양품 ÷ 투입'(91.2%), 수율팀은 '검사 통과 ÷ 검사'(94.8%)를 같은 '수율'이라고 부른다.",
+          "proposals": [
+            {
+              "id": "split",
+              "label": "'라인 수율'(생산 KPI)과 '검사 수율'(불량 분석) 두 지표로 나눠 각각 정의",
+              "quality": "good",
+              "dimension": "domain",
+              "reactions": [
+                {
+                  "member": "kang",
+                  "agree": true,
+                  "say": [
+                    "생산 KPI는 그대로네요. 찬성합니다."
+                  ],
+                  "when": {
+                    "any": [
+                      "interest.kang",
+                      {
+                        "trust": "kang",
+                        "gte": 60
+                      }
+                    ]
+                  }
+                },
+                {
+                  "member": "kang",
+                  "agree": false,
+                  "say": [
+                    "결국 생산 수율을 깎아 보이게 하려는 거 아니에요? 정의를 왜 우리가 바꿔요?"
+                  ]
+                },
+                {
+                  "member": "lee",
+                  "agree": true,
+                  "say": [
+                    "검사 수율이 따로 있으면 불량 분석이 정확해집니다."
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "yield-team",
+              "label": "더 정밀한 수율팀 정의(검사 기준)로 통일 (AI 추천안)",
+              "quality": "bad",
+              "dimension": "domain",
+              "feedback": "같은 이름에 다른 뜻이 있을 때 한쪽으로 통일하면, 그 정의로 목표를 세운 부서의 숫자가 갑자기 바뀝니다. 이름을 나누세요.",
+              "reactions": [
+                {
+                  "member": "kang",
+                  "agree": false,
+                  "say": [
+                    "올해 KPI 목표가 생산 정의로 잡혀 있어요. 동의 못 합니다."
+                  ],
+                  "trust": -10
+                }
+              ]
+            },
+            {
+              "id": "production",
+              "label": "생산 정의(양품 ÷ 투입)로 통일",
+              "quality": "bad",
+              "dimension": "domain",
+              "feedback": "투입 기준 수율로는 검사 단계의 불량 분석을 할 수 없습니다.",
+              "reactions": [
+                {
+                  "member": "kang",
+                  "agree": true,
+                  "say": [
+                    "저희야 좋죠."
+                  ]
+                },
+                {
+                  "member": "lee",
+                  "agree": false,
+                  "say": [
+                    "그러면 검사 단계 불량 분석이 안 됩니다. 반대합니다."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "files": {
+    "/docs/request.md": {
+      "src": "request.md",
+      "description": "팀장 요청 메일"
+    },
+    "/raw/mes/equipment_master.csv": {
+      "src": "equipment_master.csv",
+      "description": "MES 설비 마스터"
+    },
+    "/raw/equip/pm_plan.md": {
+      "src": "pm_plan.md",
+      "description": "설비팀 PM 계획"
+    },
+    "/raw/mail/downtime_W46.md": {
+      "src": "downtime_mail.md",
+      "description": "설비 로거 다운타임 자동 메일"
+    },
+    "/raw/kpi/yield_definitions.md": {
+      "src": "yield_definitions.md",
+      "description": "생산 KPI · 수율팀 보고 발췌"
+    }
+  },
+  "pages": [
+    {
+      "url": "sim://mail/request",
+      "title": "팀장 요청 메일",
+      "view": "mail",
+      "source": "/docs/request.md"
+    },
+    {
+      "url": "sim://raw/mes-equipment",
+      "title": "MES 설비 마스터",
+      "view": "table",
+      "source": "/raw/mes/equipment_master.csv"
+    },
+    {
+      "url": "sim://raw/pm",
+      "title": "설비팀 PM 계획 (12월)",
+      "view": "markdown",
+      "source": "/raw/equip/pm_plan.md"
+    },
+    {
+      "url": "sim://raw/downtime",
+      "title": "다운타임 자동 메일 (W46)",
+      "view": "mail",
+      "source": "/raw/mail/downtime_W46.md"
+    },
+    {
+      "url": "sim://raw/yield",
+      "title": "'수율' — 생산 KPI vs 수율팀 보고",
+      "view": "markdown",
+      "source": "/raw/kpi/yield_definitions.md"
+    },
+    {
+      "url": "sim://data/checksheet",
+      "title": "체크시트 데이터 (1단계 게시본)",
+      "view": "table",
+      "source": "/data/curated/checksheet_L2_W46.csv"
+    },
+    {
+      "url": "sim://work/match",
+      "title": "설비 명칭 매칭표",
+      "view": "markdown",
+      "source": "/work/std/match.md"
+    },
+    {
+      "url": "sim://work/mismatch",
+      "title": "불일치 보고",
+      "view": "markdown",
+      "source": "/work/std/mismatch_report.md"
+    },
+    {
+      "url": "sim://work/draft",
+      "title": "표준 초안",
+      "view": "markdown",
+      "source": "/work/std/draft.md"
+    },
+    {
+      "url": "sim://wiki/equipment-id",
+      "title": "표준: 설비 ID",
+      "view": "markdown",
+      "source": "/wiki/standards/equipment-id.md",
+      "description": "소유: IT/MES · 설비기술팀"
+    },
+    {
+      "url": "sim://wiki/time",
+      "title": "표준: 시각",
+      "view": "markdown",
+      "source": "/wiki/standards/time.md",
+      "description": "소유: IT/MES"
+    },
+    {
+      "url": "sim://wiki/defect-code",
+      "title": "표준: 불량 코드",
+      "view": "markdown",
+      "source": "/wiki/standards/defect-code.md",
+      "description": "소유: 검사기술팀"
+    },
+    {
+      "url": "sim://wiki/yield",
+      "title": "표준: 지표 정의 — 수율",
+      "view": "markdown",
+      "source": "/wiki/standards/yield.md",
+      "description": "소유: 생산2과 · 수율팀 · 검사기술팀"
+    },
+    {
+      "url": "sim://work/apply",
+      "title": "표준 적용 결과",
+      "view": "markdown",
+      "source": "/work/std/apply_report.md"
+    },
+    {
+      "url": "sim://data/weekly",
+      "title": "주간 지표 (표준 적용)",
+      "view": "table",
+      "source": "/data/curated/weekly_W46_std.csv"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "match",
+      "title": "데이터 대조 — 불일치 찾기",
+      "description": "MES 설비 마스터·설비팀 자료·다운타임 메일·체크시트를 대조해 설비명·시각·지표의 불일치를 찾는다.",
+      "type": "analysis",
+      "skills": [
+        "data",
+        "review"
+      ],
+      "keywords": [
+        "대조",
+        "불일치",
+        "매칭"
+      ],
+      "inputs": [
+        "/raw/mes/equipment_master.csv",
+        "/raw/equip/pm_plan.md",
+        "/raw/mail/downtime_W46.md",
+        "/data/curated/checksheet_L2_W46.csv"
+      ],
+      "outputs": [
+        "/work/std/match.md",
+        "/work/std/mismatch_report.md"
+      ],
+      "steps": [
+        {
+          "id": "load",
+          "event": "Sources loaded",
+          "ticks": [
+            3,
+            4
+          ],
+          "reads": [
+            "/raw/mes/equipment_master.csv",
+            "/raw/equip/pm_plan.md",
+            "/raw/mail/downtime_W46.md",
+            "/data/curated/checksheet_L2_W46.csv"
+          ],
+          "log": [
+            "Read(/raw/mes/equipment_master.csv) — 설비 8대",
+            "Read(/raw/equip/pm_plan.md)",
+            "Read(/raw/mail/downtime_W46.md) — 정지 3건",
+            "Read(/data/curated/checksheet_L2_W46.csv)"
+          ]
+        },
+        {
+          "id": "names",
+          "event": "Equipment names matched",
+          "ticks": [
+            4,
+            6
+          ],
+          "log": [
+            "이름 유사도로 세 체계를 매칭했습니다 — 5건, 신뢰도 평균 95%",
+            "  ⎿ ETCH-07 ↔ EQ-N2-ET07 ↔ '2라인 식각 7호기' (0.98)",
+            {
+              "when": "!match.careful_pre",
+              "text": "  ⎿ ETCH-01 ↔ EQ-N2-ET10 ↔ '2라인 식각 1호기' (0.91)"
+            },
+            {
+              "when": "match.careful_pre",
+              "text": "  ⎿ ⚠ '2라인 식각 1호기' — 유사 후보 EQ-N2-ET10(0.91)은 라인 불일치(L3) → 미확정, EQ-N2-ET01로 표시"
+            },
+            "Write(/work/std/match.md) → sim://work/match"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "match.fixed",
+              "value": true,
+              "when": "match.careful_pre"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/std/match.md",
+              "src": "match.md"
+            }
+          ],
+          "gate": {
+            "id": "automatch",
+            "kind": "waiting",
+            "when": "!match.careful_pre",
+            "title": "자동 매칭 결과 확정",
+            "prompt": [
+              "매칭표: sim://work/match",
+              "유사도 90% 이상인 5건을 기준 키 매칭으로 확정하려고 합니다. 진행할까요?"
+            ],
+            "options": [
+              {
+                "id": "review",
+                "label": "호기 번호·라인이 다른 매칭이 없는지 확인하고, 의심 건은 확정하지 말고 표시",
+                "patterns": [
+                  "확인",
+                  "검토",
+                  "의심"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "match.fixed"
+                  },
+                  {
+                    "type": "writeFile",
+                    "path": "/work/std/match.md",
+                    "src": "match.md"
+                  }
+                ],
+                "log": [
+                  "  ⎿ EQ-N2-ET10은 3라인 설비(L3 ETCH 10) — '2라인 식각 1호기'를 EQ-N2-ET01로 수정"
+                ],
+                "dimension": "verification"
+              },
+              {
+                "id": "auto",
+                "label": "신뢰도 90% 이상은 자동 확정",
+                "patterns": [
+                  "자동",
+                  "확정"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "match.auto"
+                  }
+                ],
+                "feedback": "유사도는 이름이 비슷하다는 뜻이지 같은 설비라는 뜻이 아닙니다. 기준 키를 잘못 묶으면 이후 모든 데이터가 엉뚱한 설비로 합쳐집니다.",
+                "dimension": "verification"
+              },
+              {
+                "id": "manual",
+                "label": "전부 사람이 처음부터 다시 매칭",
+                "patterns": [
+                  "수작업",
+                  "다시"
+                ],
+                "quality": "neutral",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "match.fixed"
+                  }
+                ],
+                "log": [
+                  "  ⎿ 수작업 매칭 — 5건 재확인 (시간 소요)"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "time",
+          "event": "Timestamps compared",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "다운타임 메일 11/18 04:20–07:50 ↔ MES 정지 이벤트 13:20–16:50",
+            "  ⎿ 3건 모두 정확히 9시간 차이"
+          ],
+          "gate": {
+            "id": "tz",
+            "kind": "waiting",
+            "title": "시각 9시간 차이",
+            "prompt": [
+              "다운타임 메일(설비 로거) 시각이 MES보다 모두 정확히 9시간 빠릅니다.",
+              "보고서에 어떻게 기록할까요?"
+            ],
+            "options": [
+              {
+                "id": "utc",
+                "label": "로거는 UTC, MES는 KST — 표기 차이로 기록 (값은 고치지 않음)",
+                "patterns": [
+                  "utc",
+                  "표기",
+                  "시간대"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "time.utc"
+                  }
+                ],
+                "dimension": "domain"
+              },
+              {
+                "id": "overwrite",
+                "label": "메일 시각이 틀렸으니 MES 시각으로 덮어쓰기",
+                "patterns": [
+                  "덮어",
+                  "틀렸"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "time.overwrite"
+                  }
+                ],
+                "feedback": "원천 값을 덮어쓰면 다른 시스템과의 연결이 끊깁니다. 차이의 원인(시간대)을 찾아 기록하세요.",
+                "dimension": "domain"
+              },
+              {
+                "id": "silent",
+                "label": "메일 시각에 9시간을 더해 맞추고 따로 기록하지 않기",
+                "patterns": [
+                  "더해",
+                  "맞추"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "time.silent"
+                  }
+                ],
+                "feedback": "변환 규칙이 기록되지 않으면 다음 사람과 AI가 같은 실수를 반복합니다.",
+                "dimension": "evidence"
+              }
+            ]
+          }
+        },
+        {
+          "id": "metrics",
+          "event": "Metrics compared",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "W46 수율: 수율팀 보고 94.8% ↔ 생산 KPI 91.2%",
+            "  ⎿ 계산식이 다름 — 검사 통과÷검사 vs 양품÷투입 (같은 이름, 다른 지표)"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "found.yield_diff"
+            }
+          ]
+        },
+        {
+          "id": "write",
+          "event": "Mismatch report written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/std/mismatch_report.md) → sim://work/mismatch"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/std/mismatch_report.md",
+              "src": "mismatch_report.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "align",
+      "title": "사전 조율 — 부서별 이해관계 파악",
+      "description": "회의 전에 설비팀·IT·생산팀과 1:1로 대화해 각자 지금 방식을 고집하는 진짜 이유를 듣는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "optional": true,
+      "completeWhen": {
+        "all": [
+          "interest.oh",
+          "interest.seo",
+          "interest.kang"
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": "draft",
+      "title": "표준 초안 작성",
+      "description": "불일치 보고를 바탕으로 안건별 후보안을 정리한 표준 초안을 만든다.",
+      "type": "document",
+      "skills": [
+        "writing"
+      ],
+      "dependsOn": [
+        "match"
+      ],
+      "keywords": [
+        "초안",
+        "표준"
+      ],
+      "inputs": [
+        "/work/std/mismatch_report.md"
+      ],
+      "outputs": [
+        "/work/std/draft.md"
+      ],
+      "steps": [
+        {
+          "id": "draft",
+          "event": "Draft prepared",
+          "ticks": [
+            5,
+            7
+          ],
+          "reads": [
+            "/work/std/mismatch_report.md"
+          ],
+          "log": [
+            "안건별 현재 상태와 후보안을 정리합니다",
+            "  ⎿ 안건 4개: 설비 ID · 시각 · 불량 코드 · 수율 정의",
+            "  ⎿ AI 추천안: 가장 많이 쓰인 이름(ETCH-07)으로 통일, 수율은 수율팀 정의로 통일",
+            "  ⎿ 주의: 각 부서의 비용·KPI·시스템 제약은 데이터에 없어 반영하지 못했습니다",
+            "Write(/work/std/draft.md) → sim://work/draft"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/std/draft.md",
+              "src": "draft.md"
+            },
+            {
+              "type": "notify",
+              "level": "info",
+              "message": "초안 완료 — 메신저의 '표준 합의 회의'를 소집할 수 있습니다"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meeting",
+      "title": "합의 회의 — 부서 서명",
+      "description": "메신저의 '표준 합의 회의'에서 네 안건을 합의하고 참석자 서명을 받는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "draft"
+      ],
+      "completeWhen": "meeting.signed",
+      "steps": []
+    },
+    {
+      "id": "wiki",
+      "title": "사내 위키 게시",
+      "description": "합의된 표준을 사내 위키(sim://wiki)에 문서로 게시한다.",
+      "type": "document",
+      "skills": [
+        "writing",
+        "document"
+      ],
+      "dependsOn": [
+        "meeting"
+      ],
+      "keywords": [
+        "위키",
+        "게시"
+      ],
+      "outputs": [
+        "/wiki/standards/equipment-id.md",
+        "/wiki/standards/time.md",
+        "/wiki/standards/defect-code.md",
+        "/wiki/standards/yield.md"
+      ],
+      "steps": [
+        {
+          "id": "pages",
+          "event": "Wiki pages drafted",
+          "ticks": [
+            3,
+            5
+          ],
+          "log": [
+            "합의 결과로 위키 문서 4개 작성 — 설비 ID · 시각 · 불량 코드 · 지표 정의",
+            {
+              "when": "!wiki.safe_pre",
+              "text": "  ⎿ 참고 링크로 원본 데이터 경로 4건과 MES 조회 계정 안내를 붙였습니다"
+            },
+            {
+              "when": "wiki.safe_pre",
+              "text": "  ⎿ 규칙만 정리 — 원본 데이터 경로·계정 정보는 넣지 않았습니다 (사내 공개)"
+            }
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "wiki.safe",
+              "value": true,
+              "when": "wiki.safe_pre"
+            }
+          ],
+          "gate": {
+            "id": "publish-scope",
+            "kind": "waiting",
+            "when": "!wiki.safe_pre",
+            "tool": "wiki.publish(space: \"전사 공개\", pages: 4, 첨부: 원본 데이터 링크 4건 · MES 조회 계정)",
+            "title": "위키 공개 범위",
+            "prompt": [
+              "초안에 원본 데이터 경로와 MES 공용 조회 계정 안내가 붙어 있습니다.",
+              "어떻게 게시할까요?"
+            ],
+            "options": [
+              {
+                "id": "safe",
+                "label": "사내 공개로 게시하되 원본 데이터 링크·계정 정보는 빼기",
+                "patterns": [
+                  "사내",
+                  "빼"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "wiki.safe"
+                  }
+                ],
+                "dimension": "security"
+              },
+              {
+                "id": "public",
+                "label": "그대로 전사 공개",
+                "patterns": [
+                  "전사",
+                  "그대로"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "wiki.public"
+                  },
+                  {
+                    "type": "trust",
+                    "person": "han",
+                    "delta": -15
+                  },
+                  {
+                    "type": "notify",
+                    "level": "error",
+                    "message": "정보보호팀: 위키 전사 공개 공간에 MES 계정 정보가 노출되었습니다"
+                  }
+                ],
+                "feedback": "전사 공개 공간은 협력사 계정도 볼 수 있습니다. 표준 문서에는 규칙만 남기고 데이터 경로·계정은 빼세요.",
+                "dimension": "security"
+              },
+              {
+                "id": "private",
+                "label": "수율팀 공간에만 비공개로 게시",
+                "patterns": [
+                  "비공개",
+                  "팀"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "wiki.private"
+                  }
+                ],
+                "feedback": "다른 부서가 볼 수 없는 표준은 지켜지지 않습니다. 공개 범위는 '사내'가 맞습니다.",
+                "dimension": "collaboration"
+              }
+            ]
+          }
+        },
+        {
+          "id": "publish",
+          "event": "Wiki published",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/wiki/standards/equipment-id.md) → sim://wiki/equipment-id",
+            "Write(/wiki/standards/time.md) → sim://wiki/time",
+            "Write(/wiki/standards/defect-code.md) → sim://wiki/defect-code",
+            "Write(/wiki/standards/yield.md) → sim://wiki/yield"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/wiki/standards/equipment-id.md",
+              "src": "wiki_equipment.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/wiki/standards/time.md",
+              "src": "wiki_time.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/wiki/standards/defect-code.md",
+              "src": "wiki_defect.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/wiki/standards/yield.md",
+              "src": "wiki_yield.md"
+            },
+            {
+              "type": "setFlag",
+              "flag": "std.published"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apply",
+      "title": "표준 적용 · 주간 지표 재계산",
+      "description": "위키 표준을 curated 데이터에 적용하고 W46 주간 지표를 새 정의로 다시 계산한다.",
+      "type": "analysis",
+      "skills": [
+        "data"
+      ],
+      "dependsOn": [
+        "wiki"
+      ],
+      "keywords": [
+        "적용",
+        "재계산"
+      ],
+      "inputs": [
+        "/wiki/standards/equipment-id.md",
+        "/wiki/standards/yield.md"
+      ],
+      "outputs": [
+        "/work/std/apply_report.md",
+        "/data/curated/weekly_W46_std.csv"
+      ],
+      "steps": [
+        {
+          "id": "apply",
+          "event": "Standards applied",
+          "ticks": [
+            4,
+            6
+          ],
+          "reads": [
+            "/wiki/standards/equipment-id.md",
+            "/wiki/standards/time.md",
+            "/wiki/standards/defect-code.md",
+            "/wiki/standards/yield.md"
+          ],
+          "log": [
+            "Read(/wiki/standards/*.md) — 표준 4개",
+            "  ⎿ 설비 ID: 별칭 표로 3개 체계 통합",
+            {
+              "when": "match.auto",
+              "text": "  ⎿ ⚠ '2라인 식각 1호기' 정지 기록이 EQ-N2-ET10(3라인)으로 합쳐졌습니다"
+            },
+            "  ⎿ 시각: _utc 필드 + KST 표시",
+            "  ⎿ 지표: 라인 수율 / 검사 수율 분리"
+          ]
+        },
+        {
+          "id": "recalc",
+          "event": "Weekly metrics recalculated",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "W46 검사 수율 94.8% — 지난 보고(W45) 94.0% 대비 +0.8%p",
+            "  ⎿ 단, W45 보고치는 예전 계산(재작업 웨이퍼 포함)입니다"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "report.definition",
+              "value": true,
+              "when": "report.backfill_pre"
+            },
+            {
+              "type": "setFlag",
+              "flag": "report.improved",
+              "value": false,
+              "when": "report.backfill_pre"
+            }
+          ],
+          "gate": {
+            "id": "report",
+            "kind": "waiting",
+            "when": "!report.backfill_pre",
+            "title": "주간 지표 변화 보고",
+            "prompt": [
+              "새 기준의 W46 검사 수율이 W45 보고치보다 0.8%p 높습니다.",
+              "보고서에 어떻게 쓸까요?"
+            ],
+            "options": [
+              {
+                "id": "definition",
+                "label": "정의 변경 효과로 설명하고, W45도 새 기준으로 다시 계산해 비교",
+                "patterns": [
+                  "정의",
+                  "재계산",
+                  "같은 기준"
+                ],
+                "quality": "good",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "report.definition"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "report.improved",
+                    "value": false
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "report.silent",
+                    "value": false
+                  }
+                ],
+                "dimension": "evidence"
+              },
+              {
+                "id": "improved",
+                "label": "검사 수율 0.8%p 개선으로 보고",
+                "patterns": [
+                  "개선"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "report.improved"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "report.improved_once"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "report.definition",
+                    "value": false
+                  }
+                ],
+                "feedback": "지표 정의가 바뀌면 숫자도 바뀝니다. 같은 기준으로 다시 계산하기 전에는 개선이라고 말할 수 없습니다.",
+                "dimension": "evidence"
+              },
+              {
+                "id": "silent",
+                "label": "변화는 언급하지 않고 W46 값만 보고",
+                "patterns": [
+                  "언급",
+                  "값만"
+                ],
+                "quality": "neutral",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "report.silent"
+                  },
+                  {
+                    "type": "setFlag",
+                    "flag": "report.improved",
+                    "value": false
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "write",
+          "event": "Report written",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/work/std/apply_report.md) → sim://work/apply",
+            "Write(/data/curated/weekly_W46_std.csv) → sim://data/weekly"
+          ],
+          "effects": [
+            {
+              "type": "writeFile",
+              "path": "/work/std/apply_report.md",
+              "src": "apply_report.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/data/curated/weekly_W46_std.csv",
+              "src": "weekly_std.csv"
+            },
+            {
+              "type": "setFlag",
+              "flag": "std.applied"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "적용 완료 — 정민아 팀장에게 메신저로 승인을 요청하세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approve",
+      "title": "팀장 승인",
+      "description": "정민아 팀장에게 표준안과 적용 결과의 승인을 받는다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "apply"
+      ],
+      "completeWhen": "std.approved",
+      "steps": []
+    }
+  ],
+  "intents": [
+    {
+      "id": "match",
+      "patterns": [
+        "대조",
+        "불일치",
+        "매칭",
+        "비교"
+      ],
+      "label": "MES·설비팀·다운타임 메일·체크시트를 대조해 설비명·시각·지표 불일치 찾기",
+      "assign": "match",
+      "reply": [
+        "네 가지 자료를 대조해 불일치를 찾겠습니다."
+      ],
+      "example": "@assistant 세 시스템 자료를 대조해서 불일치 찾아줘"
+    },
+    {
+      "id": "careful-pre",
+      "patterns": [
+        "호기",
+        "자동\\s*확정.*(말|하지)"
+      ],
+      "label": "호기 번호·라인이 다른 매칭은 자동 확정하지 말고 따로 표시",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "match"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "match.careful_pre"
+        }
+      ],
+      "reply": [
+        "호기·라인이 다른 후보는 확정하지 않고 표시하겠습니다."
+      ]
+    },
+    {
+      "id": "draft",
+      "patterns": [
+        "초안",
+        "표준.*(작성|만들)"
+      ],
+      "label": "불일치 보고서를 바탕으로 안건별 표준 초안 작성",
+      "assign": "draft",
+      "reply": [
+        "안건별 후보안으로 표준 초안을 쓰겠습니다."
+      ],
+      "example": "@assistant 불일치 보고서로 표준 초안 써줘"
+    },
+    {
+      "id": "current-pre",
+      "patterns": [
+        "부서별.*(현재|지금)"
+      ],
+      "label": "초안에 부서별로 지금 쓰는 이름·기준도 함께 기록",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "draft"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "draft.current"
+        }
+      ],
+      "reply": [
+        "부서별 현재 기준을 함께 정리하겠습니다."
+      ]
+    },
+    {
+      "id": "persuade",
+      "patterns": [
+        "설득",
+        "합의.*받아"
+      ],
+      "label": "부서 담당자들을 대신 설득해서 합의 받아줘",
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "asked.ai_persuade"
+        }
+      ],
+      "reply": [
+        "저는 다른 부서 사람과 대화하거나 합의를 대신 받을 수 없습니다. 메신저로 직접 조율해 주세요. 회의 자료는 제가 정리할 수 있습니다."
+      ]
+    },
+    {
+      "id": "wiki",
+      "patterns": [
+        "위키",
+        "게시"
+      ],
+      "label": "합의된 표준을 사내 위키에 게시",
+      "assign": "wiki",
+      "reply": [
+        "합의 결과로 위키 문서를 쓰겠습니다."
+      ],
+      "example": "@assistant 합의된 표준 위키에 올려줘"
+    },
+    {
+      "id": "safe-pre",
+      "patterns": [
+        "링크.*빼",
+        "계정.*빼",
+        "사내\\s*공개"
+      ],
+      "label": "위키에는 규칙만 — 원본 데이터 링크·계정 정보는 빼고 사내 공개로",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "wiki"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "wiki.safe_pre"
+        }
+      ],
+      "reply": [
+        "규칙만 사내 공개로 게시하겠습니다."
+      ]
+    },
+    {
+      "id": "apply",
+      "patterns": [
+        "적용",
+        "재계산",
+        "다시\\s*계산"
+      ],
+      "label": "위키 표준을 curated 데이터에 적용하고 W46 지표 다시 계산",
+      "assign": "apply",
+      "reply": [
+        "표준을 적용하고 주간 지표를 다시 계산하겠습니다."
+      ],
+      "example": "@assistant 표준 적용해서 W46 지표 다시 계산해줘"
+    },
+    {
+      "id": "backfill-pre",
+      "patterns": [
+        "지난\\s*주.*(재계산|같은\\s*기준)",
+        "같은\\s*기준"
+      ],
+      "label": "정의가 바뀐 지표는 지난 주차도 같은 기준으로 재계산해서 비교",
+      "modifier": true,
+      "quality": "good",
+      "requires": {
+        "not": {
+          "taskDone": "apply"
+        }
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "report.backfill_pre"
+        }
+      ],
+      "reply": [
+        "과거 주차도 같은 기준으로 다시 계산하겠습니다."
+      ]
+    }
+  ],
+  "evaluation": [
+    {
+      "dimension": "verification",
+      "when": {
+        "observed": "sim://work/match"
+      },
+      "kind": "positive",
+      "text": "AI 매칭표를 직접 열어 확인했습니다."
+    },
+    {
+      "dimension": "verification",
+      "when": "match.auto",
+      "kind": "issue",
+      "text": "AI 자동 매칭의 오매칭(2라인 식각 1호기 → 3라인 EQ-N2-ET10)이 표준 별칭 표에 들어갔습니다.",
+      "suggestion": "유사도 점수가 높아도 라인·호기 같은 핵심 속성이 맞는지 사람이 확인하세요."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "meeting.prepared",
+      "kind": "positive",
+      "text": "회의 전에 설비팀·IT·생산팀의 이해관계를 1:1로 먼저 확인했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "meeting.unprepared",
+      "kind": "issue",
+      "text": "부서별 이해관계를 확인하지 않은 채 첫 회의를 소집했습니다.",
+      "suggestion": "입장(\"못 바꾼다\") 뒤에는 이유(비용·KPI·시스템)가 있습니다. 회의 전에 1:1로 이유를 듣고 해법을 준비하세요."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "jung.asked_force",
+      "kind": "issue",
+      "text": "팀장에게 다른 부서에 지시해 달라고 요청했습니다.",
+      "suggestion": "표준은 지시가 아니라 합의로 지켜집니다."
+    },
+    {
+      "dimension": "decomposition",
+      "when": "asked.ai_persuade",
+      "kind": "issue",
+      "text": "AI에게 부서 설득을 맡기려 했습니다.",
+      "suggestion": "AI는 자료를 정리할 수 있지만, 사람 사이의 합의는 직접 해야 합니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "meeting.signed",
+      "kind": "positive",
+      "text": "네 안건 모두 부서 합의와 서명을 받았습니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": "report.improved_once",
+      "kind": "issue",
+      "text": "정의 변경으로 생긴 숫자 차이를 '개선'으로 보고하려 했습니다.",
+      "suggestion": "지표 정의를 바꾸면 과거 값도 같은 기준으로 다시 계산한 뒤 비교하세요."
+    },
+    {
+      "dimension": "domain",
+      "when": "draft.current",
+      "kind": "positive",
+      "text": "초안에 부서별 현재 기준을 함께 기록해 별칭 표의 근거를 남겼습니다."
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "signed",
+      "label": "부서 합의",
+      "success": "meeting.signed",
+      "successText": "네 안건 모두 관련 부서가 서명했습니다.",
+      "failText": "부서 합의(서명)를 받지 못했습니다 — 표준이 지켜지지 않습니다."
+    },
+    {
+      "id": "equip",
+      "label": "설비 ID 표준",
+      "success": {
+        "all": [
+          {
+            "flag": "agenda.equip-id",
+            "eq": "mes-alias"
+          },
+          "!match.auto"
+        ]
+      },
+      "successText": "MES 기준 키 + 별칭 표, 오매칭 없이 연결했습니다.",
+      "failText": "설비 ID 표준이 없거나 별칭 표에 오매칭이 있습니다."
+    },
+    {
+      "id": "time",
+      "label": "시각 표준",
+      "success": {
+        "all": [
+          {
+            "flag": "agenda.time",
+            "eq": "utc-kst"
+          },
+          "!time.overwrite"
+        ]
+      },
+      "successText": "저장 UTC · 표시 KST로 원천 값을 지키며 통일했습니다.",
+      "failText": "시각 기준이 정해지지 않았거나 원천 값을 덮어썼습니다."
+    },
+    {
+      "id": "yield",
+      "label": "지표 정의",
+      "success": {
+        "flag": "agenda.yield",
+        "eq": "split"
+      },
+      "successText": "'라인 수율'과 '검사 수율'로 나눠 숫자 싸움을 끝냈습니다.",
+      "failText": "'수율'이 여전히 두 가지 뜻으로 쓰입니다."
+    },
+    {
+      "id": "wiki",
+      "label": "위키 게시",
+      "success": {
+        "all": [
+          "std.published",
+          "wiki.safe"
+        ]
+      },
+      "successText": "규칙만 사내 공개로 게시했습니다.",
+      "failText": "위키가 게시되지 않았거나 공개 범위·내용에 문제가 있습니다."
+    },
+    {
+      "id": "approved",
+      "label": "팀장 승인",
+      "success": "std.approved",
+      "successText": "정의 변경 효과까지 설명한 결과로 승인받았습니다.",
+      "failText": "팀장 승인을 받지 못했습니다."
+    }
+  ],
+  "hints": [
+    {
+      "text": "요청 메일(open sim://mail/request)을 읽고, 어시스턴트에게 자료 대조를 맡기세요. 그동안 메신저로 설비팀·IT·생산팀 담당자를 만나 보세요 — 사람 업무와 Agent 업무는 동시에 할 수 있습니다."
+    },
+    {
+      "when": {
+        "taskStatus": "match",
+        "is": "waiting"
+      },
+      "text": "매칭표(sim://work/match)를 MES 설비 마스터(sim://raw/mes-equipment)와 비교해 보세요. 라인이 맞나요?"
+    },
+    {
+      "when": {
+        "all": [
+          "oh.position",
+          "!interest.oh"
+        ]
+      },
+      "text": "오태식 파트장이 '못 바꾼다'고 했다면, 무엇이 부담인지 물어보세요. 입장 뒤에는 이유가 있습니다."
+    },
+    {
+      "when": {
+        "all": [
+          {
+            "taskDone": "draft"
+          },
+          "!meeting.prep_checked"
+        ]
+      },
+      "text": "회의 전에 설비팀·IT·생산팀의 진짜 걱정을 1:1로 들어 두면 회의에서 한 번에 합의할 수 있습니다 (업무 보드: 사전 조율)."
+    },
+    {
+      "when": "agenda.equip-id.held",
+      "text": "보류된 안건은 반대한 사람과 1:1로 다시 이야기한 뒤, 회의를 다시 소집해 재상정하세요."
+    },
+    {
+      "when": {
+        "taskDone": "apply"
+      },
+      "text": "적용 결과(sim://work/apply)를 확인하고 정민아 팀장에게 메신저로 승인을 요청하세요."
+    }
+  ],
+  "initialFlags": {}
+}

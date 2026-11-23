@@ -7,7 +7,7 @@
     "stages": [
       { "stage": 0, "title": "현황 파악", "role": "실무자", "summary": "데이터가 어디에, 어떤 형태로, 누구 손에 있는지 사람들을 인터뷰해 파악한다.", "status": "ready" },
       { "stage": 1, "title": "디지털화", "role": "실무자", "summary": "종이 체크시트와 양식이 제각각인 엑셀을 정확한 구조화 데이터로 만든다. AI(OCR)의 결과를 검증한다.", "status": "ready" },
-      { "stage": 2, "title": "표준화", "role": "실무자 → 조정자", "summary": "설비 명칭·불량 코드·단위·시간대 기준을 정하고, 이해관계가 다른 부서들과 협의해 합의를 끌어낸다.", "status": "planned" },
+      { "stage": 2, "title": "표준화", "role": "실무자 → 조정자", "summary": "설비 ID·시각·불량 코드·수율 정의 기준을 정하고, 이해관계가 다른 부서들과 협의해 합의를 끌어낸다. 합의한 표준은 사내 위키에 남긴다.", "status": "ready" },
       { "stage": 3, "title": "데이터 기반 구축", "role": "조정자", "summary": "DB 스키마 설계, 적재 파이프라인, 품질 규칙, 접근 권한, 이력 관리.", "status": "planned" },
       { "stage": 4, "title": "지식화", "role": "조정자", "summary": "SOP·숨은 규칙·현장 노하우를 AI가 참고할 수 있는 지식으로 정리한다.", "status": "planned" },
       { "stage": 5, "title": "단일 Agent 활용", "role": "리더", "summary": "AI Agent 하나에게 업무를 위임하고, 결과를 검증하는 습관을 만든다.", "status": "planned" },

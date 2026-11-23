@@ -1,0 +1,9 @@
+eq_id,eq_name,line,area,status,owner_dept
+EQ-N2-ET01,L2 ETCH 01,L2,Etch,RUN,설비기술팀
+EQ-N2-ET02,L2 ETCH 02,L2,Etch,RUN,설비기술팀
+EQ-N2-ET07,L2 ETCH 07,L2,Etch,RUN,설비기술팀
+EQ-N2-ET10,L3 ETCH 10,L3,Etch,RUN,설비기술팀
+EQ-N2-ET11,L3 ETCH 11,L3,Etch,PM,설비기술팀
+EQ-N2-DP02,L2 DEP 02,L2,Deposition,RUN,설비기술팀
+EQ-N2-CM04,L2 CMP 04,L2,CMP,RUN,설비기술팀
+EQ-N2-IN01,L2 INSP 01,L2,Inspection,RUN,검사기술팀

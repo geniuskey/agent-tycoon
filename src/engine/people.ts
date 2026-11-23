@@ -2,6 +2,7 @@ import { c, padEnd } from './ansi';
 import type { Simulation } from './engine';
 import type { TopicDef } from './types';
 import { SIM_START_MINUTES, formatSimTime } from './engine';
+import { liveGroupOf } from './groups';
 
 /**
  * 가상 인물과의 대화·협의 시뮬레이션 (LLM 미사용, 규칙 기반).
@@ -50,6 +51,8 @@ export function presence(sim: Simulation, id: string, tick = sim.tick): Presence
   const p = sim.people[id];
   if (!def || !p) return { status: 'online', label: '' };
   if (tick < p.awayUntil) return { status: 'meeting', label: '회의 중', until: p.awayUntil };
+  const g = liveGroupOf(sim, id, tick);
+  if (g) return { status: 'meeting', label: g.name };
   for (const s of def.schedule ?? []) {
     const from = toTick(s.from);
     const to = toTick(s.to);

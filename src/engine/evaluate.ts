@@ -71,7 +71,7 @@ export function evaluate(sim: Simulation): Feedback {
   const assigned = ev.filter((e) => e.type === 'task.assigned');
   const real = assigned.filter((e) => !e.data?.duplicate && !e.data?.restart && !e.data?.retry && !e.data?.redo);
   const doers = new Map<string, number>();
-  for (const t of done) {
+  for (const t of done.filter((x) => sim.taskDef(x.id)?.owner !== 'player')) {
     const who = t.assignee ?? '?';
     doers.set(who, (doers.get(who) ?? 0) + 1);
   }
@@ -250,6 +250,20 @@ export function evaluate(sim: Simulation): Feedback {
     if (losses.length) add('collaboration', 'issue', `신뢰를 잃은 순간이 ${losses.length}번 있었습니다: ${[...new Set(losses.map((e) => sim.personDef(e.personId!)?.name))].join(', ')}`);
   }
 
+  // ── 회의 안건 ──
+  for (const g of sim.scenario.groups ?? []) {
+    for (const e of ev.filter((x) => x.type === 'group.agenda' && x.data?.group === g.id)) {
+      const agenda = g.agenda.find((a) => a.id === e.data?.agenda);
+      const prop = agenda?.proposals.find((p) => p.id === e.data?.proposal);
+      if (!agenda || !prop || !prop.quality || prop.quality === 'neutral') continue;
+      const dim = prop.dimension ?? 'collaboration';
+      if (prop.quality === 'good') add(dim, 'positive', `회의 '${agenda.title}' → '${prop.label}' 제안${e.data?.agreed ? '으로 합의했습니다' : '을 올렸습니다'}.`);
+      else add(dim, 'issue', `회의 '${agenda.title}'에 '${prop.label}'를 제안했습니다.`, prop.feedback);
+    }
+    const n = sim.groups[g.id]?.meetings ?? 0;
+    if (n > 2) add('collaboration', 'issue', `${g.name}을(를) ${n}번 소집했습니다.`, '회의 전에 1:1로 이해관계를 조율하면 한 번에 합의할 수 있습니다.');
+  }
+
   // ── 9. 보안 (공통) ──
   const denied = ev.filter((e) => e.type === 'security.denied' && e.data?.by === 'player');
   if (denied.length) add('security', 'issue', `권한이 없는 파일에 직접 접근을 ${denied.length}회 시도했습니다.`, '보안 등급 데이터는 업무 필요성이 확인된 경우에만 정식 절차로 접근하세요.');
@@ -308,7 +322,7 @@ function findGate(sim: Simulation, id: string) {
 
 /** DAG에 동시에 수행 가능한 (서로 의존하지 않는) 필수 Task 쌍이 있는지 */
 function hasParallel(sim: Simulation): boolean {
-  const tasks = sim.scenario.tasks.filter((t) => !t.hidden && !t.optional);
+  const tasks = sim.scenario.tasks.filter((t) => !t.hidden && !t.optional && t.owner !== 'player');
   const ancestors = (id: string, acc = new Set<string>()): Set<string> => {
     for (const d of sim.taskDef(id)?.dependsOn ?? []) {
       if (!acc.has(d)) {

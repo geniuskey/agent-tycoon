@@ -7,6 +7,7 @@ import type { SimEvent } from '../../engine/types';
 import { useSession } from '../../store/session';
 import { TrustMeter } from '../terminal/TerminalPane';
 import { useSim } from '../common';
+import GroupRoom, { GroupRow } from './GroupRoom';
 
 /**
  * 사내 메신저 — 사람과의 대화는 터미널이 아니라 여기서 한다.
@@ -16,6 +17,16 @@ import { useSim } from '../common';
 
 const isIncoming = (e: SimEvent) => e.type === 'person.said' && !e.data?.system && e.data?.from !== 'player';
 
+/** 대화방 키: 인물 id 또는 'group:<id>' */
+export const groupKey = (gid: string) => `group:${gid}`;
+
+/** 안 읽음으로 셀 이벤트의 대화방 키 */
+export function incomingKey(e: SimEvent): string | undefined {
+  if (isIncoming(e)) return e.personId;
+  if (e.type === 'group.said' && e.data?.from !== 'player') return groupKey(e.data!.group as string);
+  return undefined;
+}
+
 function personEvents(sim: Simulation, id: string) {
   return sim.events.filter((e) => e.personId === id && (e.type === 'person.said' || e.type === 'person.trust'));
 }
@@ -24,14 +35,14 @@ export function unreadCount(sim: Simulation, readSeq: Record<string, number>, id
   const after = readSeq[id] ?? 0;
   let n = 0;
   for (let i = sim.events.length - 1; i >= 0 && sim.events[i].seq > after; i--) {
-    const e = sim.events[i];
-    if (e.personId === id && isIncoming(e)) n++;
+    if (incomingKey(sim.events[i]) === id) n++;
   }
   return n;
 }
 
 export function totalUnread(sim: Simulation, readSeq: Record<string, number>): number {
-  return Object.keys(sim.people).reduce((a, id) => a + unreadCount(sim, readSeq, id), 0);
+  const keys = [...Object.keys(sim.people), ...Object.keys(sim.groups).map(groupKey)];
+  return keys.reduce((a, id) => a + unreadCount(sim, readSeq, id), 0);
 }
 
 function PresenceDot({ sim, id, className = '' }: { sim: Simulation; id: string; className?: string }) {
@@ -63,7 +74,7 @@ export default function Messenger() {
   const sim = useSim()!;
   const chatWith = useSession((s) => s.chatWith);
   const people = sim.scenario.people ?? [];
-  const active = chatWith && sim.people[chatWith] ? chatWith : null;
+  const active = chatWith && (sim.people[chatWith] || (chatWith.startsWith('group:') && sim.groups[chatWith.slice(6)])) ? chatWith : null;
 
   if (!people.length) {
     return <div className="p-6 text-center text-xs text-faint">이 미션에는 연락할 사람이 없습니다.</div>;
@@ -71,7 +82,15 @@ export default function Messenger() {
   return (
     <div className="flex h-full min-h-0">
       <ContactList active={active} />
-      {active ? <Conversation key={active} id={active} /> : <EmptyState />}
+      {active ? (
+        active.startsWith('group:') ? (
+          <GroupRoom key={active} gid={active.slice(6)} />
+        ) : (
+          <Conversation key={active} id={active} />
+        )
+      ) : (
+        <EmptyState />
+      )}
     </div>
   );
 }
@@ -96,6 +115,9 @@ function ContactList({ active }: { active: string | null }) {
   const people = sim.scenario.people ?? [];
   return (
     <div className={`flex shrink-0 flex-col overflow-y-auto bg-panel ${'w-[168px]'}`}>
+      {(sim.scenario.groups ?? []).map((g) => (
+        <GroupRow key={g.id} gid={g.id} active={active === groupKey(g.id)} />
+      ))}
       <div className="flex h-8 shrink-0 items-center px-3 text-[11px] font-semibold text-dim">
         대화 상대 <span className="ml-1.5 font-normal text-faint">{people.length}</span>
       </div>

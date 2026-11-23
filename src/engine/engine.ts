@@ -2,6 +2,7 @@ import { c } from './ansi';
 import { evalCond, type CondContext } from './conditions';
 import { Rng } from './rng';
 import type {
+  GroupRuntime,
   CarryState,
   PersonDef,
   PersonRuntime,
@@ -26,6 +27,7 @@ import type {
 } from './types';
 import { executeCommand } from './cli';
 import { readInbox } from './people';
+import { initGroups, stepGroups } from './groups';
 
 /** 1 tick = 가상 업무 시간 1분 */
 export const SIM_START_MINUTES = 9 * 60;
@@ -66,6 +68,7 @@ export class Simulation {
   tasks: Record<string, TaskRuntime> = {};
   files = new Map<string, VFile>();
   people: Record<string, PersonRuntime> = {};
+  groups: Record<string, GroupRuntime> = {};
   /** 플레이어가 직접 확인한 화면/파일 */
   observed = new Set<string>();
   readonly carry: CarryState | undefined;
@@ -107,6 +110,7 @@ export class Simulation {
     for (const p of scenario.people ?? []) {
       this.people[p.id] = { id: p.id, trust: carry?.trust[p.id] ?? p.trust, met: false, asked: [], pending: [], inbox: [], visitCount: 0, awayUntil: 0 };
     }
+    this.groups = initGroups(this);
     for (const r of scenario.roles) this.roleDefs[r.id] = r;
     for (const t of scenario.tasks) {
       this.taskDefs[t.id] = t;
@@ -171,6 +175,22 @@ export class Simulation {
     this.metrics.commands++;
     this.emit('command', cmd.text, { paneId: cmd.paneId, agentId: cmd.agentId, personId: cmd.personId });
     executeCommand(this, cmd);
+    this.checkPlayerTasks();
+  }
+
+  /** 사람이 하는 업무(owner: player): 선행 업무가 끝나고 completeWhen이 참이면 완료 */
+  checkPlayerTasks(): void {
+    for (const def of this.scenario.tasks) {
+      if (def.owner !== 'player') continue;
+      const t = this.tasks[def.id];
+      if (!t.visible || t.status === 'done' || !this.depsDone(def.id) || !this.cond(def.completeWhen)) continue;
+      if (t.startedAt === undefined) t.startedAt = this.tick;
+      t.completedAt = this.tick;
+      this.setTaskStatus(t, 'done', '사람이 완료');
+      this.applyEffects(def.onComplete, 'player');
+      this.notifyPlayer('success', `${def.id} 완료 — ${def.title}`, { taskId: def.id });
+      this.refreshTasks();
+    }
   }
 
   recordObservation(kind: 'file' | 'page', target: string): void {
@@ -186,6 +206,7 @@ export class Simulation {
   /** 시뮬레이션 1 tick 진행 */
   step(): void {
     this.tick++;
+    stepGroups(this);
     for (const p of Object.values(this.people)) {
       readInbox(this, p.id);
       while (p.pending.length && p.pending[0].at <= this.tick) {
@@ -202,12 +223,13 @@ export class Simulation {
         a.busyTicks++;
       }
     }
+    this.checkPlayerTasks();
     this.metrics.busyTicks += busy;
     if (busy > this.metrics.maxConcurrent) this.metrics.maxConcurrent = busy;
     if (busy >= 2) this.metrics.parallelTicks++;
     if (busy >= 1 && !this.submitted) {
       const readyUnassigned = Object.values(this.tasks).some(
-        (t) => t.visible && t.status === 'ready' && !t.assignee && !this.taskDefs[t.id].optional,
+        (t) => t.visible && t.status === 'ready' && !t.assignee && !this.taskDefs[t.id].optional && this.taskDefs[t.id].owner !== 'player',
       );
       if (readyUnassigned) this.metrics.missedParallelTicks++;
     }
@@ -578,6 +600,7 @@ export class Simulation {
     const def = this.taskDefs[taskId];
     const t = this.tasks[taskId];
     if (!def || !t || !t.visible) return err(`Task '${taskId}' 없음. 'task list'로 확인하세요.`);
+    if (def.owner === 'player') return err(`'${def.title}'은(는) 사람이 직접 하는 업무입니다. Agent에게 맡길 수 없습니다 — 메신저로 진행하세요.`);
     if (a.taskId && a.taskId !== taskId && ['interrupted', 'failed'].includes(a.status)) {
       // 중단/실패 상태의 Agent에게 새 작업을 주면 기존 작업은 반환된다 (진행 내용 손실)
       const old = this.tasks[a.taskId];

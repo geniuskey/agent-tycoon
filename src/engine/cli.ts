@@ -4,10 +4,13 @@ import { formatSimTime, BUSY_STATUSES } from './engine';
 import { handleNaturalLanguage } from './nlu';
 import { askTopic, handleTalk, peopleText, startTalk } from './people';
 import { doInstruct } from './choices';
+import { callMeeting, endMeeting, groupDef, propose } from './groups';
 import type { AgentStatus, PlayerCommand, TaskStatus } from './types';
 
 /** 내장 업무 보드 화면 (시나리오 pages가 아니라 Task 상태를 그대로 보여준다) */
 export const BOARD_URL = 'sim://board';
+/** 내장 사내 위키 목록 (sim://wiki/… 페이지를 모아 보여준다) */
+export const WIKI_URL = 'sim://wiki';
 
 /**
  * 가상 CLI. 실제 OS 명령/네트워크는 절대 실행하지 않는다.
@@ -51,6 +54,8 @@ const COMMANDS: { cmd: string; desc: string }[] = [
   { cmd: 'task graph', desc: 'Task 의존성 그래프(DAG)' },
   { cmd: 'people', desc: '대화할 수 있는 사람들과 신뢰도' },
   { cmd: 'talk <person>', desc: '메신저에서 이 사람과의 대화 열기 (인터뷰·협의)' },
+  { cmd: 'meeting <group> call|end', desc: '그룹 회의 소집 / 마치기 (메신저 회의방)' },
+  { cmd: 'propose <group> <안건> <제안>', desc: '회의 중 안건에 제안 올리기' },
   { cmd: 'agent spawn <role> [name]', desc: '새 Agent 생성 (독립 세션 패널 생성)' },
   { cmd: 'agent list', desc: 'Agent 목록과 상태' },
   { cmd: 'agent assign <agent> <task> [--force|--redo]', desc: 'Agent에게 Task 배정' },
@@ -79,7 +84,7 @@ const COMMANDS: { cmd: string; desc: string }[] = [
 ];
 
 export function commandNames(): string[] {
-  return ['agent', 'task', 'brief', 'roles', 'people', 'talk', 'ask', 'do', 'ls', 'tree', 'cat', 'diff', 'open', 'pages', 'hint', 'submit', 'clear', 'help'];
+  return ['agent', 'task', 'brief', 'roles', 'people', 'talk', 'ask', 'do', 'meeting', 'propose', 'ls', 'tree', 'cat', 'diff', 'open', 'pages', 'hint', 'submit', 'clear', 'help'];
 }
 
 export function tokenize(line: string): string[] {
@@ -142,6 +147,16 @@ export function executeCommand(sim: Simulation, cmd: PlayerCommand): void {
         args.slice(3).filter((x) => x.startsWith('+')).map((x) => x.slice(1)),
         args.includes('--plan'),
       );
+    case 'meeting': {
+      const gid = args[1];
+      if (!gid || !groupDef(sim, gid)) return say(c.yellow(`사용: meeting <group> [call]  (대화방: ${(sim.scenario.groups ?? []).map((g) => g.id).join(', ') || '없음'})`));
+      if ((args[2] ?? 'call') === 'call') return callMeeting(sim, gid, pane);
+      if (args[2] === 'end') return endMeeting(sim, gid, pane);
+      return say(c.yellow('사용: meeting <group> call | end'));
+    }
+    case 'propose':
+      if (!args[1] || !args[2] || !args[3]) return say(c.yellow('사용: propose <group> <안건ID> <제안ID>  (메신저 회의방의 선택지를 쓰는 것이 편합니다)'));
+      return propose(sim, args[1], args[2], args[3], pane);
     case 'talk':
       if (!args[1]) return say(peopleText(sim));
       startTalk(sim, args[1].toLowerCase(), pane);
@@ -543,7 +558,7 @@ export function lineDiff(a: string, b: string): string[] {
 function openCmd(sim: Simulation, target: string | undefined, pane: string, say: (l: string | string[]) => void): void {
   if (!target) return say(c.yellow('사용: open <file|url>'));
   if (target.startsWith('sim://')) {
-    if (target === BOARD_URL || target === 'sim://home') {
+    if (target === BOARD_URL || target === WIKI_URL || target === 'sim://home') {
       sim.emit('ui.request', 'open-page', { paneId: pane, data: { action: 'open-page', url: target } });
       return say(c.green(`↗ 가상 브라우저에서 ${target} 열기`));
     }

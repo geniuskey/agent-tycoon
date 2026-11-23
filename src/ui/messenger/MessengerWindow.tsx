@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { stripAnsi } from '../../engine/ansi';
 import { useSession } from '../../store/session';
 import { useSim } from '../common';
-import Messenger, { totalUnread } from './Messenger';
+import Messenger, { incomingKey, totalUnread } from './Messenger';
 
 /**
  * 메신저는 실제처럼 따로 떠 있는 창이다 — 브라우저·파일을 보면서 대화할 수 있다.
@@ -183,9 +183,12 @@ function Toasts() {
     const fresh: Toast[] = [];
     for (let i = sim.events.length - 1; i >= 0 && sim.events[i].seq > seen.current; i--) {
       const e = sim.events[i];
-      if (e.type !== 'person.said' || !e.personId || e.data?.system || e.data?.from === 'player') continue;
-      if (open && chatWith === e.personId) continue;
-      fresh.unshift({ seq: e.seq, personId: e.personId, text: stripAnsi(e.message) });
+      const k = incomingKey(e);
+      if (!k) continue;
+      if (e.type === 'group.said' && e.data?.system && !String(e.message).startsWith('● 회의 시작')) continue;
+      if (open && chatWith === k) continue;
+      const speaker = e.type === 'group.said' ? sim.personDef(e.data?.speaker as string)?.name : undefined;
+      fresh.unshift({ seq: e.seq, personId: k, text: (speaker ? `${speaker}: ` : '') + stripAnsi(e.message) });
     }
     seen.current = sim.events[sim.events.length - 1]?.seq ?? seen.current;
     if (!fresh.length) return;
@@ -211,7 +214,8 @@ function Toasts() {
   return (
     <div className="fixed right-4 bottom-4 z-50 flex w-72 flex-col gap-2">
       {toasts.map((t) => {
-        const def = sim.personDef(t.personId);
+        const gid = t.personId.startsWith('group:') ? t.personId.slice(6) : undefined;
+        const def = gid ? { name: sim.scenario.groups?.find((g) => g.id === gid)?.name ?? gid } : sim.personDef(t.personId);
         return (
           <button
             key={t.seq}
@@ -222,7 +226,7 @@ function Toasts() {
             className="flex items-start gap-2 rounded-lg border border-line2 bg-panel2 px-3 py-2 text-left shadow-[0_8px_24px_rgba(0,0,0,0.5)] hover:border-sky-700"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-[11px] font-semibold text-amber-200">
-              {def?.name.slice(0, 1)}
+              {gid ? '⧉' : def?.name.slice(0, 1)}
             </span>
             <span className="min-w-0">
               <span className="block text-[12px] font-semibold text-strong">{def?.name}</span>

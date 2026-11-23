@@ -133,7 +133,7 @@ export const useSession = create<SessionState>((set, get) => {
       browserIndex: 0,
       previewPath: null,
       chatWith: null,
-      readSeq: Object.fromEntries(Object.keys(sim.people).map((id) => [id, lastSeq])),
+      readSeq: Object.fromEntries([...Object.keys(sim.people), ...Object.keys(sim.groups).map((g) => `group:${g}`)].map((id) => [id, lastSeq])),
       speed: 1,
       uiSeq: sim.events[sim.events.length - 1]?.seq ?? 0,
     });
@@ -249,7 +249,11 @@ export const useSession = create<SessionState>((set, get) => {
     markRead: (personId) => {
       const { sim, readSeq } = get();
       if (!sim) return;
-      const last = [...sim.events].reverse().find((e) => e.personId === personId && e.type === 'person.said')?.seq ?? 0;
+      const gid = personId.startsWith('group:') ? personId.slice(6) : undefined;
+      const last =
+        [...sim.events]
+          .reverse()
+          .find((e) => (gid ? e.type === 'group.said' && e.data?.group === gid : e.personId === personId && e.type === 'person.said'))?.seq ?? 0;
       if ((readSeq[personId] ?? 0) < last) set({ readSeq: { ...readSeq, [personId]: last } });
     },
 

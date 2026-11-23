@@ -130,6 +130,12 @@ export interface TaskDef {
   /** 리뷰/검증 task 여부 (Agent 상태가 Reviewing으로 표시됨) */
   review?: boolean;
   keywords?: string[];
+  /**
+   * 'player' = 사람이 직접 하는 업무 (사전 조율·회의·승인). Agent에게 배정할 수 없고,
+   * completeWhen 조건이 참이 되면 완료된다.
+   */
+  owner?: 'player';
+  completeWhen?: Cond;
   inputs?: string[];
   outputs?: string[];
   steps: StepDef[];
@@ -232,6 +238,79 @@ export interface InboxMessage {
   text?: string;
 }
 
+// ───────────────────────────── Groups (그룹 대화방·회의) ─────────────────────────────
+
+/** 안건 제안에 대한 참석자 반응 — 위에서부터 when이 참인 첫 반응을 쓴다 */
+export interface ReactionDef {
+  member: string;
+  when?: Cond;
+  agree: boolean;
+  say: LogLine[];
+  /** 이 반응이 나올 때 신뢰 변화 */
+  trust?: number;
+}
+
+export interface ProposalDef {
+  id: string;
+  label: string;
+  /** 참석자 반응. 반응이 정의되지 않은 참석자는 조용히 동의한다 */
+  reactions: ReactionDef[];
+  /** 합의되면 적용 */
+  effects?: Effect[];
+  quality?: 'good' | 'bad' | 'neutral';
+  feedback?: string;
+  dimension?: DimensionId;
+  requires?: Cond;
+}
+
+export interface AgendaDef {
+  id: string;
+  title: string;
+  /** 안건 설명 (비전공자를 위한 배경) */
+  explain?: string;
+  proposals: ProposalDef[];
+}
+
+export interface GroupDef {
+  id: string;
+  name: string;
+  description: string;
+  members: string[];
+  /** 회의 소집 후 시작까지 (tick, 기본 15) */
+  notice?: number;
+  /** 회의가 열릴 때 진행자(플레이어) 안내 */
+  opening?: LogLine[];
+  agenda: AgendaDef[];
+  /** 회의가 시작될 때마다 (예: 사전 조율 여부 기록) */
+  onStart?: Effect[];
+  /** 모든 안건 합의 시 */
+  onSigned?: Effect[];
+  /** 조건이 거짓이면 회의를 소집할 수 없다 */
+  requires?: Cond;
+  /** 소집할 수 없을 때 안내 */
+  requiresText?: string;
+}
+
+export interface AgendaRuntime {
+  status: 'open' | 'agreed' | 'held';
+  proposal?: string;
+  attempts: number;
+}
+
+export interface GroupRuntime {
+  id: string;
+  /** 소집된 회의 시작 tick (없으면 회의 없음) */
+  start?: number;
+  /** 이번 회의에서 다룬 안건 — 남은 안건을 모두 다루면 회의가 끝난다 */
+  discussed: string[];
+  /** 남은 발언이 끝나면 회의 종료 */
+  closing?: boolean;
+  meetings: number;
+  agenda: Record<string, AgendaRuntime>;
+  signed: boolean;
+  pending: (PendingLog & { speaker?: string; system?: boolean })[];
+}
+
 // ───────────────────────────── Campaign ─────────────────────────────
 
 /** 이전 미션에서 다음 미션으로 이어지는 회사 상태 */
@@ -320,6 +399,7 @@ export interface ScenarioDef {
   learningObjectives: string[];
   roles: RoleDef[];
   people?: PersonDef[];
+  groups?: GroupDef[];
   campaign?: ScenarioCampaign;
   files: Record<string, FileDef>;
   pages: PageDef[];
@@ -427,6 +507,9 @@ export type EventType =
   | 'gate.resolved'
   | 'plan.presented'
   | 'plan.resolved'
+  | 'group.said'
+  | 'group.meeting'
+  | 'group.agenda'
   | 'file.created'
   | 'file.updated'
   | 'file.deleted'

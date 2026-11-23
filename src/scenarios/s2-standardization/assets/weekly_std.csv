@@ -1,0 +1,6 @@
+week,metric,value,definition
+W45,line_yield,91.0,good_out / wafer_in
+W46,line_yield,91.2,good_out / wafer_in
+{{#if report.definition}}W45,inspection_yield,94.7,inspect_pass / inspected (rework excluded; recalculated)
+{{/if}}{{#if report.improved}}W45,inspection_yield,94.0,legacy calculation (rework included)
+{{/if}}W46,inspection_yield,94.8,inspect_pass / inspected (rework excluded)

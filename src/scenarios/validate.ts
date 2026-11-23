@@ -67,8 +67,10 @@ export function validateScenario(s: LoadedScenario): string[] {
   for (const t of s.tasks) {
     const w = `task ${t.id}`;
     for (const d of t.dependsOn ?? []) if (!taskIds.has(d)) e(`${w}: 선행 task '${d}' 없음`);
-    if (!t.steps.length) e(`${w}: steps 비어 있음`);
-    if (!t.skills.some((sk) => skills.has(sk))) e(`${w}: 어떤 role도 필요 역량(${t.skills.join(',')})을 갖고 있지 않음`);
+    if (t.owner !== 'player') {
+      if (!t.steps.length) e(`${w}: steps 비어 있음`);
+      if (!t.skills.some((sk) => skills.has(sk))) e(`${w}: 어떤 role도 필요 역량(${t.skills.join(',')})을 갖고 있지 않음`);
+    }
     if (!s.roles.some((r) => t.skills.every((sk) => r.skills.includes(sk)))) e(`${w}: 모든 역량을 갖춘 role이 없음 (항상 역량 부족 경고)`);
     const stepIds = new Set<string>();
     for (const st of t.steps) {
@@ -120,6 +122,31 @@ export function validateScenario(s: LoadedScenario): string[] {
       t.patterns.forEach((pt) => checkRegex(pt, `person ${p.id}.${t.id}`));
       checkCond(t.requires, `person ${p.id}.${t.id}`);
       checkEffects(t.effects, `person ${p.id}.${t.id}`);
+    }
+  }
+  for (const t of s.tasks) {
+    if (t.owner === 'player') {
+      if (!t.completeWhen) e(`task ${t.id}: owner player는 completeWhen 필요`);
+      checkCond(t.completeWhen, `task ${t.id}.completeWhen`);
+      if (s.intents.some((i) => i.assign === t.id)) e(`task ${t.id}: 사람 업무를 Agent 지시로 배정할 수 없음`);
+    }
+  }
+  const personIdsAll = new Set((s.people ?? []).map((p) => p.id));
+  for (const g of s.groups ?? []) {
+    g.members.forEach((m) => personIdsAll.has(m) || e(`group ${g.id}: 인물 '${m}' 없음`));
+    checkCond(g.requires, `group ${g.id}`);
+    checkEffects(g.onSigned, `group ${g.id}.onSigned`);
+    checkEffects(g.onStart, `group ${g.id}.onStart`);
+    for (const a of g.agenda) {
+      if (!a.proposals.length) e(`group ${g.id}.${a.id}: 제안 없음`);
+      for (const pr of a.proposals) {
+        checkCond(pr.requires, `group ${g.id}.${a.id}.${pr.id}`);
+        checkEffects(pr.effects, `group ${g.id}.${a.id}.${pr.id}`);
+        for (const r of pr.reactions) {
+          if (!g.members.includes(r.member)) e(`group ${g.id}.${a.id}.${pr.id}: 참석자가 아닌 '${r.member}'의 반응`);
+          checkCond(r.when, `group ${g.id}.${a.id}.${pr.id}.${r.member}`);
+        }
+      }
     }
   }
   for (const p of s.pages) {

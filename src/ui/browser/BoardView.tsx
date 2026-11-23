@@ -138,6 +138,7 @@ function Card({ sim, t, onOpen, compact }: { sim: Simulation; t: TaskRuntime; on
         {def.optional && <span className="rounded border border-line2 px-1 text-faint">선택</span>}
         {def.review && <span className="rounded border border-violet-700/70 px-1 text-violet-300">검증</span>}
         {t.status === 'ready' && !compact && <span className="rounded bg-sky-500/15 px-1 text-sky-200">시작 가능</span>}
+        {def.owner === 'player' && <span className="rounded bg-amber-500/15 px-1 text-amber-200">담당: 나</span>}
       </div>
       {pending.length > 0 && <div className="mt-1 truncate text-[10.5px] text-faint">← {pending.join(', ')} 완료 후</div>}
       {note && <div className="mt-1 text-[10.5px] leading-snug text-amber-200">{note}</div>}
@@ -227,7 +228,9 @@ function TaskDetail({ sim, id, onBack, onOpen }: { sim: Simulation; id: string; 
       <dl className="mt-3 grid grid-cols-[88px_1fr] gap-x-3 gap-y-2 text-[12px]">
         <dt className="text-faint">담당</dt>
         <dd>
-          {t.assignee ? (
+          {def.owner === 'player' ? (
+            <span className="text-amber-200">나 — 사람이 직접 하는 업무 (메신저로 진행)</span>
+          ) : t.assignee ? (
             <span className="flex items-center gap-1.5">
               <AgentAvatar sim={sim} id={t.assignee} size={14} />
               <span className="font-mono" style={{ color: agentColor(sim, t.assignee) }}>
