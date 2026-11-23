@@ -222,7 +222,7 @@ export function peopleText(sim: Simulation): string[] {
   const list = sim.scenario.people ?? [];
   if (!list.length) return [c.dim('이 미션에는 대화할 수 있는 인물이 없습니다.')];
   return [
-    c.bold('사람들') + c.dim('  — 오른쪽 메신저 탭에서 대화합니다 (talk <id> 로 열기)'),
+    c.bold('사람들') + c.dim('  — 메신저 창에서 대화합니다 (talk <id> 로 열기)'),
     ...list.map((d) => {
       const p = sim.people[d.id];
       const bar = '■'.repeat(Math.round(p.trust / 10)) + '□'.repeat(10 - Math.round(p.trust / 10));

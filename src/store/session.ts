@@ -13,7 +13,7 @@ import {
 } from './persist';
 
 export type Screen = 'home' | 'workspace' | 'feedback';
-export type RightTab = 'messenger' | 'browser' | 'files' | 'preview';
+export type RightTab = 'browser' | 'files' | 'preview';
 
 export const TICK_MS = 450;
 
@@ -34,6 +34,8 @@ interface SessionState {
   previewPath: string | null;
   /** 메신저에서 열린 대화 상대 */
   chatWith: string | null;
+  /** 메신저 창이 떠 있는지 (false = 최소화) */
+  messengerOpen: boolean;
   /** 인물별로 마지막으로 읽은 메시지 seq (안 읽은 메시지 표시용, UI 전용) */
   readSeq: Record<string, number>;
   showBriefing: boolean;
@@ -55,6 +57,7 @@ interface SessionState {
   /** 메신저로 메시지 보내기 (객관식 질문 id 또는 자유 입력) */
   sendMessage: (personId: string, msg: { topic?: string; text?: string }) => void;
   markRead: (personId: string) => void;
+  setMessengerOpen: (v: boolean) => void;
   addShellPane: () => void;
   closePane: (paneId: string) => void;
   focusPane: (paneId: string) => void;
@@ -123,7 +126,8 @@ export const useSession = create<SessionState>((set, get) => {
       panes,
       focusedPane: panes[0].id,
       maximizedPane: null,
-      rightTab: sim.scenario.people?.length ? 'messenger' : 'browser',
+      rightTab: 'browser',
+      messengerOpen: !!sim.scenario.people?.length,
       browserUrl: 'sim://home',
       browserHistory: ['sim://home'],
       browserIndex: 0,
@@ -153,6 +157,7 @@ export const useSession = create<SessionState>((set, get) => {
     browserIndex: 0,
     previewPath: null,
     chatWith: null,
+    messengerOpen: false,
     readSeq: {},
     showBriefing: false,
     feedbackSessionId: null,
@@ -228,8 +233,10 @@ export const useSession = create<SessionState>((set, get) => {
     },
 
     openPersonPane: (personId, focus = true) => {
-      set({ chatWith: personId, ...(focus ? { rightTab: 'messenger' as const } : {}) });
+      set({ chatWith: personId, ...(focus ? { messengerOpen: true } : {}) });
     },
+
+    setMessengerOpen: (messengerOpen) => set({ messengerOpen }),
 
     sendMessage: (personId, msg) => {
       const { sim } = get();

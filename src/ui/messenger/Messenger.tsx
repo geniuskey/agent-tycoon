@@ -131,7 +131,7 @@ function ContactList({ active }: { active: string | null }) {
 
 function Conversation({ id }: { id: string }) {
   const sim = useSim()!;
-  const rightTab = useSession((s) => s.rightTab);
+  const open = useSession((s) => s.messengerOpen);
   const { sendMessage, markRead } = useSession.getState();
   const def = sim.personDef(id)!;
   const p = sim.people[id];
@@ -148,8 +148,8 @@ function Conversation({ id }: { id: string }) {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
   }, [evs.length, typing]);
   useEffect(() => {
-    if (rightTab === 'messenger') markRead(id);
-  }, [evs.length, rightTab, id, markRead]);
+    if (open) markRead(id);
+  }, [evs.length, open, id, markRead]);
 
   // 아직 읽지 않은 내 메시지 (상대 inbox에 남은 수만큼, 뒤에서부터)
   const playerSeqs = evs.filter((e) => e.data?.from === 'player').map((e) => e.seq);
