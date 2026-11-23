@@ -39,7 +39,7 @@ export default function Home() {
               <span className="font-mono text-lg font-bold text-sky-300">&gt;_ Agent Tycoon</span>
               <SimBadge />
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-50">AI가 일할 수 있는 조직을 만든다</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-strong">AI가 일할 수 있는 조직을 만든다</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-dim">
               현실의 출발점은 'AI Agent 여러 개를 지휘하는 것'이 아니라 종이·엑셀·메일·사람 머릿속에 흩어진 데이터입니다.
               현황 파악 → 디지털화 → 표준화 → 데이터 기반 → 지식화 → Agent 활용 → 오케스트레이션까지, 한 가상 조직을 단계별로 키워가며
@@ -50,7 +50,7 @@ export default function Home() {
 
         {sessions.length > 0 && (
           <section className="mb-8">
-            <h2 className="mb-2 text-xs font-semibold tracking-wider text-faint uppercase">작업 이력</h2>
+            <h2 className="mb-2 text-[13px] font-semibold text-fg">작업 이력</h2>
             <div className="grid gap-2 md:grid-cols-2">
               {sessions.slice(0, 6).map((r) => (
                 <SessionRow key={r.id} r={r} onResume={() => resume(r)} onReview={() => showFeedback(r)} onDelete={async () => {
@@ -76,9 +76,10 @@ export default function Home() {
 
         <section>
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <h2 className="mr-2 text-xs font-semibold tracking-wider text-faint uppercase">7단계 · 멀티 Agent 오케스트레이션 — 자유 플레이</h2>
+            <h2 className="mr-2 text-lg font-semibold text-strong">자유 플레이 · 멀티 Agent 오케스트레이션</h2>
+            <span className="font-mono text-[11px] text-sky-300">STAGE 7</span>
           </div>
-          <p className="mb-3 text-[12px] text-faint">데이터·표준·지식 기반이 이미 갖춰진 조직을 가정한 고급 미션입니다. 캠페인과 별개로 언제든 플레이할 수 있습니다.</p>
+          <p className="mb-4 max-w-3xl text-[13px] leading-relaxed text-dim">데이터·표준·지식 기반이 이미 갖춰진 조직을 가정한 고급 미션입니다. 캠페인과 별개로 언제든 플레이할 수 있습니다.</p>
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Filter label="제품 영역" value={domain} onChange={setDomain} options={usedDomains.map((d) => [d, DOMAINS[d] ?? d])} />
             <Filter label="직무" value={fn} onChange={setFn} options={usedFns.map((d) => [d, FUNCTIONS[d] ?? d])} />
@@ -96,8 +97,8 @@ export default function Home() {
                   setSelCarry({});
                   setSelected(s.id);
                 }}
-                className={`rounded-lg border p-4 text-left transition-colors ${
-                  s.ready ? 'border-line2 bg-panel hover:border-sky-700' : 'cursor-not-allowed border-line/70 bg-panel/40'
+                className={`rounded-lg border text-left transition-colors ${
+                  s.ready ? 'border-line2 bg-panel p-4 hover:border-sky-600 hover:bg-panel2' : 'cursor-not-allowed border-dashed border-line px-4 py-3'
                 } ${selected === s.id ? 'border-sky-600' : ''}`}
               >
                 <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10.5px]">
@@ -112,8 +113,8 @@ export default function Home() {
                     <span className="ml-auto text-faint">준비 중</span>
                   )}
                 </div>
-                <div className={`mb-1 text-[14px] font-medium ${s.ready ? 'text-slate-100' : 'text-faint'}`}>{s.title}</div>
-                <div className={`line-clamp-2 text-xs leading-relaxed ${s.ready ? 'text-dim' : 'text-faint'}`}>{s.summary}</div>
+                <div className={`mb-1 ${s.ready ? 'text-[15px] font-semibold text-strong' : 'text-[13px] text-dim'}`}>{s.title}</div>
+                <div className={`line-clamp-2 leading-relaxed ${s.ready ? 'text-[12.5px] text-dim' : 'text-[11.5px] text-faint'}`}>{s.summary}</div>
               </button>
             ))}
           </div>
@@ -124,7 +125,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6" onClick={() => setSelected(null)}>
           <div className="max-h-full w-full max-w-3xl overflow-auto rounded-lg border border-line2 bg-panel p-6" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between">
-              <h2 className="text-xl font-semibold text-slate-100">{sel.title}</h2>
+              <h2 className="text-xl font-semibold text-strong">{sel.title}</h2>
               <Btn onClick={() => setSelected(null)}>✕</Btn>
             </div>
             <BriefingBody s={sel} />
@@ -238,7 +239,7 @@ function CampaignSection({
   return (
     <section className="mb-10">
       <div className="mb-1 flex items-baseline gap-3">
-        <h2 className="text-lg font-semibold text-slate-100">캠페인 · {c.title}</h2>
+        <h2 className="text-lg font-semibold text-strong">캠페인 · {c.title}</h2>
         <span className="text-[11px] text-faint">{c.company}</span>
       </div>
       <p className="mb-4 max-w-3xl text-[13px] leading-relaxed text-dim">{c.summary}</p>
@@ -253,15 +254,21 @@ function CampaignSection({
                   missions.length && missions.every((m) => doneRec(m.id)) ? 'border-emerald-500 bg-emerald-500/30' : ready ? 'border-sky-500 bg-sky-500/20' : 'border-line2 bg-bg'
                 }`}
               />
-              <div className={`rounded-lg border px-4 py-3 ${ready ? 'border-line2 bg-panel' : 'border-line bg-panel/40'}`}>
+              <div
+                className={
+                  ready
+                    ? 'rounded-lg border border-line2 border-l-sky-500 border-l-[3px] bg-panel px-4 py-3'
+                    : 'flex flex-wrap items-baseline gap-x-3 rounded-lg border border-dashed border-line px-4 py-2'
+                }
+              >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-[11px] text-faint">STAGE {st.stage}</span>
-                  <span className={`text-[14px] font-medium ${ready ? 'text-slate-100' : 'text-faint'}`}>{st.title}</span>
-                  <span className="rounded bg-line px-1.5 py-px text-[10.5px] text-dim">플레이어: {st.role}</span>
-                  {!ready && <span className="text-[10.5px] text-faint">준비 중</span>}
+                  <span className={`font-mono text-[11px] ${ready ? 'text-sky-300' : 'text-faint'}`}>STAGE {st.stage}</span>
+                  <span className={ready ? 'text-[15px] font-semibold text-strong' : 'text-[13px] text-dim'}>{st.title}</span>
+                  <span className={`rounded px-1.5 py-px text-[10.5px] ${ready ? 'bg-line text-dim' : 'text-faint'}`}>플레이어: {st.role}</span>
+                  {!ready && <span className="rounded border border-line px-1.5 text-[10px] text-faint">준비 중</span>}
                   {st.freeplay && <span className="text-[10.5px] text-sky-300">아래 자유 플레이 ↓</span>}
                 </div>
-                <div className={`mt-0.5 text-[12px] ${ready ? 'text-dim' : 'text-faint'}`}>{st.summary}</div>
+                <div className={ready ? 'mt-0.5 text-[12.5px] text-dim' : 'text-[11.5px] text-faint'}>{st.summary}</div>
                 {missions.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {missions.map((m) => {
@@ -271,10 +278,16 @@ function CampaignSection({
                         <button
                           key={m.id}
                           onClick={() => onPick(m.id, cf.carry, cf.label)}
-                          className="flex items-center gap-2 rounded-md border border-line2 bg-bg px-3 py-1.5 text-left hover:border-sky-700"
+                          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-left ${
+                            done
+                              ? 'border-emerald-700/60 bg-emerald-500/[0.06] hover:border-emerald-500'
+                              : cf.locked
+                                ? 'border-line2 bg-bg hover:border-line2 hover:bg-panel2'
+                                : 'border-sky-600/70 bg-sky-500/10 hover:border-sky-400 hover:bg-sky-500/15'
+                          }`}
                         >
                           <span className={`text-xs ${done ? 'text-emerald-300' : cf.locked ? 'text-faint' : 'text-sky-300'}`}>{done ? '✔' : cf.locked ? '◌' : '▶'}</span>
-                          <span className="text-[12.5px] text-fg">{m.title.replace(/^\d단계 · /, '')}</span>
+                          <span className={`text-[12.5px] ${cf.locked && !done ? 'text-dim' : 'font-medium text-strong'}`}>{m.title.replace(/^\d단계 · /, '')}</span>
                           <span className="text-[10.5px] text-faint">
                             {done ? '완료 · 다시 하기' : cf.locked ? '이전 단계 먼저 (기본값으로 시작 가능)' : `약 ${m.estMinutes}분`}
                           </span>

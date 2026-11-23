@@ -3,7 +3,7 @@ import { parseCsv } from '../../engine/csv';
 import type { Simulation } from '../../engine/engine';
 import { formatSimTime } from '../../engine/engine';
 import { useSession } from '../../store/session';
-import { Btn, useSim } from '../common';
+import { Btn, agentColor, useSim } from '../common';
 import DashboardView from './DashboardView';
 import Markdown from './Markdown';
 import ScanView from './ScanView';
@@ -67,7 +67,7 @@ export default function Browser() {
             value={addr}
             onChange={(e) => setAddr(e.target.value)}
             spellCheck={false}
-            className="w-full rounded border border-line2 bg-bg px-2.5 py-1 font-mono text-xs text-fg outline-none focus:border-sky-700"
+            className="w-full rounded-full border border-line2 bg-bg px-3 py-1 font-mono text-xs text-fg outline-none focus:border-sky-700"
           />
         </form>
         <span className="rounded bg-line px-1.5 py-0.5 text-[10px] text-faint" title="격리된 가상 브라우저 — 외부 네트워크 접근 없음">
@@ -79,7 +79,7 @@ export default function Browser() {
           ↻ 페이지가 갱신되었습니다 — v{version} · {last.by} · {formatSimTime(last.tick)}
         </div>
       )}
-      <div className="min-h-0 flex-1 overflow-auto bg-bg">
+      <div className="min-h-0 flex-1 overflow-auto bg-paper">
         {url === 'sim://home' ? (
           <HomePage sim={sim} />
         ) : !page ? (
@@ -121,24 +121,39 @@ function HomePage({ sim }: { sim: Simulation }) {
   return (
     <div className="mx-auto max-w-2xl px-6 py-6">
       <div className="mb-1 text-xs text-faint">{sim.scenario.company.name} · 사내 포털 (가상)</div>
-      <h1 className="mb-4 text-lg font-semibold text-slate-100">업무 화면</h1>
+      <h1 className="mb-4 text-lg font-semibold text-strong">업무 화면</h1>
       <div className="grid gap-2">
         {sim.scenario.pages.map((p) => {
           const f = sim.files.get(p.source);
+          const by = f?.versions[f.versions.length - 1].by;
+          const byAgent = by && by !== 'scenario' && by !== 'user' && sim.agents[by] !== undefined;
           return (
             <button
               key={p.url}
               onClick={() => navigate(p.url)}
               className={`flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors ${
-                f ? 'border-line2 bg-panel hover:border-sky-700' : 'border-line bg-panel/40'
+                f ? 'border-line2 bg-paper2 hover:border-sky-700' : 'border-dashed border-line bg-transparent hover:border-line2'
               }`}
             >
-              <span className={`h-2 w-2 rounded-full ${f ? 'bg-emerald-400' : 'bg-faint'}`} />
-              <span className="flex-1">
-                <span className={`block text-sm ${f ? 'text-fg' : 'text-faint'}`}>{p.title}</span>
+              {/* 입력 자료(시나리오 제공)는 □, Agent 산출물은 ■ — 무엇이 '만들어진 것'인지 구분 */}
+              <span
+                className={`h-2.5 w-2.5 shrink-0 rounded-[3px] ${f ? (byAgent ? '' : 'border border-dim') : 'border border-dashed border-faint'}`}
+                style={byAgent ? { background: agentColor(sim, by!) } : undefined}
+              />
+              <span className="min-w-0 flex-1">
+                <span className={`block text-[13.5px] ${f ? 'font-medium text-strong' : 'text-faint'}`}>{p.title}</span>
                 <span className="font-mono text-[11px] text-faint">{p.url}</span>
               </span>
-              <span className="text-[11px] text-faint">{f ? `v${f.versions.length} · ${f.versions[f.versions.length - 1].by}` : '아직 없음'}</span>
+              {f ? (
+                <span className="flex items-center gap-1.5 text-[11px]">
+                  <span className="rounded bg-line px-1.5 py-px font-mono text-dim">v{f.versions.length}</span>
+                  <span className={byAgent ? 'font-mono font-semibold' : 'text-faint'} style={byAgent ? { color: agentColor(sim, by!) } : undefined}>
+                    {byAgent ? by : '제공 자료'}
+                  </span>
+                </span>
+              ) : (
+                <span className="text-[11px] text-faint italic">아직 없음</span>
+              )}
             </button>
           );
         })}
@@ -179,7 +194,7 @@ export function TableView({ content, title }: { content: string; title?: string 
   return (
     <div className="p-3">
       <div className="mb-2 flex items-center gap-2">
-        {title && <span className="text-sm font-semibold text-slate-100">{title}</span>}
+        {title && <span className="text-sm font-semibold text-strong">{title}</span>}
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -231,7 +246,7 @@ function MailView({ content }: { content: string }) {
   return (
     <div className="mx-auto max-w-3xl px-6 py-5">
       <div className="mb-1 text-[11px] text-faint">사내 메일 (가상)</div>
-      <h1 className="mb-3 text-lg font-semibold text-slate-100">{title}</h1>
+      <h1 className="mb-3 text-lg font-semibold text-strong">{title}</h1>
       <div className="mb-4 rounded-md border border-line bg-panel px-3 py-2 text-xs">
         {meta.map((m) => {
           const [, k, v] = m.match(/^\*\*(\w+):\*\*\s*(.*)$/) ?? [];

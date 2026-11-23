@@ -165,7 +165,7 @@ export default function DashboardView({ sim, source }: { sim: Simulation; source
     <div className="p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-lg font-semibold text-slate-100">{def.title}</h1>
+          <h1 className="text-lg font-semibold text-strong">{def.title}</h1>
           {def.subtitle && <div className="mt-0.5 text-xs text-dim">{def.subtitle}</div>}
         </div>
         {!!def.filters?.length && (
@@ -217,7 +217,7 @@ function WidgetBody({ w, rows, headers, allRows }: { w: Widget; rows: Record<str
   switch (w.type) {
     case 'kpi':
       return (
-        <div className="font-mono text-2xl font-semibold text-slate-100">
+        <div className="font-mono text-2xl font-semibold text-strong">
           {fmt(w.limits ? alarmsOf(rows, w).length : aggregate(rows, w), w.unit)}
         </div>
       );

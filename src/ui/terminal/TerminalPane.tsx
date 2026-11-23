@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from '../../store/session';
-import { Btn, StatusBadge, Progress, useSim } from '../common';
+import { AgentAvatar, Btn, StatusBadge, Progress, agentColor, useSim } from '../common';
 import { fitTerm, getTerm, mountTerm } from './termRegistry';
 import ChatBody from './ChatBody';
 import ChoiceCard from './ChoiceCard';
@@ -50,16 +50,27 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
   const agent = agentId ? sim?.agents[agentId] : undefined;
   const role = agent ? sim?.roleDef(agent.role) : undefined;
   const removed = agentId && !agent;
+  // 패널 정체성 색: Agent는 고유색, 사람은 호박색, 오케스트레이터 셸은 하늘색
+  const idColor = agentId ? agentColor(sim, agentId) : personId ? '#fbbf24' : '#38bdf8';
+  const attention = agent && (agent.status === 'waiting' || agent.status === 'blocked' || agent.status === 'failed');
+  const frame = attention
+    ? agent!.status === 'waiting'
+      ? 'border-amber-500/80 attn'
+      : 'border-red-500/80'
+    : focused
+      ? 'border-sky-600/80 shadow-[0_0_0_1px_rgba(56,189,248,0.18)]'
+      : 'border-line';
 
   return (
     <div
-      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-md border bg-[#0d121c] ${
-        focused ? 'border-sky-700/80 shadow-[0_0_0_1px_rgba(56,189,248,0.15)]' : 'border-line'
-      }`}
+      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-md border bg-term ${frame}`}
       onMouseDown={() => focusPane(paneId)}
     >
-      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-line bg-panel px-2 text-xs">
-        <span className="rounded bg-line px-1 font-mono text-[10px] text-faint" title={`Alt+${index + 1}`}>
+      <div
+        className={`flex h-8 shrink-0 items-center gap-2 border-b border-line px-2 text-xs ${focused ? 'bg-panel2' : 'bg-term2'}`}
+        style={{ boxShadow: `inset 0 2px 0 ${idColor}${focused ? '' : '99'}` }}
+      >
+        <span className={`rounded px-1 font-mono text-[10px] ${focused ? 'bg-sky-500/20 text-sky-200' : 'bg-line text-faint'}`} title={`Alt+${index + 1}`}>
           {index + 1}
         </span>
         {personId ? (
@@ -70,7 +81,10 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
           </>
         ) : agentId ? (
           <>
-            <span className="font-mono font-semibold text-fuchsia-300">{agentId}</span>
+            <AgentAvatar sim={sim} id={agentId} />
+            <span className="font-mono text-[12.5px] font-semibold" style={{ color: idColor }}>
+              {agentId}
+            </span>
             {role && <span className="truncate text-faint">{role.name}</span>}
             {agent && <StatusBadge status={agent.status} />}
             {agent?.taskId && (
@@ -83,8 +97,8 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
           </>
         ) : (
           <>
-            <span className="font-mono font-semibold text-sky-300">orchestrator</span>
-            <span className="text-faint">셸 · 명령 및 알림</span>
+            <span className="font-mono text-[12.5px] font-semibold text-sky-300">❯ orchestrator</span>
+            <span className="truncate text-faint">셸 · 명령 및 알림</span>
           </>
         )}
         <div className="ml-auto flex items-center">

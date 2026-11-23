@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react';
 import type { AgentStatus, TaskStatus } from '../engine/types';
+import type { Simulation } from '../engine/engine';
+import { agentColor } from './agentColor';
+
+export { agentColor };
 import { useSession } from '../store/session';
 
 export function useSim() {
@@ -20,16 +24,30 @@ export const AGENT_STATUS: Record<AgentStatus, { label: string; cls: string; dot
   interrupted: { label: 'Interrupted', cls: 'text-fuchsia-300 border-fuchsia-800', dot: 'bg-fuchsia-400' },
 };
 
-export const TASK_STATUS: Record<TaskStatus, { label: string; cls: string }> = {
-  locked: { label: '대기(선행)', cls: 'text-faint' },
-  ready: { label: '시작 가능', cls: 'text-fg' },
-  assigned: { label: '배정됨', cls: 'text-cyan-300' },
-  in_progress: { label: '진행 중', cls: 'text-sky-300' },
-  waiting: { label: '응답 대기', cls: 'text-amber-300' },
-  blocked: { label: '차단됨', cls: 'text-red-300' },
-  done: { label: '완료', cls: 'text-emerald-300' },
-  failed: { label: '실패', cls: 'text-red-300' },
+/** cls: 글자색 · pill: 상태 알약 · rail: 행 왼쪽 상태 막대 */
+export const TASK_STATUS: Record<TaskStatus, { label: string; cls: string; pill: string; rail: string }> = {
+  locked: { label: '선행 대기', cls: 'text-faint', pill: 'text-faint border border-line2', rail: 'bg-line2' },
+  ready: { label: '시작 가능', cls: 'text-fg', pill: 'text-sky-200 bg-sky-500/15', rail: 'bg-sky-400/70' },
+  assigned: { label: '배정됨', cls: 'text-cyan-300', pill: 'text-cyan-200 bg-cyan-500/15', rail: 'bg-cyan-400' },
+  in_progress: { label: '진행 중', cls: 'text-sky-300', pill: 'text-sky-100 bg-sky-500/25', rail: 'bg-sky-400' },
+  waiting: { label: '응답 대기', cls: 'text-amber-300', pill: 'text-amber-950 bg-amber-400 font-semibold', rail: 'bg-amber-400' },
+  blocked: { label: '차단됨', cls: 'text-red-300', pill: 'text-red-950 bg-red-400 font-semibold', rail: 'bg-red-400' },
+  done: { label: '완료', cls: 'text-emerald-300', pill: 'text-emerald-300 bg-emerald-500/10', rail: 'bg-emerald-500/60' },
+  failed: { label: '실패', cls: 'text-red-300', pill: 'text-red-200 bg-red-500/20', rail: 'bg-red-500' },
 };
+
+export function AgentAvatar({ sim, id, size = 18 }: { sim: Simulation | null | undefined; id: string; size?: number }) {
+  const col = agentColor(sim, id);
+  return (
+    <span
+      className="inline-flex shrink-0 items-center justify-center rounded-[4px] font-mono font-bold uppercase"
+      style={{ width: size, height: size, fontSize: size * 0.55, background: `${col}26`, color: col, boxShadow: `inset 0 0 0 1px ${col}66` }}
+      aria-hidden
+    >
+      {id.slice(0, 1)}
+    </span>
+  );
+}
 
 export function StatusBadge({ status }: { status: AgentStatus }) {
   const s = AGENT_STATUS[status];
@@ -74,11 +92,12 @@ export function Btn({
   );
 }
 
-export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
+export function SectionTitle({ children, right, count }: { children: ReactNode; right?: ReactNode; count?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-3 pt-3 pb-1.5">
-      <span className="text-[11px] font-semibold tracking-wider text-faint uppercase">{children}</span>
-      {right}
+    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-panel/95 px-3 py-2 backdrop-blur">
+      <span className="text-[12px] font-semibold text-fg">{children}</span>
+      {count !== undefined && <span className="rounded-full bg-line px-1.5 py-px font-mono text-[10px] text-dim">{count}</span>}
+      <span className="ml-auto flex items-center">{right}</span>
     </div>
   );
 }

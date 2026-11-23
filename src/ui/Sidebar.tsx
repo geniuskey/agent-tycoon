@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSession } from '../store/session';
 import { TrustMeter } from './terminal/TerminalPane';
-import { AGENT_STATUS, Btn, Progress, SectionTitle, StatusBadge, TASK_STATUS, useSim } from './common';
+import { AgentAvatar, Btn, Progress, SectionTitle, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
 
 export default function Sidebar() {
   const sim = useSim()!;
@@ -17,10 +17,10 @@ export default function Sidebar() {
     <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-panel">
       {people.length > 0 && (
         <>
-          <SectionTitle right={<span className="text-[11px] text-faint">{people.filter((p) => sim.people[p.id].met).length}/{people.length} 만남</span>}>
+          <SectionTitle count={`${people.filter((p) => sim.people[p.id].met).length}/${people.length}`} right={<span className="text-[10.5px] text-faint">만남</span>}>
             사람들
           </SectionTitle>
-          <div className="px-2">
+          <div className="px-2 pt-1.5 pb-2">
             {people.map((p) => {
               const rt = sim.people[p.id];
               return (
@@ -31,39 +31,63 @@ export default function Sidebar() {
                   className="mb-1 block w-full rounded border border-transparent px-2 py-1.5 text-left hover:border-line2 hover:bg-panel2"
                 >
                   <div className="flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${rt.met ? 'bg-amber-400' : 'bg-faint'}`} />
-                    <span className="text-xs font-medium text-fg">{p.name}</span>
+                    <span
+                      className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${
+                        rt.met ? 'bg-amber-400/20 text-amber-200 ring-1 ring-amber-400/50' : 'bg-line text-faint'
+                      }`}
+                    >
+                      {p.name.slice(0, 1)}
+                    </span>
+                    <span className={`text-[12.5px] font-medium ${rt.met ? 'text-strong' : 'text-dim'}`}>{p.name}</span>
                     <span className="ml-auto">
                       <TrustMeter value={rt.trust} />
                     </span>
                   </div>
-                  <div className="truncate pl-3 text-[11px] text-dim">{p.title}</div>
+                  <div className="truncate pl-[24px] text-[11px] text-faint">{p.title}</div>
                 </button>
               );
             })}
           </div>
         </>
       )}
-      <SectionTitle right={<span className="text-[11px] text-faint">{done}/{tasks.length}</span>}>Tasks</SectionTitle>
-      <div className="px-2">
+      <SectionTitle count={`${done}/${tasks.length}`} right={<Progress value={tasks.length ? done / tasks.length : 0} className="w-16" />}>
+        Tasks
+      </SectionTitle>
+      <div className="px-2 pt-1.5 pb-2">
         {tasks.map((t) => {
           const def = sim.taskDef(t.id)!;
           const st = TASK_STATUS[t.status];
+          const isDone = t.status === 'done';
+          const muted = isDone || t.status === 'locked';
           return (
-            <div key={t.id} className="group mb-1 rounded border border-transparent px-2 py-1.5 hover:border-line2 hover:bg-panel2" title={def.description}>
-              <div className="flex items-center gap-1.5">
-                <span className={`font-mono text-[11.5px] ${t.status === 'done' ? 'text-emerald-300' : 'text-fg'}`}>{t.id}</span>
-                {def.optional && <span className="text-[10px] text-faint">선택</span>}
-                {def.review && <span className="text-[10px] text-violet-300">검증</span>}
-                <span className={`ml-auto text-[10.5px] ${st.cls}`}>{st.label}</span>
+            <div
+              key={t.id}
+              className={`group relative mb-1 overflow-hidden rounded-md py-1.5 pr-2 pl-3 hover:bg-panel2 ${
+                t.status === 'waiting' || t.status === 'blocked' ? 'bg-amber-500/[0.07]' : ''
+              }`}
+              title={def.description}
+            >
+              <span className={`absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-full ${st.rail}`} />
+              <div className="flex items-start gap-2">
+                <span className={`min-w-0 flex-1 text-[12.5px] leading-snug ${isDone ? 'text-dim line-through decoration-faint/60' : muted ? 'text-dim' : 'font-medium text-strong'}`}>
+                  {def.title}
+                </span>
+                <span className={`mt-px shrink-0 rounded px-1.5 py-px text-[10px] ${st.pill}`}>{st.label}</span>
               </div>
-              <div className="truncate text-[11px] text-dim">{def.title}</div>
-              {def.dependsOn?.length ? (
-                <div className="truncate text-[10.5px] text-faint">← {def.dependsOn.join(', ')}</div>
-              ) : null}
-              {t.assignee && (
+              {!isDone && (
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-faint">
+                  <span className="font-mono">{t.id}</span>
+                  {def.optional && <span className="rounded border border-line2 px-1 leading-tight">선택</span>}
+                  {def.review && <span className="rounded border border-violet-700/70 px-1 leading-tight text-violet-300">검증</span>}
+                  {def.dependsOn?.length && t.status === 'locked' ? <span className="truncate">← {def.dependsOn.join(', ')}</span> : null}
+                </div>
+              )}
+              {t.assignee && !isDone && (
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="font-mono text-[10.5px] text-fuchsia-300">@{t.assignee}</span>
+                  <span className="flex items-center gap-1 font-mono text-[10.5px]" style={{ color: agentColor(sim, t.assignee) }}>
+                    <AgentAvatar sim={sim} id={t.assignee} size={13} />
+                    {t.assignee}
+                  </span>
                   <Progress value={sim.taskProgress(t.id)} className="flex-1" />
                 </div>
               )}
@@ -78,6 +102,7 @@ export default function Sidebar() {
       </div>
 
       <SectionTitle
+        count={agents.length}
         right={
           <Btn onClick={() => setRoleOpen((v) => !v)} title="Agent 생성">
             ＋ 생성
@@ -87,7 +112,7 @@ export default function Sidebar() {
         Agents
       </SectionTitle>
       {roleOpen && (
-        <div className="mx-2 mb-2 rounded border border-line2 bg-panel2 p-1">
+        <div className="mx-2 mt-1.5 mb-2 rounded border border-line2 bg-panel2 p-1">
           {sim.scenario.roles.map((r) => (
             <button
               key={r.id}
@@ -97,13 +122,17 @@ export default function Sidebar() {
               }}
               className="block w-full rounded px-2 py-1 text-left hover:bg-line"
             >
-              <span className="font-mono text-xs text-sky-300">{r.id}</span> <span className="text-xs text-fg">{r.name}</span>
+              <span className="flex items-center gap-1.5">
+                <AgentAvatar sim={sim} id={r.id} size={15} />
+                <span className="font-mono text-xs font-semibold" style={{ color: agentColor(sim, r.id) }}>{r.id}</span>
+                <span className="text-xs text-fg">{r.name}</span>
+              </span>
               <div className="text-[10.5px] text-faint">{r.skills.join(' · ')}</div>
             </button>
           ))}
         </div>
       )}
-      <div className="px-2 pb-3">
+      <div className="px-2 pt-1.5 pb-3">
         {!agents.length && <div className="px-2 py-2 text-[11.5px] text-faint">Agent가 없습니다. ＋ 생성 또는 `agent spawn &lt;role&gt;`</div>}
         {agents.map((a) => {
           const gate = sim.openGate(a);
@@ -112,19 +141,28 @@ export default function Sidebar() {
             <button
               key={a.id}
               onClick={() => openAgentPane(a.id)}
-              className={`mb-1 block w-full rounded border px-2 py-1.5 text-left hover:bg-panel2 ${needs ? AGENT_STATUS[a.status].cls.split(' ').find((c) => c.startsWith('border')) : 'border-transparent hover:border-line2'}`}
+              className={`mb-1 block w-full rounded-md border px-2 py-1.5 text-left ${
+                needs
+                  ? a.status === 'waiting'
+                    ? 'attn border-amber-500/70 bg-amber-500/[0.09] hover:bg-amber-500/15'
+                    : 'border-red-500/70 bg-red-500/[0.09] hover:bg-red-500/15'
+                  : 'border-transparent hover:border-line2 hover:bg-panel2'
+              }`}
             >
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-xs font-semibold text-fuchsia-300">{a.id}</span>
+                <AgentAvatar sim={sim} id={a.id} />
+                <span className="font-mono text-[12.5px] font-semibold" style={{ color: agentColor(sim, a.id) }}>
+                  {a.id}
+                </span>
                 <span className="ml-auto">
                   <StatusBadge status={a.status} />
                 </span>
               </div>
-              <div className="truncate text-[11px] text-dim">
+              <div className="truncate pl-[24px] text-[11px] text-dim">
                 {a.taskId ? [a.taskId, sim.currentStep(a)?.event].filter(Boolean).join(' · ') : sim.roleDef(a.role)?.name}
               </div>
               {needs && (
-                <div className="mt-0.5 truncate text-[11px] text-amber-300">
+                <div className={`mt-1 truncate pl-[24px] text-[11.5px] font-medium ${a.status === 'waiting' ? 'text-amber-200' : 'text-red-200'}`}>
                   {gate ? `⏸ ${gate.title}` : a.phase === 'confirm-mismatch' ? '⏸ 역량 확인 요청' : a.phase === 'waiting-deps' ? '⏳ 선행 작업 대기' : a.error ?? ''}
                 </div>
               )}

@@ -3,7 +3,7 @@ import { evaluate, type Rating } from '../engine/evaluate';
 import { exportCarry, formatSimTime, replay } from '../engine/engine';
 import { SCENARIOS } from '../scenarios';
 import { useSession } from '../store/session';
-import { Btn, SimBadge, StatusBadge, TASK_STATUS, useSim } from './common';
+import { AgentAvatar, Btn, SimBadge, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
 import { EventLog, Gantt } from './Timeline';
 
 const RATING: Record<Rating, { label: string; cls: string; icon: string }> = {
@@ -59,7 +59,7 @@ export default function Feedback() {
           <div className="mx-auto max-w-5xl px-6 py-6">
             <div className="mb-6 rounded-lg border border-line2 bg-panel p-5">
               <div className="text-[11px] tracking-wider text-faint uppercase">요청자 반응 · {sim.scenario.briefing.requester.name}</div>
-              <div className="mt-1 text-xl font-semibold text-slate-100">{fb.headline}</div>
+              <div className="mt-1 text-xl font-semibold text-strong">{fb.headline}</div>
               <div className="mt-1 text-xs text-dim">
                 결과 기준 {okCount}/{fb.outcomes.length} 충족 · 가상 업무 시간 {fb.stats.simMinutes}분 · Agent {fb.stats.agentsSpawned}개 · 최대 동시 작업 {fb.stats.maxConcurrent} ·
                 명령 {fb.stats.commands}회 (자연어 {fb.stats.nlInstructions}) · 개입 요청 {fb.stats.gatesOpened}건 · 산출물 확인 {fb.stats.observations}회
@@ -207,7 +207,10 @@ function Replay() {
               <div className="mb-1 text-[11px] font-semibold text-faint">Agent @ {formatSimTime(t)}</div>
               {snap.agentList().map((a) => (
                 <div key={a.id} className="flex items-center gap-2 py-0.5 text-xs">
-                  <span className="w-28 truncate font-mono text-fuchsia-300">{a.id}</span>
+                  <span className="flex w-28 items-center gap-1.5 truncate font-mono font-semibold" style={{ color: agentColor(snap, a.id) }}>
+                    <AgentAvatar sim={snap} id={a.id} size={15} />
+                    {a.id}
+                  </span>
                   <StatusBadge status={a.status} />
                   <span className="truncate text-dim">{a.taskId ?? ''}</span>
                 </div>

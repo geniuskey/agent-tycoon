@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { stripAnsi } from '../../engine/ansi';
 import { agentChoices } from '../../engine/choices';
 import { useSession } from '../../store/session';
-import { useSim } from '../common';
+import { agentColor, useSim } from '../common';
 
 /**
  * 객관식 선택 카드 (Claude Code plan mode 스타일).
@@ -45,7 +45,7 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
 
   if (ch.mode === 'busy') {
     return (
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-line bg-panel px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-line bg-term2 px-2 py-1.5">
         <span className="text-[11px] text-faint">작업 중 —</span>
         {ch.actions.map((a) => (
           <button key={a.command} onClick={() => run(a.command)} className="rounded border border-line2 px-2 py-0.5 text-[11.5px] text-dim hover:border-sky-700 hover:text-fg">
@@ -67,7 +67,13 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
   const total = primary.length + mods.length;
   const title =
     ch.mode === 'gate' ? ch.gate.title : ch.mode === 'confirm' ? ch.title : `${agentId}에게 지시하기`;
-  const tone = ch.mode === 'gate' ? (ch.gate.kind === 'blocked' ? 'border-red-800/80' : 'border-amber-700/80') : ch.mode === 'confirm' ? 'border-amber-700/80' : 'border-line2';
+  const blocked = ch.mode === 'gate' && ch.gate.kind === 'blocked';
+  // 결정 요청(gate/confirm)은 색을 입힌 면, 일상 지시(instruct)는 중립 면 — 한눈에 '내가 답해야 하는 것'이 구분되게
+  const tone = isGate
+    ? blocked
+      ? { box: 'border-red-500/80 bg-[#1c0f12]', head: 'bg-red-500/15', title: 'text-red-100', chip: 'bg-red-400 text-red-950', chipText: '차단 — 결정 필요', mark: 'border-red-300 bg-red-400/30', dot: 'bg-red-200', btn: 'bg-red-400 text-red-950 hover:bg-red-300', foot: 'bg-[#1c0f12]', row: 'bg-red-500/10' }
+      : { box: 'border-amber-500/80 bg-[#1a1509]', head: 'bg-amber-500/15', title: 'text-amber-50', chip: 'bg-amber-400 text-amber-950', chipText: '결정 필요', mark: 'border-amber-300 bg-amber-400/30', dot: 'bg-amber-200', btn: 'bg-amber-400 text-amber-950 hover:bg-amber-300', foot: 'bg-[#1a1509]', row: 'bg-amber-500/10' }
+    : { box: 'border-line2 bg-term2', head: '', title: 'text-fg', chip: '', chipText: '', mark: 'border-sky-400 bg-sky-500/30', dot: 'bg-sky-300', btn: 'bg-sky-500/90 text-slate-950 hover:bg-sky-400', foot: 'bg-term2', row: 'bg-panel2' };
 
   const toggleMod = (i: number) =>
     setMulti((s) => {
@@ -133,8 +139,11 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
 
   if (collapsed) {
     return (
-      <div className="flex items-center gap-2 border-t border-line bg-panel px-2 py-1">
-        <button onClick={() => setCollapsed(false)} className={`rounded px-2 py-0.5 text-[11.5px] ${isGate ? 'pulse text-amber-300' : 'text-sky-300'} hover:bg-panel2`}>
+      <div className="flex items-center gap-2 border-t border-line bg-term2 px-2 py-1">
+        <button
+          onClick={() => setCollapsed(false)}
+          className={`rounded px-2 py-0.5 text-[11.5px] ${isGate ? 'attn bg-amber-500/15 font-semibold text-amber-200' : 'text-sky-300 hover:bg-panel2'}`}
+        >
           ▸ {isGate ? `선택 필요: ${title}` : '선택지로 지시하기'}
         </button>
       </div>
@@ -149,13 +158,13 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
         type="button"
         onClick={() => pick(idx)}
         onMouseEnter={() => setCursor(idx)}
-        className={`flex w-full items-start gap-2 rounded px-2 py-1 text-left text-[12.5px] ${cursor === idx && focused ? 'bg-panel2' : ''} ${
-          selected ? 'text-fg' : 'text-dim'
-        } hover:bg-panel2`}
+        className={`flex w-full items-start gap-2 rounded px-2 py-1 text-left text-[12.5px] ${cursor === idx && focused ? tone.row : ''} ${
+          selected ? `${tone.row} text-strong` : isGate ? 'text-fg' : 'text-dim'
+        } ${isGate ? 'hover:bg-white/5' : 'hover:bg-panel2'}`}
       >
         <span className="w-4 shrink-0 font-mono text-[11px] text-faint">{idx + 1 <= 9 ? idx + 1 : ''}</span>
-        <span className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center border ${multiMark ? 'rounded-sm' : 'rounded-full'} ${selected ? 'border-sky-400 bg-sky-500/30' : 'border-line2'}`}>
-          {selected && <span className={`${multiMark ? 'h-2 w-2 rounded-[1px]' : 'h-1.5 w-1.5 rounded-full'} bg-sky-300`} />}
+        <span className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center border ${multiMark ? 'rounded-sm' : 'rounded-full'} ${selected ? tone.mark : 'border-line2'}`}>
+          {selected && <span className={`${multiMark ? 'h-2 w-2 rounded-[1px]' : 'h-1.5 w-1.5 rounded-full'} ${tone.dot}`} />}
         </span>
         <span className="flex-1 leading-snug">
           {label}
@@ -171,17 +180,28 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
       tabIndex={0}
       onKeyDown={onKey}
       onFocus={() => useSession.getState().focusPane(paneId)}
-      className={`${isGate ? 'max-h-[78%] min-h-[45%]' : 'max-h-[55%]'} shrink-0 overflow-y-auto border-t-2 bg-panel px-2 pt-2 pb-1.5 outline-none focus:bg-[#141b29] ${tone}`}
+      className={`${isGate ? 'max-h-[78%] min-h-[45%] border-t-2' : 'max-h-[55%] border-t'} shrink-0 overflow-y-auto px-2 pb-1.5 outline-none ${tone.box}`}
     >
-      <div className="mb-1 flex items-start gap-2 px-1">
+      <div className={`-mx-2 mb-1 flex items-start gap-2 px-3 ${isGate ? `pt-2 pb-2 ${tone.head}` : 'pt-1.5'}`}>
         <div className="flex-1">
-          <div className={`text-[12.5px] font-semibold ${isGate ? 'text-amber-200' : 'text-sky-200'}`}>
-            {isGate && (ch.mode === 'gate' && ch.gate.kind === 'blocked' ? '⛔ ' : '⏸ ')}
-            {title}
-            {isMulti && ch.mode === 'gate' && <span className="ml-2 text-[10.5px] font-normal text-amber-300/80">복수 선택 · {ch.min}~{ch.max}개</span>}
-          </div>
+          {isGate ? (
+            <>
+              <div className="mb-1 flex items-center gap-2">
+                <span className={`rounded px-1.5 py-px text-[10px] font-bold tracking-wide ${tone.chip}`}>{blocked ? '⛔' : '⏸'} {tone.chipText}</span>
+                {isMulti && ch.mode === 'gate' && <span className="text-[10.5px] text-amber-200/80">복수 선택 · {ch.min}~{ch.max}개</span>}
+              </div>
+              <div className={`text-[13.5px] font-semibold ${tone.title}`}>{title}</div>
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[12px] text-dim">
+              <span className="font-mono font-semibold" style={{ color: agentColor(sim, agentId) }}>
+                {agentId}
+              </span>
+              에게 지시하기
+            </div>
+          )}
           {prompt.map((l, i) => (
-            <div key={i} className="text-[11.5px] leading-snug text-dim">
+            <div key={i} className={`text-[12px] leading-snug ${isGate ? 'text-fg/80' : 'text-dim'}`}>
               {l}
             </div>
           ))}
@@ -203,11 +223,11 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
           ))}
         </>
       )}
-      <div className="sticky bottom-0 -mx-2 mt-1.5 flex items-center gap-2 border-t border-line bg-panel px-3 pt-1.5 pb-0.5">
+      <div className={`sticky bottom-0 -mx-2 mt-1.5 flex items-center gap-2 border-t border-line px-3 pt-1.5 pb-0.5 ${tone.foot}`}>
         <button
           disabled={!canSubmit}
           onClick={submit}
-          className="rounded bg-sky-500/90 px-3 py-1 text-[12px] font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-30"
+          className={`rounded px-3 py-1 text-[12px] font-semibold disabled:opacity-30 ${tone.btn}`}
         >
           {ch.mode === 'instruct' ? '지시하기' : '확인'} ⏎
         </button>

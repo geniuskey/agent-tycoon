@@ -80,7 +80,7 @@ export default function Briefing({ onClose }: { onClose: () => void }) {
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <div className="text-[11px] tracking-wider text-faint uppercase">업무 브리핑</div>
-            <h2 className="text-xl font-semibold text-slate-100">{sim.scenario.briefing.title}</h2>
+            <h2 className="text-xl font-semibold text-strong">{sim.scenario.briefing.title}</h2>
           </div>
           <Btn onClick={onClose}>✕</Btn>
         </div>

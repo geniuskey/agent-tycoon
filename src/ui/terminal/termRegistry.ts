@@ -7,6 +7,7 @@ import { completions } from '../../engine/cli';
 import { formatSimTime } from '../../engine/engine';
 import type { Simulation } from '../../engine/engine';
 import type { SimEvent } from '../../engine/types';
+import { agentColor } from '../agentColor';
 
 /**
  * xterm 인스턴스 레지스트리.
@@ -41,10 +42,10 @@ export interface TermInstance {
 const registry = new Map<string, TermInstance>();
 
 const THEME = {
-  background: '#0d121c',
+  background: '#0a0c10',
   foreground: '#d7dde8',
   cursor: '#38bdf8',
-  cursorAccent: '#0d121c',
+  cursorAccent: '#0a0c10',
   selectionBackground: '#264f78',
   black: '#1e2533',
   red: '#f87171',
@@ -64,9 +65,15 @@ const THEME = {
   brightWhite: '#f8fafc',
 };
 
-export function promptOf(inst: Pick<TermInstance, 'agentId' | 'personId'>): string {
+/** Agent 고유색(24-bit)으로 프롬프트를 칠해 패널 머리·사이드바와 같은 색으로 이어지게 한다. */
+function rgb(hex: string, text: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `\x1b[1;38;2;${(n >> 16) & 255};${(n >> 8) & 255};${n & 255}m${text}\x1b[0m`;
+}
+
+export function promptOf(inst: Pick<TermInstance, 'agentId' | 'personId'> & { sim?: Simulation | null }): string {
   if (inst.personId) return c.yellow('나 ') + c.cyan('❯ ');
-  return inst.agentId ? c.magenta(`${inst.agentId} `) + c.cyan('❯ ') : c.cyan('❯ ');
+  return inst.agentId ? rgb(agentColor(inst.sim, inst.agentId), `${inst.agentId} `) + c.cyan('❯ ') : c.cyan('❯ ');
 }
 
 export function getTerm(

@@ -2,14 +2,21 @@
 @import '@xterm/xterm/css/xterm.css';
 
 @theme {
-  --color-bg: #0b0f17;
+  /* 영역(zone)마다 면의 온도를 달리해 '어디를 보고 있는지'가 먼저 읽히게 한다.
+     bg: 앱 바탕 · panel: 탐색/관리(사이드바·상단바) · term: 터미널(중립 흑색) · paper: 가상 브라우저(산출물) */
+  --color-bg: #090c12;
   --color-panel: #111723;
-  --color-panel2: #161d2b;
+  --color-panel2: #19212f;
+  --color-term: #0a0c10;
+  --color-term2: #12151b;
+  --color-paper: #15171c;
+  --color-paper2: #1d2027;
   --color-line: #222b3b;
-  --color-line2: #2c3749;
+  --color-line2: #2f3a4d;
+  --color-strong: #f1f5f9;
   --color-fg: #d7dde8;
-  --color-dim: #8a96aa;
-  --color-faint: #5c6678;
+  --color-dim: #94a0b4;
+  --color-faint: #5f6a7d;
   --color-accent: #38bdf8;
   --color-ok: #34d399;
   --color-warn: #fbbf24;
@@ -71,3 +78,8 @@ body,
   to { background-color: transparent; }
 }
 .flash { animation: flash-in 1.6s ease-out; }
+@keyframes attn-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35); }
+  50% { box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.75), 0 0 14px rgba(251, 191, 36, 0.12); }
+}
+.attn { animation: attn-glow 1.8s ease-in-out infinite; }

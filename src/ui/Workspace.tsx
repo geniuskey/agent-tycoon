@@ -56,27 +56,33 @@ export default function Workspace() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {attention > 0 && (
-            <span className="pulse rounded border border-amber-700 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">⏸ 개입 필요 {attention}</span>
+          {/* 상태 묶음: 개입 필요 · 작업 중 · 시계 · 배속 */}
+          {attention > 0 ? (
+            <span className="attn rounded bg-amber-400 px-2 py-0.5 text-[11.5px] font-bold text-amber-950">⏸ 개입 필요 {attention}</span>
+          ) : (
+            <span className="rounded border border-line2 px-2 py-0.5 text-[11px] text-faint">개입 필요 0</span>
           )}
-          <span className="text-[11px] text-faint">작업 중 {busy}</span>
-          <div className="flex items-center gap-1 rounded border border-line2 bg-bg px-2 py-0.5">
-            <span className="font-mono text-sm text-fg" title="가상 업무 시간 (1 tick = 1분)">
-              {formatSimTime(sim.tick)}
-            </span>
-          </div>
+          <span className={`flex items-center gap-1.5 rounded px-2 py-0.5 text-[11px] ${busy ? 'bg-sky-500/10 text-sky-200' : 'text-faint'}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${busy ? 'pulse bg-sky-400' : 'bg-faint'}`} />
+            작업 중 {busy}
+          </span>
+          <div className="mx-1 h-5 w-px bg-line" />
+          <span className="font-mono text-[15px] font-semibold tracking-tight text-strong tabular-nums" title="가상 업무 시간 (1 tick = 1분)">
+            {formatSimTime(sim.tick)}
+          </span>
           <div className="flex items-center rounded border border-line2">
             {[0, 1, 2, 4].map((s) => (
               <button
                 key={s}
                 onClick={() => setSpeed(s)}
-                className={`px-2 py-0.5 text-[11px] ${speed === s ? 'bg-sky-500/20 text-sky-300' : 'text-dim hover:text-fg'}`}
+                className={`px-2 py-0.5 text-[11px] ${speed === s ? (s === 0 ? 'bg-amber-500/20 text-amber-200' : 'bg-sky-500/20 text-sky-200') : 'text-dim hover:text-fg'}`}
                 title={s === 0 ? '일시정지' : `${s}배속`}
               >
                 {s === 0 ? '❚❚' : `${s}x`}
               </button>
             ))}
           </div>
+          <div className="mx-1 h-5 w-px bg-line" />
           <Btn variant="outline" onClick={() => setShowBriefing(true)}>
             브리핑
           </Btn>
@@ -94,12 +100,12 @@ export default function Workspace() {
           <Sidebar />
         </Panel>
         <ResizeHandle dir="h" />
-        <Panel defaultSize={50} minSize={30} className="relative">
+        <Panel defaultSize={50} minSize={30} className="relative bg-bg">
           <PanelGroup direction="vertical" autoSaveId="at-center">
             <Panel minSize={30}>
               <div className="flex h-full flex-col">
                 <div className="flex h-7 shrink-0 items-center gap-1 border-b border-line px-2 text-[11px] text-faint">
-                  <span>터미널 작업 공간</span>
+                  <span className="font-semibold text-dim">터미널 작업 공간</span>
                   <span className="ml-2 hidden xl:inline">Alt+1..9 이동 · Alt+Enter 최대화 · Ctrl+F 검색 · Tab 자동완성</span>
                   <Btn className="ml-auto" onClick={addShellPane} title="셸 패널 추가">
                     ＋ 셸
@@ -127,13 +133,13 @@ export default function Workspace() {
         </Panel>
         <ResizeHandle dir="h" />
         <Panel defaultSize={33} minSize={20}>
-          <div className="flex h-full min-h-0 flex-col bg-panel">
-            <div className="flex h-8 shrink-0 items-end gap-0.5 border-b border-line px-2">
+          <div className="flex h-full min-h-0 flex-col bg-paper">
+            <div className="flex h-8 shrink-0 items-end gap-0.5 border-b border-line bg-panel px-2">
               {tabs.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setRightTab(t.id)}
-                  className={`rounded-t px-3 py-1 text-xs ${rightTab === t.id ? 'border border-b-0 border-line bg-bg text-fg' : 'text-dim hover:text-fg'}`}
+                  className={`rounded-t px-3 py-1 text-xs ${rightTab === t.id ? 'border border-b-0 border-line bg-paper font-medium text-strong' : 'text-dim hover:text-fg'}`}
                 >
                   {t.label}
                 </button>
@@ -165,7 +171,7 @@ function BottomPanel({
   const n = sim.events.filter((e) => e.type === 'notify').length;
   return (
     <div className="flex h-full min-h-0 flex-col border-t border-line bg-panel">
-      <div className="flex h-7 shrink-0 items-center gap-1 border-b border-line px-2">
+      <div className="flex h-7 shrink-0 items-center gap-1 border-b border-line px-1">
         {(
           [
             ['timeline', '타임라인'],
@@ -173,7 +179,11 @@ function BottomPanel({
             ['events', '이벤트 로그'],
           ] as const
         ).map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)} className={`rounded px-2 py-0.5 text-[11px] ${tab === id ? 'bg-line text-fg' : 'text-dim hover:text-fg'}`}>
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`-mb-px h-7 border-b-2 px-2.5 text-[11.5px] ${tab === id ? 'border-sky-400 font-medium text-strong' : 'border-transparent text-dim hover:text-fg'}`}
+          >
             {label}
           </button>
         ))}

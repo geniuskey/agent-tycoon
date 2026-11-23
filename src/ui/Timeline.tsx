@@ -3,6 +3,7 @@ import type { Simulation } from '../engine/engine';
 import { formatSimTime } from '../engine/engine';
 import { stripAnsi } from '../engine/ansi';
 import type { AgentStatus, SimEvent } from '../engine/types';
+import { AgentAvatar, agentColor } from './common';
 
 const STATUS_FILL: Record<AgentStatus, string> = {
   idle: 'transparent',
@@ -51,7 +52,10 @@ export function Gantt({ sim, uptoTick, onPick }: { sim: Simulation; uptoTick?: n
     <div className="px-3 py-2">
       {lanes.map(([id, l]) => (
         <div key={id} className="mb-1 flex items-center gap-2">
-          <span className="w-28 shrink-0 truncate font-mono text-[11px] text-fuchsia-300">{id}</span>
+          <span className="flex w-28 shrink-0 items-center gap-1.5 truncate font-mono text-[11.5px] font-semibold" style={{ color: agentColor(sim, id) }}>
+            <AgentAvatar sim={sim} id={id} size={15} />
+            {id}
+          </span>
           <div
             className="relative h-4 flex-1 rounded-sm bg-line/50"
             onClick={(e) => {
@@ -111,16 +115,23 @@ const TYPE_LABEL: Partial<Record<SimEvent['type'], string>> = {
   'session.start': '시작',
 };
 
+/** 이벤트 범주별 칩 — 내 행동(명령·지시) / 결정 요청 / 결정 / 산출물 / 위험 / 진행이 색으로 갈린다 */
 const TYPE_CLS: Partial<Record<SimEvent['type'], string>> = {
-  'gate.opened': 'text-amber-300',
-  'gate.resolved': 'text-emerald-300',
-  'security.denied': 'text-red-300',
-  'intent.unrecognized': 'text-red-300',
-  command: 'text-sky-300',
-  'agent.message': 'text-sky-300',
-  'file.created': 'text-violet-300',
-  'file.updated': 'text-violet-300',
+  command: 'bg-sky-500/15 text-sky-200',
+  'agent.message': 'bg-sky-500/15 text-sky-200',
+  'gate.opened': 'bg-amber-400 text-amber-950 font-semibold',
+  'gate.resolved': 'bg-emerald-500/20 text-emerald-200',
+  'file.created': 'bg-violet-500/20 text-violet-200',
+  'file.updated': 'bg-violet-500/20 text-violet-200',
+  'file.deleted': 'bg-violet-500/20 text-violet-200',
+  'security.denied': 'bg-red-400 text-red-950 font-semibold',
+  'intent.unrecognized': 'bg-red-500/20 text-red-200',
+  'session.submitted': 'bg-emerald-500/20 text-emerald-200',
+  notify: 'bg-line2 text-fg',
 };
+
+/** 진행 기록(단계·상태)은 한 단계 낮춰 '사건'이 묻히지 않게 */
+const QUIET = new Set<SimEvent['type']>(['step.completed', 'agent.status', 'task.status', 'flag.set', 'observe', 'intent.matched']);
 
 export function EventLog({ sim, uptoTick, compact }: { sim: Simulation; uptoTick?: number; compact?: boolean }) {
   const [q, setQ] = useState('');
@@ -152,11 +163,17 @@ export function EventLog({ sim, uptoTick, compact }: { sim: Simulation; uptoTick
       </div>
       <div className={`min-h-0 flex-1 overflow-auto px-3 pb-2 font-mono text-[11px] ${compact ? '' : ''}`}>
         {[...evs].reverse().slice(0, 600).map((e) => (
-          <div key={e.seq} className="flex gap-2 py-px hover:bg-panel2">
-            <span className="w-12 shrink-0 text-faint">{formatSimTime(e.tick)}</span>
-            <span className={`w-14 shrink-0 ${TYPE_CLS[e.type] ?? 'text-dim'}`}>{TYPE_LABEL[e.type] ?? e.type}</span>
-            {e.agentId && <span className="shrink-0 text-fuchsia-300/80">{e.agentId}</span>}
-            <span className="truncate text-fg/90">{stripAnsi(e.message)}</span>
+          <div key={e.seq} className={`flex items-center gap-2 py-px hover:bg-panel2 ${e.type === 'gate.opened' ? 'bg-amber-500/[0.07]' : ''}`}>
+            <span className="w-11 shrink-0 text-faint">{formatSimTime(e.tick)}</span>
+            <span className="w-16 shrink-0">
+              <span className={`rounded px-1 py-px font-sans text-[10.5px] ${TYPE_CLS[e.type] ?? 'text-faint'}`}>{TYPE_LABEL[e.type] ?? e.type}</span>
+            </span>
+            {e.agentId && (
+              <span className="w-20 shrink-0 truncate font-semibold" style={{ color: agentColor(sim, e.agentId) }}>
+                {e.agentId}
+              </span>
+            )}
+            <span className={`truncate ${QUIET.has(e.type) ? 'text-dim' : 'text-strong'}`}>{stripAnsi(e.message).replace(e.agentId ? new RegExp(`^${e.agentId}:\\s*`) : /^$/, '')}</span>
           </div>
         ))}
       </div>
@@ -174,7 +191,7 @@ export function Notifications({ sim }: { sim: Simulation }) {
         const cls = lvl === 'error' ? 'text-red-300' : lvl === 'warn' ? 'text-amber-300' : lvl === 'success' ? 'text-emerald-300' : 'text-fg';
         const icon = lvl === 'error' ? '✗' : lvl === 'warn' ? '⏸' : lvl === 'success' ? '✔' : e.type === 'task.activated' ? '＋' : 'ℹ';
         return (
-          <div key={e.seq} className="flex gap-2 py-0.5">
+          <div key={e.seq} className={`flex gap-2 rounded px-1 py-0.5 ${lvl === 'warn' ? 'bg-amber-500/[0.07]' : lvl === 'error' ? 'bg-red-500/[0.07]' : ''}`}>
             <span className="w-12 shrink-0 font-mono text-faint">{formatSimTime(e.tick)}</span>
             <span className={cls}>
               {icon} {stripAnsi(e.message)}
