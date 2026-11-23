@@ -1,0 +1,4 @@
+week,line_yield,inspection_yield,inspected,passed,rework_excluded,d07_count,source
+W50,91.1,94.6,1172,1109,18,41,view.yield_weekly
+W51,91.3,94.7,1180,1117,22,58,view.yield_weekly
+W52,91.4,94.9,1176,1116,19,47,view.yield_weekly

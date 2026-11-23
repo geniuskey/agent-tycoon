@@ -781,6 +781,7 @@ export class Simulation {
     if (decisions) this.agentLog(a, c.dim(`  ⎿ 진행 중 판단을 요청할 지점: ${decisions}곳`));
     if (a.mismatch) this.agentLog(a, c.yellow(`  ⎿ 주의: 역량 부족 상태로 진행 (속도 ×${MISMATCH_FACTOR})`));
     this.agentLog(a, c.cyan('  ▾ 이 계획대로 진행할까요? 아래 카드에서 고르세요'));
+    this.setFlag(`plan.${def.id}`, true, a.id);
     this.emit('plan.presented', `${a.id}: ${def.id} 계획 제시`, { agentId: a.id, taskId: t.id, data: { steps: steps.length } });
     this.notifyPlayer('warn', `${a.id}: '${def.id}' 계획 승인 요청`, { agentId: a.id, taskId: t.id });
   }

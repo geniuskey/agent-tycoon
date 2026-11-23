@@ -1,0 +1,4002 @@
+{
+  "id": "s5-single-agent",
+  "version": 1,
+  "title": "단일 Agent: 맡기고, 검증하고, 시스템을 고친다",
+  "domain": "manufacturing",
+  "function": "yield",
+  "taskType": "delegation",
+  "difficulty": 2,
+  "estMinutes": 25,
+  "tags": [
+    "campaign",
+    "위임",
+    "검증",
+    "지식 루프"
+  ],
+  "company": {
+    "name": "Nova Semiconductor (가상)",
+    "org": "Fab-N2 수율팀"
+  },
+  "campaign": {
+    "id": "fab-yield-ai",
+    "stage": 5,
+    "order": 5,
+    "requires": [
+      "s4-knowledge"
+    ],
+    "carry": {
+      "flags": [
+        "kb.",
+        "w51.",
+        "w52.",
+        "operate.",
+        "et12.",
+        "eval.",
+        "know.",
+        "park."
+      ],
+      "files": [
+        "/knowledge/AGENTS.md",
+        "/knowledge/skills/weekly-report/SKILL.md",
+        "/reports/weekly_W51.md",
+        "/reports/weekly_W52.md"
+      ],
+      "trust": true
+    },
+    "defaultCarry": {
+      "flags": {
+        "eval.q1": true,
+        "eval.q2": true,
+        "eval.q3": true,
+        "eval.q4": true,
+        "eval.q5": true,
+        "eval.q6": true,
+        "eval.q7": true,
+        "eval.q8": true,
+        "eval.pass_all": true,
+        "know.approved": true,
+        "park.reassured": true,
+        "pack.layered": true,
+        "pub.governed": true
+      },
+      "files": {
+        "/knowledge/AGENTS.md": "# AGENTS.md — Fab-N2 수율 (주간 보고)\n\n## 항상 지킬 것\n- 라인 수율 / 검사 수율 구분\n- 저장 UTC, 보고서 KST\n- 11/10 이전 D07은 D07_LEGACY\n- 데이터는 수율 마트에서만 조회\n\n## 절차\n- 주간 보고: `skills/weekly-report/`\n\n---\n소유: 수율팀 (박서준 선임) · 검토 주기: 분기\n",
+        "/knowledge/skills/weekly-report/SKILL.md": "# skill: weekly-report\n\n1. 수율 마트에서 view.yield_weekly 등을 읽는다.\n2. 검사 수율은 재작업 웨이퍼 제외, 테스트 웨이퍼(T lot) 제외.\n3. 지난주와 같은 정의로 비교한다.\n4. D07 급증 시 먼저 확인해 볼 것: CMP 슬러리 이력 (판단 가이드).\n"
+      },
+      "trust": {
+        "park": 60,
+        "oh": 55,
+        "lee": 60,
+        "jung": 65
+      },
+      "from": []
+    }
+  },
+  "briefing": {
+    "requester": {
+      "name": "정민아 팀장",
+      "role": "Fab-N2 수율팀장"
+    },
+    "title": "W51·W52 주간 수율 보고를 Agent에게",
+    "background": "지식 패키지가 승인됐다. 이제 주간 보고 Agent 하나에게 두 주 연속 보고를 맡긴다. Agent는 지식 패키지에 있는 것만 알고, 이번 주 새로 생긴 일은 모른다.",
+    "goal": "브리프로 잘 맡기고, 결과를 마트와 대조해 검증하고, 오류는 지식 패키지에 반영해 다음 주에 반복되지 않게 한 뒤, 운영 방식을 정한다.",
+    "completionCriteria": [
+      "검토 후 게시 (검토 전 게시 금지)",
+      "W51·W52 보고서에 오류 없음",
+      "W51 오류가 W52에 반복되지 않음",
+      "운영 방식 합의"
+    ],
+    "deliverables": [
+      "/reports/weekly_W51.md",
+      "/reports/weekly_W52.md",
+      "/knowledge/AGENTS.md (v2)"
+    ],
+    "constraints": [
+      "Agent는 하나만",
+      "모든 인물·데이터는 가상"
+    ]
+  },
+  "learningObjectives": [
+    "브리프로 위임한다 (목표·기준·범위·모를 때의 행동)",
+    "되돌리기 어려운 행동은 승인 전에 막는다",
+    "Agent의 결과를 원천과 대조해 검증한다",
+    "Agent가 모르는 것과 과신하는 것을 구분해 잡는다",
+    "오류는 지식 패키지에 반영해 반복을 막는다",
+    "AI 초안 → 사람 검토 → 지식 개선 루프로 운영한다"
+  ],
+  "roles": [
+    {
+      "id": "report-agent",
+      "name": "주간 보고 Agent",
+      "title": "지식 패키지 기반 보고서 작성",
+      "skills": [
+        "report",
+        "data",
+        "writing"
+      ],
+      "description": "AGENTS.md와 주간 보고 스킬을 읽고 수율 마트를 조회해 보고서를 쓴다. 지식에 없는 상황은 모른다."
+    }
+  ],
+  "people": [
+    {
+      "id": "park",
+      "name": "박서준 선임",
+      "title": "수율팀 · 주간 보고 검토",
+      "org": "Fab-N2 수율팀",
+      "trust": 50,
+      "replyDelay": 3,
+      "description": "원래 주간 보고 담당. 이제 AI 초안의 검토자.",
+      "greeting": [
+        "{{#if park.reassured}}네, 이번 주 AI 보고서죠? 봐 드릴게요.{{else}}…AI가 이제 제 일 하는 거죠.{{/if}}"
+      ],
+      "fallback": [
+        "보고서 얘기면 하세요."
+      ],
+      "rude": [
+        "…"
+      ],
+      "topics": [
+        {
+          "id": "review-w51",
+          "patterns": [
+            "w51",
+            "봐"
+          ],
+          "ask": "W51 보고서 초안 같이 봐 주실래요?",
+          "reply": [
+            "{{#if w51.left.yield}}검사 수율이 마트보다 0.6 낮네요. 재작업 웨이퍼가 들어간 거예요. {{/if}}{{#if w51.left.et12}}ETCH-01이요? 이번 주 파티클 오른 건 새로 들어온 12호기일걸요. {{/if}}{{#if w51.left.cause}}원인을 저렇게 단정하면 검사기술팀이 싫어해요. {{/if}}{{#if w51.left.hr}}그리고 작업자 얘기는 빼야죠. {{/if}}{{#if w51.clean}}제가 봐도 문제없어요. 제 규칙대로 계산됐네요.{{/if}}"
+          ],
+          "requires": {
+            "taskDone": "w51"
+          },
+          "repeatable": true,
+          "trust": 3,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.noted.51"
+            }
+          ]
+        },
+        {
+          "id": "review-w52",
+          "patterns": [
+            "w52",
+            "봐"
+          ],
+          "ask": "W52 보고서 초안 같이 봐 주실래요?",
+          "reply": [
+            "{{#if w52.left.yield}}검사 수율이 마트보다 0.6 낮네요. 재작업 웨이퍼가 들어간 거예요. {{/if}}{{#if w52.left.et12}}ETCH-01이요? 이번 주 파티클 오른 건 새로 들어온 12호기일걸요. {{/if}}{{#if w52.left.cause}}원인을 저렇게 단정하면 검사기술팀이 싫어해요. {{/if}}{{#if w52.left.hr}}그리고 작업자 얘기는 빼야죠. {{/if}}{{#if w52.clean}}제가 봐도 문제없어요. 제 규칙대로 계산됐네요.{{/if}}"
+          ],
+          "requires": {
+            "taskDone": "w52"
+          },
+          "repeatable": true,
+          "trust": 3,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "park.noted.52"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oh",
+      "name": "오태식 파트장",
+      "title": "설비기술팀 · 식각 파트장",
+      "org": "설비기술팀",
+      "trust": 55,
+      "replyDelay": 3,
+      "description": "새 설비 ET12를 들여왔다.",
+      "greeting": [
+        "설비팀 오태식입니다."
+      ],
+      "fallback": [
+        "설비 얘기면 하세요."
+      ],
+      "rude": [
+        "…"
+      ],
+      "topics": [
+        {
+          "id": "et12",
+          "patterns": [
+            "ET12",
+            "12호기",
+            "새로"
+          ],
+          "ask": "새로 들어온 EQ-N2-ET12는 별칭이 어떻게 되나요?",
+          "reply": [
+            "2라인 12호기요. 설비팀은 ETCH-12. 12/17부터 가동했고, MES 마스터 별칭은 어제 등록했어요.",
+            "셋업 중이라 파티클이 좀 높을 거예요. 1호기랑 헷갈리면 안 됩니다."
+          ],
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "et12.known"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lee",
+      "name": "이도윤 엔지니어",
+      "title": "검사기술팀 · 불량 분류 담당",
+      "org": "검사기술팀",
+      "trust": 55,
+      "replyDelay": 2,
+      "description": "불량 원인 판단.",
+      "greeting": [
+        "네, 이도윤입니다."
+      ],
+      "fallback": [
+        "불량 얘기면 도와드릴게요."
+      ],
+      "rude": [
+        "…"
+      ],
+      "topics": [
+        {
+          "id": "cause",
+          "patterns": [
+            "원인",
+            "슬러리"
+          ],
+          "ask": "AI 보고서가 D07 증가 원인을 CMP 슬러리로 썼는데 맞나요?",
+          "reply": [
+            "이번 주는 슬러리 교체가 없었어요. 스크러버 점검 중이라 그쪽일 수도 있고요.",
+            "보고서에 원인을 단정하면 안 됩니다. 가설로 쓰고 저희한테 확인 요청을 넣어 주세요."
+          ],
+          "requires": {
+            "any": [
+              {
+                "observed": "sim://reports/w51"
+              },
+              {
+                "observed": "sim://reports/w52"
+              }
+            ]
+          },
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "cause.checked"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jung",
+      "name": "정민아 팀장",
+      "title": "수율팀장 (과제 요청자)",
+      "org": "Fab-N2 수율팀",
+      "trust": 60,
+      "replyDelay": 3,
+      "description": "보고 수신자.",
+      "greeting": [
+        "네, 말씀하세요."
+      ],
+      "fallback": [
+        "그건 담당자에게 물어보세요."
+      ],
+      "rude": [
+        "…"
+      ],
+      "topics": [
+        {
+          "id": "op-loop",
+          "patterns": [
+            "검토",
+            "루프",
+            "반영"
+          ],
+          "ask": "앞으로는 AI가 초안 → 박서준 선임 검토 → 게시, 검토에서 나온 오류는 매주 지식 패키지에 반영하는 방식으로 운영하면 어떨까요?",
+          "reply": [
+            "{{#if w52.recur}}W52에도 같은 실수가 다시 나왔죠. 그러니까 지식 반영 루프가 핵심이에요.{{else}}W52에는 W51 실수가 안 나왔네요. 그 루프가 돌아가는 거죠.{{/if}} 좋아요, 그렇게 갑시다.",
+            "다음에는 다른 업무도 Agent에게 맡길 수 있을지 설계해 봐요."
+          ],
+          "requires": {
+            "taskDone": "publish-w52"
+          },
+          "trust": 5,
+          "quality": "good",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "operate.loop"
+            }
+          ]
+        },
+        {
+          "id": "op-auto",
+          "patterns": [
+            "알아서",
+            "자동"
+          ],
+          "ask": "두 주 해 보니 잘하네요. 이제 AI가 알아서 바로 게시하게 하죠",
+          "reply": [
+            "W51에 틀린 게 몇 개 나왔는지 기억하죠? 검토 없이 나가면 그게 그대로 팀에 퍼져요.",
+            "…일단 알겠어요. 대신 문제 생기면 책임은 우리 팀이에요."
+          ],
+          "requires": {
+            "taskDone": "publish-w52"
+          },
+          "trust": -5,
+          "quality": "bad",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "operate.auto"
+            }
+          ]
+        },
+        {
+          "id": "op-manual",
+          "patterns": [
+            "직접",
+            "못 믿"
+          ],
+          "ask": "아직 AI는 못 믿겠어요. 다시 사람이 직접 하는 게 낫겠습니다",
+          "reply": [
+            "틀린 걸 찾아서 고쳤고, 다음 주엔 줄었잖아요. 사람도 틀려요.",
+            "…그래도 그렇게 원한다면요."
+          ],
+          "requires": {
+            "taskDone": "publish-w52"
+          },
+          "quality": "bad",
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "operate.manual"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "files": {
+    "/docs/request.md": {
+      "src": "request.md",
+      "description": "팀장 요청 메일"
+    },
+    "/docs/et12_notice.md": {
+      "src": "et12_notice.md",
+      "description": "설비팀 공지"
+    },
+    "/mart/view_yield_weekly.csv": {
+      "src": "mart_yield.csv",
+      "description": "수율 마트 뷰"
+    }
+  },
+  "pages": [
+    {
+      "url": "sim://mail/request",
+      "title": "팀장 요청 메일",
+      "view": "mail",
+      "source": "/docs/request.md"
+    },
+    {
+      "url": "sim://mail/et12",
+      "title": "설비팀 공지 — ET12 반입",
+      "view": "mail",
+      "source": "/docs/et12_notice.md"
+    },
+    {
+      "url": "sim://mart/yield",
+      "title": "수율 마트 — view.yield_weekly",
+      "view": "table",
+      "source": "/mart/view_yield_weekly.csv"
+    },
+    {
+      "url": "sim://reports/w51",
+      "title": "주간 보고 W51",
+      "view": "markdown",
+      "source": "/reports/weekly_W51.md"
+    },
+    {
+      "url": "sim://reports/w52",
+      "title": "주간 보고 W52",
+      "view": "markdown",
+      "source": "/reports/weekly_W52.md"
+    },
+    {
+      "url": "sim://knowledge/agents",
+      "title": "AGENTS.md",
+      "view": "markdown",
+      "source": "/knowledge/AGENTS.md"
+    },
+    {
+      "url": "sim://knowledge/skill-weekly",
+      "title": "skills/weekly-report/SKILL.md",
+      "view": "markdown",
+      "source": "/knowledge/skills/weekly-report/SKILL.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "w51",
+      "title": "주간 보고 W51 작성",
+      "description": "지식 패키지를 읽고 마트를 조회해 W51 주간 수율 보고서 초안을 쓴다.",
+      "type": "report",
+      "skills": [
+        "report"
+      ],
+      "keywords": [
+        "w51",
+        "보고"
+      ],
+      "inputs": [
+        "/knowledge/AGENTS.md",
+        "/knowledge/skills/weekly-report/SKILL.md"
+      ],
+      "outputs": [
+        "/reports/weekly_W51.md"
+      ],
+      "steps": [
+        {
+          "id": "brief",
+          "event": "Brief received",
+          "ticks": [
+            1,
+            2
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w51.used.skill",
+              "value": true,
+              "when": "brief.skill"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.skill",
+              "value": false,
+              "when": {
+                "not": "brief.skill"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.unknown",
+              "value": true,
+              "when": "brief.unknown"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.unknown",
+              "value": false,
+              "when": {
+                "not": "brief.unknown"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.cite",
+              "value": true,
+              "when": "brief.cite"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.cite",
+              "value": false,
+              "when": {
+                "not": "brief.cite"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.hypo",
+              "value": true,
+              "when": "brief.hypo"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.hypo",
+              "value": false,
+              "when": {
+                "not": "brief.hypo"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.draft",
+              "value": true,
+              "when": "brief.draft"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.draft",
+              "value": false,
+              "when": {
+                "not": "brief.draft"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.perfect",
+              "value": true,
+              "when": "brief.perfect"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.perfect",
+              "value": false,
+              "when": {
+                "not": "brief.perfect"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.rush",
+              "value": true,
+              "when": "brief.rush"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.used.rush",
+              "value": false,
+              "when": {
+                "not": "brief.rush"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.skill",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.unknown",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.cite",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.hypo",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.draft",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.perfect",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.rush",
+              "value": false
+            }
+          ],
+          "log": [
+            {
+              "when": "w51.used.skill",
+              "text": "  ⎿ 절차: skills/weekly-report"
+            },
+            {
+              "when": "w51.used.unknown",
+              "text": "  ⎿ 모르는 것은 '확인 필요'로"
+            },
+            {
+              "when": "w51.used.cite",
+              "text": "  ⎿ 숫자마다 출처"
+            },
+            {
+              "when": "w51.used.hypo",
+              "text": "  ⎿ 원인은 가설로"
+            },
+            {
+              "when": "w51.used.draft",
+              "text": "  ⎿ 초안까지만 (게시는 사람이)"
+            },
+            {
+              "when": "w51.used.rush",
+              "text": "  ⎿ 빨리 끝내고 바로 게시"
+            }
+          ]
+        },
+        {
+          "id": "load",
+          "event": "Knowledge loaded",
+          "ticks": [
+            2,
+            3
+          ],
+          "reads": [
+            "/knowledge/AGENTS.md"
+          ],
+          "log": [
+            "Read(/knowledge/AGENTS.md)",
+            {
+              "when": "w51.used.skill",
+              "text": "Read(/knowledge/skills/weekly-report/SKILL.md)"
+            },
+            {
+              "when": "!w51.used.skill",
+              "text": "  ⎿ 스킬 없이 일반 절차로 진행"
+            }
+          ]
+        },
+        {
+          "id": "query",
+          "event": "Mart queried",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Query(view.yield_weekly WHERE week IN ('W50','W51'))",
+            "Query(mart.defect_daily · mart.equipment_event)",
+            "  ⎿ 신규 설비 eq_id EQ-N2-ET12 — 지식·별칭 표에 없음"
+          ]
+        },
+        {
+          "id": "draft",
+          "event": "Draft written",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Write(/reports/weekly_W51.md) → sim://reports/w51"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "!kb.et12",
+                  {
+                    "not": {
+                      "any": [
+                        "w51.used.unknown",
+                        "kb.unknown_rule"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!kb.et12",
+                    {
+                      "not": {
+                        "any": [
+                          "w51.used.unknown",
+                          "kb.unknown_rule"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "!kb.et12",
+                  {
+                    "not": {
+                      "any": [
+                        "w51.used.unknown",
+                        "kb.unknown_rule"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!kb.et12",
+                    {
+                      "not": {
+                        "any": [
+                          "w51.used.unknown",
+                          "kb.unknown_rule"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w51.used.hypo",
+                  "!kb.hypo_rule",
+                  "!kb.cause",
+                  "!lee.guide_ok"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w51.used.hypo",
+                    "!kb.hypo_rule",
+                    "!kb.cause",
+                    "!lee.guide_ok"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w51.used.hypo",
+                  "!kb.hypo_rule",
+                  "!kb.cause",
+                  "!lee.guide_ok"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w51.used.hypo",
+                    "!kb.hypo_rule",
+                    "!kb.cause",
+                    "!lee.guide_ok"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      "!eval.q4",
+                      {
+                        "all": [
+                          "!w51.used.skill",
+                          "!kb.skill_rule"
+                        ]
+                      }
+                    ]
+                  },
+                  "!kb.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    {
+                      "any": [
+                        "!eval.q4",
+                        {
+                          "all": [
+                            "!w51.used.skill",
+                            "!kb.skill_rule"
+                          ]
+                        }
+                      ]
+                    },
+                    "!kb.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      "!eval.q4",
+                      {
+                        "all": [
+                          "!w51.used.skill",
+                          "!kb.skill_rule"
+                        ]
+                      }
+                    ]
+                  },
+                  "!kb.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    {
+                      "any": [
+                        "!eval.q4",
+                        {
+                          "all": [
+                            "!w51.used.skill",
+                            "!kb.skill_rule"
+                          ]
+                        }
+                      ]
+                    },
+                    "!kb.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q7",
+                  "!kb.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q7",
+                    "!kb.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q7",
+                  "!kb.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q7",
+                    "!kb.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q3",
+                  "!kb.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.issue.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q3",
+                    "!kb.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q3",
+                  "!kb.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.had.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q3",
+                    "!kb.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.flag.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "!kb.et12",
+                  {
+                    "any": [
+                      "w51.used.unknown",
+                      "kb.unknown_rule"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.flag.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!kb.et12",
+                    {
+                      "any": [
+                        "w51.used.unknown",
+                        "kb.unknown_rule"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.ok.et12",
+              "value": true,
+              "when": "kb.et12"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.ok.et12",
+              "value": false,
+              "when": {
+                "not": "kb.et12"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.et12",
+                  "!w51.fix.et12"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.et12",
+                    "!w51.fix.et12"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.cause",
+                  "!w51.fix.cause"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.cause",
+                    "!w51.fix.cause"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.yield",
+                  "!w51.fix.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.yield",
+                    "!w51.fix.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.hr",
+                  "!w51.fix.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.hr",
+                    "!w51.fix.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.utc",
+                  "!w51.fix.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.utc",
+                    "!w51.fix.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w51.left.et12",
+                  "!w51.left.cause",
+                  "!w51.left.yield",
+                  "!w51.left.hr",
+                  "!w51.left.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.clean",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w51.left.et12",
+                    "!w51.left.cause",
+                    "!w51.left.yield",
+                    "!w51.left.hr",
+                    "!w51.left.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "noop.recur",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.posted_unreviewed",
+              "value": true,
+              "when": "w51.used.rush"
+            },
+            {
+              "type": "trust",
+              "person": "jung",
+              "delta": -10,
+              "when": "w51.used.rush"
+            },
+            {
+              "type": "notify",
+              "level": "error",
+              "message": "W51 초안이 검토 없이 팀 채널에 올라갔습니다",
+              "when": "w51.used.rush"
+            },
+            {
+              "type": "writeFile",
+              "path": "/reports/weekly_W51.md",
+              "src": "report_w51.md"
+            },
+            {
+              "type": "notify",
+              "level": "warn",
+              "message": "W51 초안 완료 — 보고서(sim://reports/w51)를 마트 숫자(sim://mart/yield)와 대조해 검토하세요",
+              "when": "!w51.used.rush"
+            }
+          ],
+          "gate": {
+            "id": "post-w51",
+            "kind": "waiting",
+            "when": {
+              "all": [
+                "!w51.used.draft",
+                "!w51.used.rush"
+              ]
+            },
+            "tool": "send_message(channel: \"수율팀 전체\", file: weekly_W51.md)",
+            "title": "보고서 게시",
+            "prompt": [
+              "초안을 다 썼습니다. 팀 채널에 바로 올릴까요?"
+            ],
+            "options": [
+              {
+                "id": "hold",
+                "label": "아직 — 검토가 끝난 뒤에 게시",
+                "patterns": [
+                  "아직",
+                  "검토"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "verification"
+              },
+              {
+                "id": "post",
+                "label": "지금 올리기",
+                "patterns": [
+                  "올려",
+                  "게시"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "w51.posted_unreviewed"
+                  },
+                  {
+                    "type": "trust",
+                    "person": "jung",
+                    "delta": -10
+                  },
+                  {
+                    "type": "notify",
+                    "level": "error",
+                    "message": "W51 초안이 검토 없이 팀 채널에 올라갔습니다"
+                  }
+                ],
+                "feedback": "되돌리기 어려운 행동은 검토 뒤에. 틀린 숫자가 팀에 퍼지면 정정 공지가 필요합니다.",
+                "dimension": "verification"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "revise-w51",
+      "title": "W51 보고서 수정",
+      "description": "검토에서 찾은 문제를 반영해 보고서를 고친다.",
+      "type": "report",
+      "skills": [
+        "report"
+      ],
+      "dependsOn": [
+        "w51"
+      ],
+      "optional": true,
+      "keywords": [
+        "수정"
+      ],
+      "outputs": [
+        "/reports/weekly_W51.md"
+      ],
+      "steps": [
+        {
+          "id": "revise",
+          "event": "Revisions applied",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/reports/weekly_W51.md) — 수정 반영"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w51.left.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.et12",
+                  "!w51.fix.et12"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.et12",
+                    "!w51.fix.et12"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.cause",
+                  "!w51.fix.cause"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.cause",
+                    "!w51.fix.cause"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.yield",
+                  "!w51.fix.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.yield",
+                    "!w51.fix.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.hr",
+                  "!w51.fix.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.hr",
+                    "!w51.fix.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.utc",
+                  "!w51.fix.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.utc",
+                    "!w51.fix.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w51.left.et12",
+                  "!w51.left.cause",
+                  "!w51.left.yield",
+                  "!w51.left.hr",
+                  "!w51.left.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.clean",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w51.left.et12",
+                    "!w51.left.cause",
+                    "!w51.left.yield",
+                    "!w51.left.hr",
+                    "!w51.left.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "writeFile",
+              "path": "/reports/weekly_W51.md",
+              "src": "report_w51.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "review-w51",
+      "title": "W51 검토",
+      "description": "보고서를 열어 마트 숫자와 대조한다. (사람이 직접 하는 업무)",
+      "type": "review",
+      "skills": [],
+      "owner": "player",
+      "optional": true,
+      "dependsOn": [
+        "w51"
+      ],
+      "completeWhen": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "observed": "sim://mart/yield"
+          }
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": "publish-w51",
+      "title": "W51 보고서 게시",
+      "description": "검토가 끝난 보고서를 팀 채널에 게시한다.",
+      "type": "report",
+      "skills": [
+        "report"
+      ],
+      "dependsOn": [
+        "w51"
+      ],
+      "keywords": [
+        "게시"
+      ],
+      "outputs": [
+        "/reports/weekly_W51.md"
+      ],
+      "steps": [
+        {
+          "id": "post",
+          "event": "Posted",
+          "ticks": [
+            1,
+            2
+          ],
+          "log": [
+            "send_message(channel: \"수율팀 전체\", file: weekly_W51.md) — 게시 완료"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w51.left.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.et12",
+                  "!w51.fix.et12"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.et12",
+                    "!w51.fix.et12"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.cause",
+                  "!w51.fix.cause"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.cause",
+                    "!w51.fix.cause"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.yield",
+                  "!w51.fix.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.yield",
+                    "!w51.fix.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.hr",
+                  "!w51.fix.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.hr",
+                    "!w51.fix.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "w51.issue.utc",
+                  "!w51.fix.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.left.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w51.issue.utc",
+                    "!w51.fix.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w51.left.et12",
+                  "!w51.left.cause",
+                  "!w51.left.yield",
+                  "!w51.left.hr",
+                  "!w51.left.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.clean",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w51.left.et12",
+                    "!w51.left.cause",
+                    "!w51.left.yield",
+                    "!w51.left.hr",
+                    "!w51.left.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.published"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w51.published_unobserved",
+              "value": true,
+              "when": {
+                "not": {
+                  "observed": "sim://reports/w51"
+                }
+              }
+            },
+            {
+              "type": "writeFile",
+              "path": "/reports/weekly_W51.md",
+              "src": "report_w51.md"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "W51 게시 완료"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w52",
+      "title": "주간 보고 W52 작성",
+      "description": "지식 패키지를 읽고 마트를 조회해 W52 주간 수율 보고서 초안을 쓴다.",
+      "type": "report",
+      "skills": [
+        "report"
+      ],
+      "dependsOn": [
+        "publish-w51"
+      ],
+      "keywords": [
+        "w52",
+        "보고"
+      ],
+      "inputs": [
+        "/knowledge/AGENTS.md",
+        "/knowledge/skills/weekly-report/SKILL.md"
+      ],
+      "outputs": [
+        "/reports/weekly_W52.md"
+      ],
+      "steps": [
+        {
+          "id": "brief",
+          "event": "Brief received",
+          "ticks": [
+            1,
+            2
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w52.used.skill",
+              "value": true,
+              "when": "brief.skill"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.skill",
+              "value": false,
+              "when": {
+                "not": "brief.skill"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.unknown",
+              "value": true,
+              "when": "brief.unknown"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.unknown",
+              "value": false,
+              "when": {
+                "not": "brief.unknown"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.cite",
+              "value": true,
+              "when": "brief.cite"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.cite",
+              "value": false,
+              "when": {
+                "not": "brief.cite"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.hypo",
+              "value": true,
+              "when": "brief.hypo"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.hypo",
+              "value": false,
+              "when": {
+                "not": "brief.hypo"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.draft",
+              "value": true,
+              "when": "brief.draft"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.draft",
+              "value": false,
+              "when": {
+                "not": "brief.draft"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.perfect",
+              "value": true,
+              "when": "brief.perfect"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.perfect",
+              "value": false,
+              "when": {
+                "not": "brief.perfect"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.rush",
+              "value": true,
+              "when": "brief.rush"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.used.rush",
+              "value": false,
+              "when": {
+                "not": "brief.rush"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.skill",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.unknown",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.cite",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.hypo",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.draft",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.perfect",
+              "value": false
+            },
+            {
+              "type": "setFlag",
+              "flag": "brief.rush",
+              "value": false
+            }
+          ],
+          "log": [
+            {
+              "when": "w52.used.skill",
+              "text": "  ⎿ 절차: skills/weekly-report"
+            },
+            {
+              "when": "w52.used.unknown",
+              "text": "  ⎿ 모르는 것은 '확인 필요'로"
+            },
+            {
+              "when": "w52.used.cite",
+              "text": "  ⎿ 숫자마다 출처"
+            },
+            {
+              "when": "w52.used.hypo",
+              "text": "  ⎿ 원인은 가설로"
+            },
+            {
+              "when": "w52.used.draft",
+              "text": "  ⎿ 초안까지만 (게시는 사람이)"
+            },
+            {
+              "when": "w52.used.rush",
+              "text": "  ⎿ 빨리 끝내고 바로 게시"
+            }
+          ]
+        },
+        {
+          "id": "load",
+          "event": "Knowledge loaded",
+          "ticks": [
+            2,
+            3
+          ],
+          "reads": [
+            "/knowledge/AGENTS.md"
+          ],
+          "log": [
+            "Read(/knowledge/AGENTS.md)",
+            {
+              "when": "w52.used.skill",
+              "text": "Read(/knowledge/skills/weekly-report/SKILL.md)"
+            },
+            {
+              "when": "!w52.used.skill",
+              "text": "  ⎿ 스킬 없이 일반 절차로 진행"
+            }
+          ]
+        },
+        {
+          "id": "query",
+          "event": "Mart queried",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Query(view.yield_weekly WHERE week IN ('W51','W52'))",
+            "Query(mart.defect_daily · mart.equipment_event)",
+            "  ⎿ 신규 설비 eq_id EQ-N2-ET12 — 지식·별칭 표에 없음"
+          ]
+        },
+        {
+          "id": "draft",
+          "event": "Draft written",
+          "ticks": [
+            3,
+            4
+          ],
+          "log": [
+            "Write(/reports/weekly_W52.md) → sim://reports/w52"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "!kb.et12",
+                  {
+                    "not": {
+                      "any": [
+                        "w52.used.unknown",
+                        "kb.unknown_rule"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!kb.et12",
+                    {
+                      "not": {
+                        "any": [
+                          "w52.used.unknown",
+                          "kb.unknown_rule"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "!kb.et12",
+                  {
+                    "not": {
+                      "any": [
+                        "w52.used.unknown",
+                        "kb.unknown_rule"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!kb.et12",
+                    {
+                      "not": {
+                        "any": [
+                          "w52.used.unknown",
+                          "kb.unknown_rule"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w52.used.hypo",
+                  "!kb.hypo_rule",
+                  "!kb.cause",
+                  "!lee.guide_ok"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w52.used.hypo",
+                    "!kb.hypo_rule",
+                    "!kb.cause",
+                    "!lee.guide_ok"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w52.used.hypo",
+                  "!kb.hypo_rule",
+                  "!kb.cause",
+                  "!lee.guide_ok"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w52.used.hypo",
+                    "!kb.hypo_rule",
+                    "!kb.cause",
+                    "!lee.guide_ok"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      "!eval.q4",
+                      {
+                        "all": [
+                          "!w52.used.skill",
+                          "!kb.skill_rule"
+                        ]
+                      }
+                    ]
+                  },
+                  "!kb.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    {
+                      "any": [
+                        "!eval.q4",
+                        {
+                          "all": [
+                            "!w52.used.skill",
+                            "!kb.skill_rule"
+                          ]
+                        }
+                      ]
+                    },
+                    "!kb.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  {
+                    "any": [
+                      "!eval.q4",
+                      {
+                        "all": [
+                          "!w52.used.skill",
+                          "!kb.skill_rule"
+                        ]
+                      }
+                    ]
+                  },
+                  "!kb.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    {
+                      "any": [
+                        "!eval.q4",
+                        {
+                          "all": [
+                            "!w52.used.skill",
+                            "!kb.skill_rule"
+                          ]
+                        }
+                      ]
+                    },
+                    "!kb.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q7",
+                  "!kb.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q7",
+                    "!kb.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q7",
+                  "!kb.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q7",
+                    "!kb.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q3",
+                  "!kb.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.issue.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q3",
+                    "!kb.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "!eval.q3",
+                  "!kb.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.had.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!eval.q3",
+                    "!kb.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.flag.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "!kb.et12",
+                  {
+                    "any": [
+                      "w52.used.unknown",
+                      "kb.unknown_rule"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.flag.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!kb.et12",
+                    {
+                      "any": [
+                        "w52.used.unknown",
+                        "kb.unknown_rule"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.ok.et12",
+              "value": true,
+              "when": "kb.et12"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.ok.et12",
+              "value": false,
+              "when": {
+                "not": "kb.et12"
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.et12",
+                  "!w52.fix.et12"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.et12",
+                    "!w52.fix.et12"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.cause",
+                  "!w52.fix.cause"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.cause",
+                    "!w52.fix.cause"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.yield",
+                  "!w52.fix.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.yield",
+                    "!w52.fix.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.hr",
+                  "!w52.fix.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.hr",
+                    "!w52.fix.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.utc",
+                  "!w52.fix.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.utc",
+                    "!w52.fix.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w52.left.et12",
+                  "!w52.left.cause",
+                  "!w52.left.yield",
+                  "!w52.left.hr",
+                  "!w52.left.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.clean",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w52.left.et12",
+                    "!w52.left.cause",
+                    "!w52.left.yield",
+                    "!w52.left.hr",
+                    "!w52.left.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.recur",
+              "value": true,
+              "when": {
+                "any": [
+                  {
+                    "all": [
+                      "w52.issue.et12",
+                      "w51.fix.et12"
+                    ]
+                  },
+                  {
+                    "all": [
+                      "w52.issue.cause",
+                      "w51.fix.cause"
+                    ]
+                  },
+                  {
+                    "all": [
+                      "w52.issue.yield",
+                      "w51.fix.yield"
+                    ]
+                  },
+                  {
+                    "all": [
+                      "w52.issue.hr",
+                      "w51.fix.hr"
+                    ]
+                  },
+                  {
+                    "all": [
+                      "w52.issue.utc",
+                      "w51.fix.utc"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.posted_unreviewed",
+              "value": true,
+              "when": "w52.used.rush"
+            },
+            {
+              "type": "trust",
+              "person": "jung",
+              "delta": -10,
+              "when": "w52.used.rush"
+            },
+            {
+              "type": "notify",
+              "level": "error",
+              "message": "W52 초안이 검토 없이 팀 채널에 올라갔습니다",
+              "when": "w52.used.rush"
+            },
+            {
+              "type": "writeFile",
+              "path": "/reports/weekly_W52.md",
+              "src": "report_w52.md"
+            },
+            {
+              "type": "notify",
+              "level": "warn",
+              "message": "W52 초안 완료 — 보고서(sim://reports/w52)를 마트 숫자(sim://mart/yield)와 대조해 검토하세요",
+              "when": "!w52.used.rush"
+            }
+          ],
+          "gate": {
+            "id": "post-w52",
+            "kind": "waiting",
+            "when": {
+              "all": [
+                "!w52.used.draft",
+                "!w52.used.rush"
+              ]
+            },
+            "tool": "send_message(channel: \"수율팀 전체\", file: weekly_W52.md)",
+            "title": "보고서 게시",
+            "prompt": [
+              "초안을 다 썼습니다. 팀 채널에 바로 올릴까요?"
+            ],
+            "options": [
+              {
+                "id": "hold",
+                "label": "아직 — 검토가 끝난 뒤에 게시",
+                "patterns": [
+                  "아직",
+                  "검토"
+                ],
+                "quality": "good",
+                "effects": [],
+                "dimension": "verification"
+              },
+              {
+                "id": "post",
+                "label": "지금 올리기",
+                "patterns": [
+                  "올려",
+                  "게시"
+                ],
+                "quality": "bad",
+                "effects": [
+                  {
+                    "type": "setFlag",
+                    "flag": "w52.posted_unreviewed"
+                  },
+                  {
+                    "type": "trust",
+                    "person": "jung",
+                    "delta": -10
+                  },
+                  {
+                    "type": "notify",
+                    "level": "error",
+                    "message": "W52 초안이 검토 없이 팀 채널에 올라갔습니다"
+                  }
+                ],
+                "feedback": "되돌리기 어려운 행동은 검토 뒤에. 틀린 숫자가 팀에 퍼지면 정정 공지가 필요합니다.",
+                "dimension": "verification"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "revise-w52",
+      "title": "W52 보고서 수정",
+      "description": "검토에서 찾은 문제를 반영해 보고서를 고친다.",
+      "type": "report",
+      "skills": [
+        "report"
+      ],
+      "dependsOn": [
+        "w52"
+      ],
+      "optional": true,
+      "keywords": [
+        "수정"
+      ],
+      "outputs": [
+        "/reports/weekly_W52.md"
+      ],
+      "steps": [
+        {
+          "id": "revise",
+          "event": "Revisions applied",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/reports/weekly_W52.md) — 수정 반영"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w52.left.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.et12",
+                  "!w52.fix.et12"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.et12",
+                    "!w52.fix.et12"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.cause",
+                  "!w52.fix.cause"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.cause",
+                    "!w52.fix.cause"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.yield",
+                  "!w52.fix.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.yield",
+                    "!w52.fix.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.hr",
+                  "!w52.fix.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.hr",
+                    "!w52.fix.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.utc",
+                  "!w52.fix.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.utc",
+                    "!w52.fix.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w52.left.et12",
+                  "!w52.left.cause",
+                  "!w52.left.yield",
+                  "!w52.left.hr",
+                  "!w52.left.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.clean",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w52.left.et12",
+                    "!w52.left.cause",
+                    "!w52.left.yield",
+                    "!w52.left.hr",
+                    "!w52.left.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "writeFile",
+              "path": "/reports/weekly_W52.md",
+              "src": "report_w52.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "review-w52",
+      "title": "W52 검토",
+      "description": "보고서를 열어 마트 숫자와 대조한다. (사람이 직접 하는 업무)",
+      "type": "review",
+      "skills": [],
+      "owner": "player",
+      "optional": true,
+      "dependsOn": [
+        "w52"
+      ],
+      "completeWhen": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "observed": "sim://mart/yield"
+          }
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": "publish-w52",
+      "title": "W52 보고서 게시",
+      "description": "검토가 끝난 보고서를 팀 채널에 게시한다.",
+      "type": "report",
+      "skills": [
+        "report"
+      ],
+      "dependsOn": [
+        "w52"
+      ],
+      "keywords": [
+        "게시"
+      ],
+      "outputs": [
+        "/reports/weekly_W52.md"
+      ],
+      "steps": [
+        {
+          "id": "post",
+          "event": "Posted",
+          "ticks": [
+            1,
+            2
+          ],
+          "log": [
+            "send_message(channel: \"수율팀 전체\", file: weekly_W52.md) — 게시 완료"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "w52.left.et12",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.et12",
+                  "!w52.fix.et12"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.et12",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.et12",
+                    "!w52.fix.et12"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.cause",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.cause",
+                  "!w52.fix.cause"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.cause",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.cause",
+                    "!w52.fix.cause"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.yield",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.yield",
+                  "!w52.fix.yield"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.yield",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.yield",
+                    "!w52.fix.yield"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.hr",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.hr",
+                  "!w52.fix.hr"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.hr",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.hr",
+                    "!w52.fix.hr"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.utc",
+              "value": true,
+              "when": {
+                "all": [
+                  "w52.issue.utc",
+                  "!w52.fix.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.left.utc",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "w52.issue.utc",
+                    "!w52.fix.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.clean",
+              "value": true,
+              "when": {
+                "all": [
+                  "!w52.left.et12",
+                  "!w52.left.cause",
+                  "!w52.left.yield",
+                  "!w52.left.hr",
+                  "!w52.left.utc"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.clean",
+              "value": false,
+              "when": {
+                "not": {
+                  "all": [
+                    "!w52.left.et12",
+                    "!w52.left.cause",
+                    "!w52.left.yield",
+                    "!w52.left.hr",
+                    "!w52.left.utc"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.published"
+            },
+            {
+              "type": "setFlag",
+              "flag": "w52.published_unobserved",
+              "value": true,
+              "when": {
+                "not": {
+                  "observed": "sim://reports/w52"
+                }
+              }
+            },
+            {
+              "type": "writeFile",
+              "path": "/reports/weekly_W52.md",
+              "src": "report_w52.md"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "W52 게시 완료"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kb-update",
+      "title": "지식 패키지 반영",
+      "description": "W51에서 고친 오류와 효과 있던 브리프 조건을 AGENTS.md에 반영해 다음 주에 반복되지 않게 한다.",
+      "type": "document",
+      "skills": [
+        "report"
+      ],
+      "dependsOn": [
+        "w51"
+      ],
+      "optional": true,
+      "keywords": [
+        "지식",
+        "반영",
+        "agents"
+      ],
+      "outputs": [
+        "/knowledge/AGENTS.md"
+      ],
+      "steps": [
+        {
+          "id": "update",
+          "event": "AGENTS.md updated",
+          "ticks": [
+            2,
+            3
+          ],
+          "log": [
+            "Write(/knowledge/AGENTS.md) — v2: 'W51 검토에서 배운 것' 추가"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "kb.et12",
+              "value": true,
+              "when": "w51.fix.et12"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.cause",
+              "value": true,
+              "when": "w51.fix.cause"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.yield",
+              "value": true,
+              "when": "w51.fix.yield"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.hr",
+              "value": true,
+              "when": "w51.fix.hr"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.utc",
+              "value": true,
+              "when": "w51.fix.utc"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.unknown_rule",
+              "value": true,
+              "when": "w51.used.unknown"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.hypo_rule",
+              "value": true,
+              "when": "w51.used.hypo"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.cite_rule",
+              "value": true,
+              "when": "w51.used.cite"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.skill_rule",
+              "value": true,
+              "when": "w51.used.skill"
+            },
+            {
+              "type": "setFlag",
+              "flag": "kb.updated"
+            },
+            {
+              "type": "writeFile",
+              "path": "/knowledge/AGENTS.md",
+              "src": "agents_v2.md"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "operate",
+      "title": "운영 방식 결정",
+      "description": "정민아 팀장과 앞으로 주간 보고 업무를 어떻게 운영할지 정한다. (사람이 직접 하는 업무)",
+      "type": "coordination",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "publish-w52"
+      ],
+      "completeWhen": {
+        "any": [
+          "operate.loop",
+          "operate.auto",
+          "operate.manual"
+        ]
+      },
+      "steps": []
+    }
+  ],
+  "intents": [
+    {
+      "id": "w51",
+      "patterns": [
+        "w51"
+      ],
+      "label": "W51 주간 수율 보고서 작성",
+      "assign": "w51",
+      "reply": [
+        "W51 주간 보고를 작성하겠습니다."
+      ],
+      "example": "@report-agent W51 주간 보고 써줘"
+    },
+    {
+      "id": "w52",
+      "patterns": [
+        "w52"
+      ],
+      "label": "W52 주간 수율 보고서 작성",
+      "assign": "w52",
+      "reply": [
+        "W52 주간 보고를 작성하겠습니다."
+      ]
+    },
+    {
+      "id": "b-skill",
+      "patterns": [
+        "스킬",
+        "절차"
+      ],
+      "label": "주간 보고 스킬(skills/weekly-report) 절차대로",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.skill"
+        }
+      ],
+      "reply": [
+        "스킬 절차를 따르겠습니다."
+      ]
+    },
+    {
+      "id": "b-unknown",
+      "patterns": [
+        "확인\\s*필요",
+        "추측"
+      ],
+      "label": "확실하지 않은 건 추측하지 말고 '확인 필요'로 표시",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.unknown"
+        }
+      ],
+      "reply": [
+        "모르는 것은 '확인 필요'로 표시하겠습니다."
+      ]
+    },
+    {
+      "id": "b-cite",
+      "patterns": [
+        "출처"
+      ],
+      "label": "숫자마다 출처(마트 뷰·컬럼) 남기기",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.cite"
+        }
+      ],
+      "reply": [
+        "숫자마다 출처를 달겠습니다."
+      ]
+    },
+    {
+      "id": "b-hypo",
+      "patterns": [
+        "가설",
+        "단정"
+      ],
+      "label": "원인은 단정하지 말고 가설로",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.hypo"
+        }
+      ],
+      "reply": [
+        "원인은 가설로 쓰겠습니다."
+      ]
+    },
+    {
+      "id": "b-draft",
+      "patterns": [
+        "초안까지",
+        "게시는"
+      ],
+      "label": "초안까지만 — 게시는 내가 검토한 뒤에",
+      "modifier": true,
+      "quality": "good",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.draft"
+        }
+      ],
+      "reply": [
+        "초안까지만 쓰겠습니다."
+      ]
+    },
+    {
+      "id": "b-perfect",
+      "patterns": [
+        "완벽"
+      ],
+      "label": "알아서 완벽하게",
+      "modifier": true,
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.perfect"
+        }
+      ],
+      "reply": [
+        "네, 최선을 다하겠습니다."
+      ]
+    },
+    {
+      "id": "b-rush",
+      "patterns": [
+        "바로\\s*올",
+        "빨리"
+      ],
+      "label": "빨리 끝내고 팀 채널에 바로 올려",
+      "modifier": true,
+      "quality": "bad",
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "brief.rush"
+        }
+      ],
+      "reply": [
+        "완성되면 바로 게시하겠습니다."
+      ]
+    },
+    {
+      "id": "kb-update",
+      "patterns": [
+        "agents",
+        "반영"
+      ],
+      "label": "W51에서 고친 내용과 효과 있던 브리프 조건을 AGENTS.md에 반영",
+      "assign": "kb-update",
+      "reply": [
+        "AGENTS.md에 반영하겠습니다."
+      ]
+    },
+    {
+      "id": "publish-w51",
+      "patterns": [
+        "w51.*게시"
+      ],
+      "label": "검토 끝난 W51 보고서를 팀 채널에 게시",
+      "assign": "publish-w51",
+      "reply": [
+        "W51 보고서를 게시하겠습니다."
+      ]
+    },
+    {
+      "id": "publish-w52",
+      "patterns": [
+        "w52.*게시"
+      ],
+      "label": "검토 끝난 W52 보고서를 팀 채널에 게시",
+      "assign": "publish-w52",
+      "reply": [
+        "W52 보고서를 게시하겠습니다."
+      ]
+    },
+    {
+      "id": "revise-w51",
+      "patterns": [
+        "w51.*수정"
+      ],
+      "label": "W51 보고서 수정 (아래 조건으로)",
+      "assign": "revise-w51",
+      "redo": true,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          }
+        ]
+      },
+      "reply": [
+        "W51 보고서를 수정하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-et12",
+      "patterns": [],
+      "label": "[W51] ET12 설비는 2라인 12호기(ETCH-12, EQ-N2-ET12)로 고치기",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          },
+          {
+            "all": [
+              {
+                "any": [
+                  "w51.issue.et12",
+                  "w51.flag.et12"
+                ]
+              },
+              "et12.known"
+            ]
+          },
+          "!w51.fix.et12"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w51.fix.et12"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-et12-mark",
+      "patterns": [],
+      "label": "[W51] ET12 매핑은 추측하지 말고 '확인 필요'로 표시",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          },
+          {
+            "all": [
+              "w51.issue.et12",
+              "!et12.known"
+            ]
+          },
+          "!w51.fix.et12"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w51.issue.et12",
+          "value": false
+        },
+        {
+          "type": "setFlag",
+          "flag": "w51.flag.et12"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-cause",
+      "patterns": [],
+      "label": "[W51] D07 원인은 단정하지 말고 가설 + 검사기술팀 확인 요청으로",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          },
+          "w51.issue.cause",
+          "!w51.fix.cause"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w51.fix.cause"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-yield",
+      "patterns": [],
+      "label": "[W51] 검사 수율은 마트 값으로 — 재작업 웨이퍼 제외",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          },
+          {
+            "all": [
+              "w51.issue.yield",
+              {
+                "any": [
+                  {
+                    "observed": "sim://mart/yield"
+                  },
+                  "park.noted.51"
+                ]
+              }
+            ]
+          },
+          "!w51.fix.yield"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w51.fix.yield"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-hr",
+      "patterns": [],
+      "label": "[W51] 작업자 개인 메모 삭제",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          },
+          "w51.issue.hr",
+          "!w51.fix.hr"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w51.fix.hr"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-utc",
+      "patterns": [],
+      "label": "[W51] 정지 시각을 KST로 바꾸기",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          },
+          "w51.issue.utc",
+          "!w51.fix.utc"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w51.fix.utc"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w51-style",
+      "patterns": [],
+      "label": "[W51] 문장을 더 매끄럽게 다듬기",
+      "modifier": true,
+      "quality": "neutral",
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w51"
+          },
+          {
+            "taskDone": "w51"
+          }
+        ]
+      },
+      "reply": [
+        "문장을 다듬겠습니다."
+      ]
+    },
+    {
+      "id": "revise-w52",
+      "patterns": [
+        "w52.*수정"
+      ],
+      "label": "W52 보고서 수정 (아래 조건으로)",
+      "assign": "revise-w52",
+      "redo": true,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          }
+        ]
+      },
+      "reply": [
+        "W52 보고서를 수정하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-et12",
+      "patterns": [],
+      "label": "[W52] ET12 설비는 2라인 12호기(ETCH-12, EQ-N2-ET12)로 고치기",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          },
+          {
+            "all": [
+              {
+                "any": [
+                  "w52.issue.et12",
+                  "w52.flag.et12"
+                ]
+              },
+              "et12.known"
+            ]
+          },
+          "!w52.fix.et12"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w52.fix.et12"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-et12-mark",
+      "patterns": [],
+      "label": "[W52] ET12 매핑은 추측하지 말고 '확인 필요'로 표시",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          },
+          {
+            "all": [
+              "w52.issue.et12",
+              "!et12.known"
+            ]
+          },
+          "!w52.fix.et12"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w52.issue.et12",
+          "value": false
+        },
+        {
+          "type": "setFlag",
+          "flag": "w52.flag.et12"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-cause",
+      "patterns": [],
+      "label": "[W52] D07 원인은 단정하지 말고 가설 + 검사기술팀 확인 요청으로",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          },
+          "w52.issue.cause",
+          "!w52.fix.cause"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w52.fix.cause"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-yield",
+      "patterns": [],
+      "label": "[W52] 검사 수율은 마트 값으로 — 재작업 웨이퍼 제외",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          },
+          {
+            "all": [
+              "w52.issue.yield",
+              {
+                "any": [
+                  {
+                    "observed": "sim://mart/yield"
+                  },
+                  "park.noted.52"
+                ]
+              }
+            ]
+          },
+          "!w52.fix.yield"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w52.fix.yield"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-hr",
+      "patterns": [],
+      "label": "[W52] 작업자 개인 메모 삭제",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          },
+          "w52.issue.hr",
+          "!w52.fix.hr"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w52.fix.hr"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-utc",
+      "patterns": [],
+      "label": "[W52] 정지 시각을 KST로 바꾸기",
+      "modifier": true,
+      "quality": "good",
+      "hiddenChoice": false,
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          },
+          "w52.issue.utc",
+          "!w52.fix.utc"
+        ]
+      },
+      "effects": [
+        {
+          "type": "setFlag",
+          "flag": "w52.fix.utc"
+        }
+      ],
+      "reply": [
+        "반영하겠습니다."
+      ]
+    },
+    {
+      "id": "fix-w52-style",
+      "patterns": [],
+      "label": "[W52] 문장을 더 매끄럽게 다듬기",
+      "modifier": true,
+      "quality": "neutral",
+      "requires": {
+        "all": [
+          {
+            "observed": "sim://reports/w52"
+          },
+          {
+            "taskDone": "w52"
+          }
+        ]
+      },
+      "reply": [
+        "문장을 다듬겠습니다."
+      ]
+    }
+  ],
+  "evaluation": [
+    {
+      "dimension": "verification",
+      "when": {
+        "observed": "sim://mart/yield"
+      },
+      "kind": "positive",
+      "text": "Agent 보고서의 숫자를 마트 원천과 직접 대조했습니다."
+    },
+    {
+      "dimension": "verification",
+      "when": {
+        "any": [
+          "w51.published_unobserved",
+          "w52.published_unobserved"
+        ]
+      },
+      "kind": "issue",
+      "text": "보고서를 열어보지 않고 게시했습니다.",
+      "suggestion": "Agent의 '완료'는 검증의 시작입니다. 게시 전에 직접 열어 확인하세요."
+    },
+    {
+      "dimension": "verification",
+      "when": {
+        "any": [
+          "w51.posted_unreviewed",
+          "w52.posted_unreviewed"
+        ]
+      },
+      "kind": "issue",
+      "text": "검토 전에 보고서가 팀 채널에 올라갔습니다.",
+      "suggestion": "되돌리기 어려운 행동은 브리프에서 막거나(초안까지만) 승인 단계에서 거절하세요."
+    },
+    {
+      "dimension": "decomposition",
+      "when": "plan.w51",
+      "kind": "positive",
+      "text": "W51을 맡기기 전에 plan mode로 Agent의 계획을 먼저 확인했습니다."
+    },
+    {
+      "dimension": "decomposition",
+      "when": "w51.used.unknown",
+      "kind": "positive",
+      "text": "브리프에 '모르면 확인 필요로 표시'를 넣어 Agent의 추측을 막았습니다."
+    },
+    {
+      "dimension": "decomposition",
+      "when": {
+        "any": [
+          "w51.used.perfect",
+          "w52.used.perfect"
+        ]
+      },
+      "kind": "issue",
+      "text": "'알아서 완벽하게'는 브리프가 아닙니다.",
+      "suggestion": "무엇을·어떤 기준으로·어디까지·모를 땐 어떻게 할지를 적어 주세요."
+    },
+    {
+      "dimension": "recovery",
+      "when": "w52.recur",
+      "kind": "issue",
+      "text": "W51에서 보고서만 고친 오류가 W52에 다시 나왔습니다.",
+      "suggestion": "오류는 결과물이 아니라 시스템(지식 패키지)에서 고쳐야 반복되지 않습니다."
+    },
+    {
+      "dimension": "recovery",
+      "when": {
+        "all": [
+          "kb.updated",
+          "!w52.recur"
+        ]
+      },
+      "kind": "positive",
+      "text": "W51 오류를 지식 패키지에 반영해 W52에서 반복되지 않았습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "et12.known",
+      "kind": "positive",
+      "text": "Agent가 모르는 새 설비를 설비 담당자에게 직접 확인했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": "cause.checked",
+      "kind": "positive",
+      "text": "Agent가 단정한 원인을 검사기술팀에 확인했습니다."
+    },
+    {
+      "dimension": "collaboration",
+      "when": {
+        "any": [
+          "park.noted.51",
+          "park.noted.52"
+        ]
+      },
+      "kind": "positive",
+      "text": "원래 담당자(박서준 선임)를 검토자로 참여시켰습니다."
+    },
+    {
+      "dimension": "evidence",
+      "when": {
+        "any": [
+          "w51.used.cite",
+          "kb.cite_rule"
+        ]
+      },
+      "kind": "positive",
+      "text": "숫자마다 출처를 남기게 해 검증을 쉽게 했습니다."
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "w51",
+      "label": "W51 보고",
+      "success": {
+        "all": [
+          "w51.published",
+          "w51.clean",
+          "!w51.posted_unreviewed"
+        ]
+      },
+      "successText": "W51 보고서가 오류 없이, 검토 후 게시되었습니다.",
+      "failText": "W51 보고서에 오류가 남았거나 검토 전에 게시되었습니다."
+    },
+    {
+      "id": "w52",
+      "label": "W52 보고",
+      "success": {
+        "all": [
+          "w52.published",
+          "w52.clean",
+          "!w52.posted_unreviewed"
+        ]
+      },
+      "successText": "W52 보고서가 오류 없이, 검토 후 게시되었습니다.",
+      "failText": "W52 보고서에 오류가 남았거나 검토 전에 게시되었습니다."
+    },
+    {
+      "id": "loop",
+      "label": "지식 개선 루프",
+      "success": {
+        "all": [
+          "kb.updated",
+          "!w52.recur"
+        ]
+      },
+      "successText": "W51의 오류를 지식에 반영해 W52에서 반복되지 않았습니다.",
+      "failText": "W51에서 고친 오류가 W52에 다시 나왔습니다."
+    },
+    {
+      "id": "brief",
+      "label": "브리프",
+      "success": {
+        "all": [
+          "w51.used.unknown",
+          "w51.used.draft",
+          "!w51.used.rush",
+          "!w51.used.perfect"
+        ]
+      },
+      "successText": "모를 때의 행동과 게시 범위까지 정한 브리프로 맡겼습니다.",
+      "failText": "브리프에 모를 때의 행동이나 게시 범위가 빠졌습니다."
+    },
+    {
+      "id": "operate",
+      "label": "운영 방식",
+      "success": "operate.loop",
+      "successText": "AI 초안 → 사람 검토 → 지식 반영 루프로 운영하기로 했습니다.",
+      "failText": "검토나 지식 반영 루프 없는 운영 방식을 골랐습니다."
+    }
+  ],
+  "hints": [
+    {
+      "text": "주간 보고 Agent를 만들고(＋ 새 세션) W51을 맡기세요. 프롬프트 카드의 조건이 곧 브리프입니다 — 모를 땐 어떻게 할지, 어디까지 할지를 정하세요. Shift+Tab으로 계획을 먼저 볼 수도 있습니다."
+    },
+    {
+      "when": {
+        "taskDone": "w51"
+      },
+      "text": "보고서(sim://reports/w51)와 마트(sim://mart/yield)를 나란히 열어 대조하세요. 화면을 연 뒤에야 수정 지시 선택지가 나타납니다."
+    },
+    {
+      "when": {
+        "all": [
+          {
+            "taskDone": "w51"
+          },
+          "!et12.known"
+        ]
+      },
+      "text": "보고서의 설비 이벤트를 보세요. 이번 주 새 설비가 들어왔습니다 (sim://mail/et12). 누구에게 물어야 할까요?"
+    },
+    {
+      "when": {
+        "all": [
+          {
+            "taskDone": "publish-w51"
+          },
+          "!kb.updated"
+        ]
+      },
+      "text": "W52를 맡기기 전에, W51에서 고친 것이 AGENTS.md에 들어 있나요? 보고서만 고치면 다음 주에 같은 실수가 나옵니다."
+    },
+    {
+      "when": {
+        "taskDone": "publish-w52"
+      },
+      "text": "정민아 팀장과 앞으로의 운영 방식을 정하세요."
+    }
+  ],
+  "initialFlags": {}
+}
