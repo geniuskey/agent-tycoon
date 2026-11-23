@@ -13,7 +13,7 @@ import {
 } from './persist';
 
 export type Screen = 'home' | 'workspace' | 'feedback';
-export type RightTab = 'browser' | 'files' | 'preview';
+export type RightTab = 'messenger' | 'browser' | 'files' | 'preview';
 
 export const TICK_MS = 450;
 
@@ -32,6 +32,10 @@ interface SessionState {
   browserHistory: string[];
   browserIndex: number;
   previewPath: string | null;
+  /** 메신저에서 열린 대화 상대 */
+  chatWith: string | null;
+  /** 인물별로 마지막으로 읽은 메시지 seq (안 읽은 메시지 표시용, UI 전용) */
+  readSeq: Record<string, number>;
   showBriefing: boolean;
   feedbackSessionId: string | null;
   sessions: SessionRecord[];
@@ -48,6 +52,9 @@ interface SessionState {
   input: (paneId: string, text: string) => void;
   openAgentPane: (agentId: string, focus?: boolean) => void;
   openPersonPane: (personId: string, focus?: boolean) => void;
+  /** 메신저로 메시지 보내기 (객관식 질문 id 또는 자유 입력) */
+  sendMessage: (personId: string, msg: { topic?: string; text?: string }) => void;
+  markRead: (personId: string) => void;
   addShellPane: () => void;
   closePane: (paneId: string) => void;
   focusPane: (paneId: string) => void;
@@ -102,7 +109,10 @@ export const useSession = create<SessionState>((set, get) => {
   }
 
   function boot(sim: Simulation, rec: Partial<SessionRecord> & { id: string; createdAt: number }) {
-    const panes = rec.panes?.length ? rec.panes : [{ id: 'shell-1' }];
+    // 사람과의 대화는 메신저로 옮겨졌다 — 예전 세션의 인물 패널은 버린다
+    const saved = (rec.panes ?? []).filter((p) => !p.personId);
+    const panes = saved.length ? saved : [{ id: 'shell-1' }];
+    const lastSeq = sim.events[sim.events.length - 1]?.seq ?? 0;
     set({
       sim,
       sessionId: rec.id,
@@ -113,11 +123,13 @@ export const useSession = create<SessionState>((set, get) => {
       panes,
       focusedPane: panes[0].id,
       maximizedPane: null,
-      rightTab: 'browser',
+      rightTab: sim.scenario.people?.length ? 'messenger' : 'browser',
       browserUrl: 'sim://home',
       browserHistory: ['sim://home'],
       browserIndex: 0,
       previewPath: null,
+      chatWith: null,
+      readSeq: Object.fromEntries(Object.keys(sim.people).map((id) => [id, lastSeq])),
       speed: 1,
       uiSeq: sim.events[sim.events.length - 1]?.seq ?? 0,
     });
@@ -140,6 +152,8 @@ export const useSession = create<SessionState>((set, get) => {
     browserHistory: ['sim://home'],
     browserIndex: 0,
     previewPath: null,
+    chatWith: null,
+    readSeq: {},
     showBriefing: false,
     feedbackSessionId: null,
     sessions: [],
@@ -214,11 +228,22 @@ export const useSession = create<SessionState>((set, get) => {
     },
 
     openPersonPane: (personId, focus = true) => {
-      const id = `person:${personId}`;
-      const { panes } = get();
-      if (!panes.some((p) => p.id === id)) set({ panes: [...panes, { id, personId }] });
-      if (focus) set({ focusedPane: id, maximizedPane: get().maximizedPane ? id : null });
-      get().persist();
+      set({ chatWith: personId, ...(focus ? { rightTab: 'messenger' as const } : {}) });
+    },
+
+    sendMessage: (personId, msg) => {
+      const { sim } = get();
+      if (!sim) return;
+      const ctx = { paneId: `person:${personId}`, personId };
+      if (msg.topic) sim.input(`ask ${personId} ${msg.topic}`, ctx);
+      else if (msg.text?.trim()) sim.input(msg.text.trim(), ctx);
+    },
+
+    markRead: (personId) => {
+      const { sim, readSeq } = get();
+      if (!sim) return;
+      const last = [...sim.events].reverse().find((e) => e.personId === personId && e.type === 'person.said')?.seq ?? 0;
+      if ((readSeq[personId] ?? 0) < last) set({ readSeq: { ...readSeq, [personId]: last } });
     },
 
     addShellPane: () => {

@@ -25,6 +25,7 @@ import type {
   VFile,
 } from './types';
 import { executeCommand } from './cli';
+import { readInbox } from './people';
 
 /** 1 tick = 가상 업무 시간 1분 */
 export const SIM_START_MINUTES = 9 * 60;
@@ -104,7 +105,7 @@ export class Simulation {
       observed: (t) => this.observed.has(t),
     };
     for (const p of scenario.people ?? []) {
-      this.people[p.id] = { id: p.id, trust: carry?.trust[p.id] ?? p.trust, met: false, asked: [], pending: [], visitCount: 0, awayUntil: 0 };
+      this.people[p.id] = { id: p.id, trust: carry?.trust[p.id] ?? p.trust, met: false, asked: [], pending: [], inbox: [], visitCount: 0, awayUntil: 0 };
     }
     for (const r of scenario.roles) this.roleDefs[r.id] = r;
     for (const t of scenario.tasks) {
@@ -186,6 +187,7 @@ export class Simulation {
   step(): void {
     this.tick++;
     for (const p of Object.values(this.people)) {
+      readInbox(this, p.id);
       while (p.pending.length && p.pending[0].at <= this.tick) {
         this.emit('person.said', p.pending.shift()!.text, { personId: p.id });
       }

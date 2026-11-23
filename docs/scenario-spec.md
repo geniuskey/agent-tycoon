@@ -161,7 +161,7 @@ src/scenarios/<scenario-id>/
 
 - **지시**: `intents[].label`이 선택지 문구. `modifier: true`인 intent는 '조건(복수)'으로 표시. `requires`가 거짓이면 숨김, `hiddenChoice: true`면 자유 입력 전용.
 - **발견 후에만 보이는 선택지**: `requires: { "observed": "sim://fab/monitor" }` — 플레이어가 그 화면/파일을 연 뒤에만 노출.
-- **질문**: `people[].topics[].ask`(없으면 `hint`)가 선택지 문구. 함정 질문(신뢰 하락)도 `ask`를 붙여 섞는다. `patience`(기본 5)를 넘으면 30분 자리 비움.
+- **질문**: `people[].topics[].ask`(없으면 `hint`)가 선택지 문구. 함정 질문(신뢰 하락)도 `ask`를 붙여 섞는다. `patience`(기본 5)를 넘으면 30분 회의에 들어가고 남은 메시지는 회의 후에 답한다. `replyDelay`(기본 2 tick)는 메시지를 읽기까지 걸리는 시간, `schedule: [{from:"10:30", to:"11:10", label}]`은 메시지를 보지 않는 고정 일정.
 - **복수 선택 gate**: `{ "multi": true, "min": 1, "max": 4 }`. 선택한 모든 옵션의 효과 적용, flag `gate.<id>.<option>`=true/false. `quality: good`인데 고르지 않은 옵션은 '빠뜨림'으로 피드백.
 - **함정 설계 원칙**: 정답만 있는 선택지는 학습이 없다. 실무에서 흔한 지름길(검증 생략, 추정으로 채우기, 외부 서비스, 현장 압박)을 그럴듯한 문구로 넣는다.
 

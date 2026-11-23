@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useSession } from '../../store/session';
 import { AgentAvatar, Btn, StatusBadge, Progress, agentColor, useSim } from '../common';
 import { copySelection, fitTerm, getTerm, mountTerm } from './termRegistry';
-import ChatBody from './ChatBody';
 import ChoiceCard from './ChoiceCard';
 
-export default function TerminalPane({ paneId, agentId, personId, index }: { paneId: string; agentId?: string; personId?: string; index: number }) {
+export default function TerminalPane({ paneId, agentId, index }: { paneId: string; agentId?: string; index: number }) {
   const sim = useSim();
   const host = useRef<HTMLDivElement>(null);
   const focused = useSession((s) => s.focusedPane === paneId);
@@ -15,13 +14,10 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
   const [query, setQuery] = useState('');
   const [copied, setCopied] = useState<{ ok: boolean; chars: number; at: number } | null>(null);
 
-  const inst = getTerm(paneId, agentId, sim, (text) => input(paneId, text), personId);
-  const isChat = !!personId;
-  const person = personId ? sim?.people[personId] : undefined;
-  const pdef = personId ? sim?.personDef(personId) : undefined;
+  const inst = getTerm(paneId, agentId, sim, (text) => input(paneId, text));
 
   useEffect(() => {
-    if (!host.current || isChat) return;
+    if (!host.current) return;
     mountTerm(inst, host.current);
     const ro = new ResizeObserver(() => fitTerm(inst));
     ro.observe(host.current);
@@ -61,17 +57,17 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
       inst.el.removeEventListener('term-copied', onCopied);
       clearTimeout(hide);
     };
-  }, [inst, paneId, focusPane, isChat]);
+  }, [inst, paneId, focusPane]);
 
   useEffect(() => {
-    if (focused && !isChat) inst.term.focus();
-  }, [focused, inst, isChat]);
+    if (focused) inst.term.focus();
+  }, [focused, inst]);
 
   const agent = agentId ? sim?.agents[agentId] : undefined;
   const role = agent ? sim?.roleDef(agent.role) : undefined;
   const removed = agentId && !agent;
-  // 패널 정체성 색: Agent는 고유색, 사람은 호박색, 오케스트레이터 셸은 하늘색
-  const idColor = agentId ? agentColor(sim, agentId) : personId ? '#fbbf24' : '#38bdf8';
+  // 패널 정체성 색: Agent는 고유색, 오케스트레이터 셸은 하늘색
+  const idColor = agentId ? agentColor(sim, agentId) : '#38bdf8';
   const attention = agent && (agent.status === 'waiting' || agent.status === 'blocked' || agent.status === 'failed');
   const frame = attention
     ? agent!.status === 'waiting'
@@ -93,13 +89,7 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
         <span className={`rounded px-1 font-mono text-[10px] ${focused ? 'bg-sky-500/20 text-sky-200' : 'bg-line text-faint'}`} title={`Alt+${index + 1}`}>
           {index + 1}
         </span>
-        {personId ? (
-          <>
-            <span className="font-semibold text-amber-300">{pdef?.name ?? personId}</span>
-            <span className="truncate text-faint">{pdef?.title}</span>
-            {person && <TrustMeter value={person.trust} />}
-          </>
-        ) : agentId ? (
+        {agentId ? (
           <>
             <AgentAvatar sim={sim} id={agentId} />
             <span className="font-mono text-[12.5px] font-semibold" style={{ color: idColor }}>
@@ -145,9 +135,9 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
               ↻
             </Btn>
           )}
-          {!isChat && <Btn title="로그 검색 (Ctrl+F)" onClick={() => setSearchOpen((v) => !v)}>
+          <Btn title="로그 검색 (Ctrl+F)" onClick={() => setSearchOpen((v) => !v)}>
             ⌕
-          </Btn>}
+          </Btn>
           <Btn title="최대화 (Alt+Enter)" onClick={() => toggleMaximize(paneId)}>
             {maximized ? '▣' : '□'}
           </Btn>
@@ -188,14 +178,8 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
           </Btn>
         </div>
       )}
-      {personId ? (
-        <ChatBody paneId={paneId} personId={personId} focused={focused} />
-      ) : (
-        <>
-          <div ref={host} className="min-h-0 flex-1" onClick={() => inst.term.focus()} />
-          {agentId && agent && <ChoiceCard paneId={paneId} agentId={agentId} onFreeText={() => inst.term.focus()} />}
-        </>
-      )}
+      <div ref={host} className="min-h-0 flex-1" onClick={() => inst.term.focus()} />
+      {agentId && agent && <ChoiceCard paneId={paneId} agentId={agentId} onFreeText={() => inst.term.focus()} />}
 
     </div>
   );

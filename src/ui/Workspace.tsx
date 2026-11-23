@@ -10,11 +10,13 @@ import Browser from './browser/Browser';
 import { FileExplorer, FilePreview } from './files/Files';
 import { EventLog, Gantt, Notifications } from './Timeline';
 import Briefing from './Briefing';
+import Messenger, { totalUnread } from './messenger/Messenger';
 
 export default function Workspace() {
   const sim = useSim()!;
   const speed = useSession((s) => s.speed);
   const rightTab = useSession((s) => s.rightTab);
+  const readSeq = useSession((s) => s.readSeq);
   const showBriefing = useSession((s) => s.showBriefing);
   const { setSpeed, setRightTab, goHome, input, addShellPane, setShowBriefing, persist } = useSession.getState();
   const [bottomTab, setBottomTab] = useState<'notify' | 'timeline' | 'events'>('timeline');
@@ -34,7 +36,10 @@ export default function Workspace() {
   const attention = sim.agentList().filter((a) => ['waiting', 'blocked', 'failed'].includes(a.status)).length;
   const busy = sim.agentList().filter((a) => ['working', 'planning', 'reviewing'].includes(a.status)).length;
 
-  const tabs: { id: RightTab; label: string }[] = [
+  const hasPeople = !!sim.scenario.people?.length;
+  const unread = hasPeople ? totalUnread(sim, readSeq) : 0;
+  const tabs: { id: RightTab; label: string; badge?: number }[] = [
+    ...(hasPeople ? [{ id: 'messenger' as const, label: '메신저', badge: unread }] : []),
     { id: 'browser', label: '브라우저' },
     { id: 'files', label: '파일' },
     { id: 'preview', label: '미리보기' },
@@ -142,10 +147,14 @@ export default function Workspace() {
                   className={`rounded-t px-3 py-1 text-xs ${rightTab === t.id ? 'border border-b-0 border-line bg-paper font-medium text-strong' : 'text-dim hover:text-fg'}`}
                 >
                   {t.label}
+                  {!!t.badge && (
+                    <span className="ml-1.5 rounded-full bg-red-500 px-1.5 text-[10px] leading-4 font-bold text-white">{t.badge}</span>
+                  )}
                 </button>
               ))}
             </div>
             <div className="min-h-0 flex-1">
+              {rightTab === 'messenger' && hasPeople && <Messenger />}
               {rightTab === 'browser' && <Browser />}
               {rightTab === 'files' && <FileExplorer />}
               {rightTab === 'preview' && <FilePreview />}

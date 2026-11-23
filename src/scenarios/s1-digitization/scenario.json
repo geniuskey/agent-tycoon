@@ -118,6 +118,7 @@
   "people": [
     {
       "id": "jung",
+      "schedule": [{ "from": "10:30", "to": "11:10", "label": "팀장 회의" }],
       "name": "정민아 팀장",
       "title": "수율팀장 (과제 요청자)",
       "org": "Fab-N2 수율팀",
@@ -161,6 +162,7 @@
     },
     {
       "id": "choi",
+      "replyDelay": 6,
       "name": "최재석 반장",
       "title": "생산2과 · 라인2 교대조 반장",
       "org": "생산2과",
@@ -691,7 +693,7 @@
                 "quality": "good",
                 "dimension": "collaboration",
                 "log": [
-                  "빈값으로 두고, 확인 요청 메모를 남깁니다. 최재석 반장에게 직접 확인해 주세요 (talk choi)."
+                  "빈값으로 두고, 확인 요청 메모를 남깁니다. 최재석 반장에게 메신저로 직접 확인해 주세요."
                 ],
                 "effects": [
                   {
@@ -1189,7 +1191,7 @@
               }
             },
             "message": "'X'·'-' 기호의 의미를 확인할 수 없습니다 (현장 규칙)",
-            "hint": "기록한 사람(최재석 반장, talk choi)에게 기호의 뜻을 확인한 뒤 'agent retry {{agent}}'"
+            "hint": "기록한 사람(최재석 반장)에게 메신저로 기호의 뜻을 확인한 뒤 'agent retry {{agent}}'"
           },
           "effects": [
             {
@@ -1274,7 +1276,7 @@
           "fail": {
             "when": "!found.code_rule",
             "message": "과거 D07 처리 기준이 없습니다 (검사기술팀 확인 필요)",
-            "hint": "이도윤 엔지니어(talk lee)에게 구 코드 처리 기준을 확인한 뒤 'agent retry {{agent}}'"
+            "hint": "이도윤 엔지니어에게 메신저로 구 코드 처리 기준을 확인한 뒤 'agent retry {{agent}}'"
           },
           "effects": [
             {
@@ -2034,7 +2036,7 @@
         "taskStatus": "fix-digitized",
         "is": "failed"
       },
-      "text": "수정 실패 원인은 '사람만 아는 정보'입니다. 현장(talk choi)이나 검사기술팀(talk lee)에 확인하세요."
+      "text": "수정 실패 원인은 '사람만 아는 정보'입니다. 현장(최재석 반장)이나 검사기술팀(이도윤 엔지니어)에 메신저로 확인하세요."
     }
   ],
   "initialFlags": {}

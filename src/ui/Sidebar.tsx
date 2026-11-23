@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useSession } from '../store/session';
-import { TrustMeter } from './terminal/TerminalPane';
 import { AgentAvatar, Btn, Progress, SectionTitle, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
 
 export default function Sidebar() {
@@ -12,44 +11,8 @@ export default function Sidebar() {
   const agents = sim.agentList();
   const done = tasks.filter((t) => t.status === 'done').length;
 
-  const people = sim.scenario.people ?? [];
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-panel">
-      {people.length > 0 && (
-        <>
-          <SectionTitle count={`${people.filter((p) => sim.people[p.id].met).length}/${people.length}`} right={<span className="text-[10.5px] text-faint">만남</span>}>
-            사람들
-          </SectionTitle>
-          <div className="px-2 pt-1.5 pb-2">
-            {people.map((p) => {
-              const rt = sim.people[p.id];
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => run(`talk ${p.id}`)}
-                  title={p.description}
-                  className="mb-1 block w-full rounded border border-transparent px-2 py-1.5 text-left hover:border-line2 hover:bg-panel2"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${
-                        rt.met ? 'bg-amber-400/20 text-amber-200 ring-1 ring-amber-400/50' : 'bg-line text-faint'
-                      }`}
-                    >
-                      {p.name.slice(0, 1)}
-                    </span>
-                    <span className={`text-[12.5px] font-medium ${rt.met ? 'text-strong' : 'text-dim'}`}>{p.name}</span>
-                    <span className="ml-auto">
-                      <TrustMeter value={rt.trust} />
-                    </span>
-                  </div>
-                  <div className="truncate pl-[24px] text-[11px] text-faint">{p.title}</div>
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
       <SectionTitle count={`${done}/${tasks.length}`} right={<Progress value={tasks.length ? done / tasks.length : 0} className="w-16" />}>
         Tasks
       </SectionTitle>

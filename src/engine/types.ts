@@ -194,8 +194,12 @@ export interface PersonDef {
   fallback: string[];
   /** 무례/압박성 발언 반응 */
   rude?: LogLine[];
-  /** 한 번 만날 때 받아주는 질문 수 (기본 5). 넘으면 잠시 자리를 비운다 */
+  /** 한 번에 받아주는 질문 수 (기본 5). 넘으면 30분간 회의에 들어가고, 그동안 온 메시지는 나중에 확인한다 */
   patience?: number;
+  /** 메시지를 읽기까지 걸리는 시간 (tick, 기본 2). 현장 근무자는 메신저를 자주 못 본다 */
+  replyDelay?: number;
+  /** 고정 일정 — 이 시간에는 메시지를 읽지 않는다 ("HH:MM" 업무 시각) */
+  schedule?: { from: string; to: string; label: string }[];
   topics: TopicDef[];
 }
 
@@ -204,12 +208,23 @@ export interface PersonRuntime {
   trust: number;
   met: boolean;
   asked: string[];
-  /** 이번 만남에서 받은 질문 수 */
+  /** 이번 대화에서 받은 질문 수 */
   visitCount: number;
-  /** 이 tick까지 자리 비움 */
+  /** 이 tick까지 회의 중 (인내심 초과) */
   awayUntil: number;
   lastTick?: number;
   pending: PendingLog[];
+  /** 아직 읽지 않은 메시지 — 읽을 수 있게 되면 순서대로 답한다 */
+  inbox: InboxMessage[];
+}
+
+export interface InboxMessage {
+  /** 보낸 tick */
+  sent: number;
+  /** 객관식 질문 */
+  topic?: string;
+  /** 자유 입력 */
+  text?: string;
 }
 
 // ───────────────────────────── Campaign ─────────────────────────────

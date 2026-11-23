@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../src/engine/engine';
 import { agentChoices } from '../src/engine/choices';
-import { topicChoices } from '../src/engine/people';
+import { presence, topicChoices } from '../src/engine/people';
 import { evaluate } from '../src/engine/evaluate';
 import { getScenario } from '../src/scenarios';
-import { lastOutput, lastSaid, runUntil, sh, status, taskStatus } from './helpers';
+import { lastOutput, lastSaid, runUntil, sh, status, taskStatus, waitReply } from './helpers';
 
 describe('객관식 지시 (do)', () => {
   it('지시는 단일 선택, 조건은 복수 선택으로 적용된다', () => {
@@ -78,29 +78,35 @@ describe('객관식 대화 (ask)', () => {
     const before = topicChoices(sim, 'choi').map((t) => t.id);
     expect(before).toEqual(expect.arrayContaining(['tablet', 'blame', 'pain', 'legend']));
     sh(sim, 'ask choi pain');
-    sim.advance(5);
+    waitReply(sim, 'choi');
     expect(topicChoices(sim, 'choi').map((t) => t.id)).not.toContain('pain');
     expect(sim.people['choi'].trust).toBe(45);
     sh(sim, 'ask choi blame');
-    sim.advance(5);
+    waitReply(sim, 'choi');
     expect(sim.people['choi'].trust).toBe(30);
   });
 
-  it('한 번에 너무 많이 물으면 자리를 비운다 (인내심)', () => {
+  it('한 번에 너무 많이 물으면 회의에 들어가고, 남은 메시지는 회의 후에 답한다 (인내심)', () => {
     const sim = new Simulation(getScenario('s0-data-discovery')!, 9);
-    for (const t of ['process', 'pain', 'other', 'reassure', 'macro']) {
-      sh(sim, `ask park ${t}`);
-      sim.advance(3);
-    }
-    sh(sim, 'ask park rush');
-    sim.advance(3);
-    expect(lastSaid(sim, 'park', 1)).toContain('일하러 가봐야');
-    sh(sim, 'ask park rush');
-    sim.advance(3);
-    expect(lastSaid(sim, 'park', 1)).toContain('자리를 비웠습니다');
-    sim.advance(35);
-    sh(sim, 'ask park rush');
-    sim.advance(3);
-    expect(sim.people['park'].asked).toContain('rush');
+    // 답을 기다리지 않고 질문을 연달아 보낸다
+    for (const t of ['process', 'pain', 'other', 'reassure', 'macro', 'rush']) sh(sim, `ask park ${t}`);
+    runUntil(sim, () => presence(sim, 'park').status === 'meeting' && !sim.people['park'].pending.length);
+    expect(lastSaid(sim, 'park', 1)).toContain('회의 들어가야');
+    expect(sim.people['park'].asked).not.toContain('rush');
+    // 회의 중에는 읽지 않는다
+    sim.advance(10);
+    expect(sim.people['park'].inbox.length).toBe(1);
+    // 회의가 끝나면 늦게 보고 답한다
+    runUntil(sim, () => sim.people['park'].asked.includes('rush'));
+    waitReply(sim, 'park');
+    expect(lastSaid(sim, 'park', 6)).toContain('늦게 봤네요');
+  });
+
+  it('메시지는 바로 답이 오지 않는다 — 읽는 시간과 회의 일정', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 10);
+    sh(sim, 'ask choi pain');
+    sim.advance(2);
+    expect(sim.people['choi'].asked).not.toContain('pain'); // 현장 근무자는 메신저를 늦게 본다
+    runUntil(sim, () => sim.people['choi'].asked.includes('pain'));
   });
 });

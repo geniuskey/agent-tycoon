@@ -1,7 +1,7 @@
 import { c, padEnd } from './ansi';
 import type { Simulation } from './engine';
 import type { TopicDef } from './types';
-import { formatSimTime } from './engine';
+import { SIM_START_MINUTES, formatSimTime } from './engine';
 
 /**
  * 가상 인물과의 대화·협의 시뮬레이션 (LLM 미사용, 규칙 기반).
@@ -10,6 +10,7 @@ import { formatSimTime } from './engine';
  *  - 어떤 정보는 신뢰가 쌓여야만 털어놓는다 (minTrust).
  *  - 주제(topic)에 맞는 질문에만 답하고, 알 수 없는 질문에는 인물답게 되묻는다.
  *  - 신뢰도는 캠페인 다음 단계로 이월된다.
+ *  - 대화는 메신저처럼 비동기다: 보낸 메시지는 상대가 읽을 때(replyDelay, 회의 일정) 답이 온다.
  */
 
 const RUDE = /(빨리\s*(줘|내|보내)|당장|내놔|시키는\s*대로|왜\s*(그것도|이것도)|대충|그냥\s*줘요?$|필요\s*없(어|게|어지))/;
@@ -29,7 +30,35 @@ export function personPrompt(sim: Simulation, id: string): string {
   return d ? d.name : id;
 }
 
-/** talk <id>: 대화 시작 (첫 만남이면 인사) */
+// ───────────────────────────── 부재 상태 (메신저) ─────────────────────────────
+
+export type PresenceStatus = 'online' | 'meeting';
+export interface Presence {
+  status: PresenceStatus;
+  label: string;
+  /** 이 tick에 다시 메시지를 볼 수 있다 */
+  until?: number;
+}
+
+const toTick = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m - SIM_START_MINUTES;
+};
+
+export function presence(sim: Simulation, id: string, tick = sim.tick): Presence {
+  const def = sim.personDef(id);
+  const p = sim.people[id];
+  if (!def || !p) return { status: 'online', label: '' };
+  if (tick < p.awayUntil) return { status: 'meeting', label: '회의 중', until: p.awayUntil };
+  for (const s of def.schedule ?? []) {
+    const from = toTick(s.from);
+    const to = toTick(s.to);
+    if (tick >= from && tick < to) return { status: 'meeting', label: s.label, until: to };
+  }
+  return { status: 'online', label: '대화 가능' };
+}
+
+/** talk <id>: 메신저에서 이 사람과의 대화를 연다 (메시지는 보내지 않는다) */
 export function startTalk(sim: Simulation, id: string, pane: string): boolean {
   const def = sim.personDef(id);
   const p = sim.people[id];
@@ -38,8 +67,7 @@ export function startTalk(sim: Simulation, id: string, pane: string): boolean {
     return false;
   }
   sim.emit('ui.request', 'open-person-pane', { personId: id, paneId: pane, data: { action: 'person-pane' } });
-  if (!p.met) greet(sim, id);
-  sim.out(pane, c.green(`✓ ${def.name} (${def.title})와 대화 패널을 엽니다.`));
+  sim.out(pane, c.green(`✓ 메신저에서 ${def.name} (${def.title})와의 대화를 엽니다.`));
   return true;
 }
 
@@ -58,14 +86,78 @@ export function suggestions(sim: Simulation, id: string, max = 3): string[] {
   return def.topics.filter((t) => t.hint && !p.asked.includes(t.id) && sim.cond(t.requires)).slice(0, max).map((t) => t.hint!);
 }
 
+/** 메시지 보내기 — 바로 답하지 않고, 상대가 메시지를 읽을 때(readInbox) 답한다 */
+function send(sim: Simulation, id: string, line: string, pane: string, msg: { topic?: string; text?: string }) {
+  const def = sim.personDef(id)!;
+  sim.emit('person.said', c.white(c.bold('나 ▸ ')) + c.white(line), {
+    personId: id,
+    paneId: pane,
+    data: { from: 'player', ...(msg.topic ? { topic: msg.topic } : {}) },
+  });
+  if (pane !== `person:${id}`) sim.out(pane, c.dim(`→ ${def.name}에게 메시지: ${line}`));
+  sim.people[id].inbox.push({ sent: sim.tick, ...msg });
+}
+
 export function handleTalk(sim: Simulation, id: string, text: string, pane: string): void {
+  sim.metrics.nlInstructions++;
+  send(sim, id, text, pane, { text });
+}
+
+/** 객관식 질문: ask <person> <topicId> */
+export function askTopic(sim: Simulation, id: string, topicId: string, pane: string): void {
+  const def = sim.personDef(id);
+  const topic = def?.topics.find((t) => t.id === topicId);
+  if (!def || !sim.people[id] || !topic) {
+    sim.out(pane, c.red(`✗ 질문 '${topicId}' 없음`));
+    return;
+  }
+  send(sim, id, topic.ask ?? topic.hint ?? topic.id, pane, { topic: topicId });
+}
+
+/**
+ * 매 tick: 상대가 메시지를 볼 수 있으면(회의 중이 아니고 읽는 시간이 지났으면) 쌓인 메시지에 차례로 답한다.
+ * 회의가 끝난 뒤 늦게 보면 한마디 덧붙인다.
+ */
+export function readInbox(sim: Simulation, id: string): void {
+  const def = sim.personDef(id);
+  const p = sim.people[id];
+  if (!def || !p?.inbox.length) return;
+  const delay = def.replyDelay ?? 2;
+  const head = p.inbox[0];
+  if (presence(sim, id).status !== 'online') return;
+  if (sim.tick < head.sent + delay) return;
+  // 회의 등으로 늦게 읽었으면
+  const wasBusy = presence(sim, id, head.sent).status !== 'online' || sim.tick - head.sent > delay + 5;
+  if (!p.met) greet(sim, id);
+  else if (wasBusy) sim.personSay(id, ['아, 늦게 봤네요. 죄송해요.']);
+  while (p.inbox.length) {
+    if (!checkPatience(sim, id)) return; // 회의 들어감 — 남은 메시지는 회의 후에
+    const m = p.inbox.shift()!;
+    if (m.topic) answerTopic(sim, id, m.topic);
+    else answerText(sim, id, m.text ?? '');
+  }
+}
+
+/** 한 번에 받아주는 질문 수 — 넘으면 30분 회의에 들어간다 */
+function checkPatience(sim: Simulation, id: string): boolean {
   const def = sim.personDef(id)!;
   const p = sim.people[id];
-  sim.metrics.nlInstructions++;
-  sim.emit('person.said', c.white(c.bold('나 ▸ ')) + c.white(text), { personId: id, paneId: pane, data: { from: 'player' } });
-  if (pane !== `person:${id}`) sim.out(pane, c.dim(`→ ${def.name}에게: ${text}`));
-  if (!p.met) greet(sim, id);
+  if (p.lastTick !== undefined && sim.tick - p.lastTick > 20) p.visitCount = 0;
+  p.lastTick = sim.tick;
+  p.visitCount++;
+  if (p.visitCount > (def.patience ?? 5)) {
+    p.awayUntil = sim.tick + 30;
+    p.visitCount = 0;
+    sim.personSay(id, ['죄송한데 회의 들어가야 해서요. 남은 건 끝나고 볼게요.']);
+    sim.emit('intent.matched', `대화 중단(질문 과다): ${def.name}`, { personId: id, data: { patience: true } });
+    return false;
+  }
+  return true;
+}
 
+function answerText(sim: Simulation, id: string, text: string): void {
+  const def = sim.personDef(id)!;
+  const p = sim.people[id];
   const say = (lines: string[]) => sim.personSay(id, lines);
 
   if (RUDE.test(text)) {
@@ -79,14 +171,13 @@ export function handleTalk(sim: Simulation, id: string, text: string, pane: stri
   // 아직 묻지 않은 주제 우선
   const topic: TopicDef | undefined = matched.find((t) => !p.asked.includes(t.id)) ?? matched[0];
 
-  if (topic && !checkAvailable(sim, id)) return;
   if (!topic) {
     if (GREET.test(text.trim()) || THANKS.test(text)) {
-      say([THANKS.test(text) ? '네, 별말씀을요.' : '네, 안녕하세요. 무슨 일로 오셨어요?']);
+      say([THANKS.test(text) ? '네, 별말씀을요.' : '네, 안녕하세요. 무슨 일이세요?']);
       return;
     }
     sim.metrics.unrecognized++;
-    sim.emit('intent.unrecognized', text, { personId: id, paneId: pane });
+    sim.emit('intent.unrecognized', text, { personId: id });
     const fb = def.fallback[Math.floor(sim.rand() * def.fallback.length)] ?? '음… 무슨 말씀인지 잘 모르겠어요.';
     say([fb]);
     const sug = suggestions(sim, id);
@@ -97,41 +188,8 @@ export function handleTalk(sim: Simulation, id: string, text: string, pane: stri
   respondTopic(sim, id, topic);
 }
 
-/** 한 번의 만남에서 받아주는 질문 수 — 넘으면 자리를 비운다 */
-function checkAvailable(sim: Simulation, id: string): boolean {
-  const def = sim.personDef(id)!;
-  const p = sim.people[id];
-  if (sim.tick < p.awayUntil) {
-    sim.personSay(id, [`(${def.name}은(는) 자리를 비웠습니다. ${formatSimTime(p.awayUntil)} 이후에 다시 오세요.)`]);
-    return false;
-  }
-  if (p.lastTick !== undefined && sim.tick - p.lastTick > 20) p.visitCount = 0;
-  p.lastTick = sim.tick;
-  p.visitCount++;
-  if (p.visitCount > (def.patience ?? 5)) {
-    p.awayUntil = sim.tick + 30;
-    p.visitCount = 0;
-    sim.personSay(id, ['죄송한데 이제 일하러 가봐야 해요. 나중에 다시 얘기하죠.']);
-    sim.emit('intent.matched', `대화 종료(시간 초과): ${def.name}`, { personId: id, data: { patience: true } });
-    return false;
-  }
-  return true;
-}
-
-/** 객관식 질문: ask <person> <topicId> */
-export function askTopic(sim: Simulation, id: string, topicId: string, pane: string): void {
-  const def = sim.personDef(id);
-  const p = sim.people[id];
-  const topic = def?.topics.find((t) => t.id === topicId);
-  if (!def || !p || !topic) {
-    sim.out(pane, c.red(`✗ 질문 '${topicId}' 없음`));
-    return;
-  }
-  const line = topic.ask ?? topic.hint ?? topic.id;
-  sim.emit('person.said', c.white(c.bold('나 ▸ ')) + c.white(line), { personId: id, paneId: pane, data: { from: 'player', topic: topicId } });
-  if (pane !== `person:${id}`) sim.out(pane, c.dim(`→ ${def.name}에게: ${line}`));
-  if (!p.met) greet(sim, id);
-  if (!checkAvailable(sim, id)) return;
+function answerTopic(sim: Simulation, id: string, topicId: string): void {
+  const topic = sim.personDef(id)!.topics.find((t) => t.id === topicId)!;
   if (!sim.cond(topic.requires)) {
     sim.personSay(id, ['음… 지금 그 얘기는 좀 이른 것 같은데요.']);
     return;
@@ -164,12 +222,14 @@ export function peopleText(sim: Simulation): string[] {
   const list = sim.scenario.people ?? [];
   if (!list.length) return [c.dim('이 미션에는 대화할 수 있는 인물이 없습니다.')];
   return [
-    c.bold('사람들') + c.dim('  — talk <id> 로 대화, 또는 @<id> <질문>'),
+    c.bold('사람들') + c.dim('  — 오른쪽 메신저 탭에서 대화합니다 (talk <id> 로 열기)'),
     ...list.map((d) => {
       const p = sim.people[d.id];
       const bar = '■'.repeat(Math.round(p.trust / 10)) + '□'.repeat(10 - Math.round(p.trust / 10));
       const col = p.trust >= 60 ? c.green : p.trust >= 40 ? c.yellow : c.red;
-      return `  ${c.cyan(padEnd(d.id, 10))}${padEnd(d.name, 14)}${c.dim(padEnd(d.title, 26))} 신뢰 ${col(bar)} ${p.trust}${p.met ? '' : c.dim('  (아직 안 만남)')}`;
+      const pr = presence(sim, d.id);
+      const st = pr.status === 'online' ? c.green('● 대화 가능') : c.red(`● ${pr.label}${pr.until !== undefined ? ` ~${formatSimTime(pr.until)}` : ''}`);
+      return `  ${c.cyan(padEnd(d.id, 10))}${padEnd(d.name, 14)}${c.dim(padEnd(d.title, 26))} 신뢰 ${col(bar)} ${p.trust}  ${st}${p.met ? '' : c.dim('  (아직 연락 안 함)')}`;
     }),
   ];
 }
@@ -181,7 +241,7 @@ export function topicChoices(sim: Simulation, id: string): { id: string; label: 
   if (!def || !p) return [];
   const h = (s: string) => [...s].reduce((a, ch) => (Math.imul(a, 31) + ch.charCodeAt(0)) >>> 0, 7);
   return def.topics
-    .filter((t) => (t.ask || t.hint) && !p.asked.includes(t.id) && sim.cond(t.requires))
+    .filter((t) => (t.ask || t.hint) && !p.asked.includes(t.id) && !p.inbox.some((m) => m.topic === t.id) && sim.cond(t.requires))
     .map((t) => ({ id: t.id, label: (t.ask ?? t.hint)!, k: h(def.id + t.id) }))
     .sort((a, b) => a.k - b.k)
     .map(({ id: tid, label }) => ({ id: tid, label }));

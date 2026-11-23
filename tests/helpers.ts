@@ -33,10 +33,14 @@ export function lastOutput(sim: Simulation, n = 10): string {
 export const status = (sim: Simulation, id: string) => sim.agents[id]?.status;
 export const taskStatus = (sim: Simulation, id: string) => sim.tasks[id]?.status;
 
-/** 인물 대화 패널에서 말하기 (응답이 출력될 때까지 몇 tick 진행) */
-export function talk(sim: Simulation, personId: string, text: string, ticks = 4): void {
+/** 메신저로 메시지 보내기 (상대가 읽고 답을 다 보낼 때까지 tick 진행 — 회의 중이면 끝날 때까지) */
+export function talk(sim: Simulation, personId: string, text: string): void {
   sim.input(text, { paneId: `person:${personId}`, personId });
-  sim.advance(ticks);
+  waitReply(sim, personId);
+}
+export function waitReply(sim: Simulation, personId: string, max = 200): void {
+  const p = sim.people[personId];
+  for (let i = 0; i < max && (p.inbox.length || p.pending.length); i++) sim.step();
 }
 export const trust = (sim: Simulation, id: string) => sim.people[id]?.trust;
 export function lastSaid(sim: Simulation, personId: string, n = 3): string {
