@@ -255,6 +255,19 @@ export class Simulation {
     p.trust = Math.max(0, Math.min(100, p.trust + delta));
     this.emit('person.trust', `${this.personDef(id)?.name ?? id} 신뢰 ${from} → ${p.trust}`, { personId: id, data: { from, to: p.trust, delta, by } });
   }
+  /** 보이는 Task의 의존 깊이 (0 = 선행 없음). 같은 깊이는 병렬 수행 가능 */
+  taskLevels(): Record<string, number> {
+    const level: Record<string, number> = {};
+    const lv = (id: string, seen = new Set<string>()): number => {
+      if (level[id] !== undefined) return level[id];
+      if (seen.has(id)) return 0;
+      seen.add(id);
+      const deps = (this.taskDefs[id]?.dependsOn ?? []).filter((d) => this.tasks[d]?.visible);
+      return (level[id] = deps.length ? Math.max(...deps.map((d) => lv(d, seen))) + 1 : 0);
+    };
+    for (const t of this.visibleTasks()) lv(t.id);
+    return level;
+  }
   visibleTasks(): TaskRuntime[] {
     return this.scenario.tasks.map((t) => this.tasks[t.id]).filter((t) => t.visible);
   }

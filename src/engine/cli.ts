@@ -6,6 +6,9 @@ import { askTopic, handleTalk, peopleText, startTalk } from './people';
 import { doInstruct } from './choices';
 import type { AgentStatus, PlayerCommand, TaskStatus } from './types';
 
+/** 내장 업무 보드 화면 (시나리오 pages가 아니라 Task 상태를 그대로 보여준다) */
+export const BOARD_URL = 'sim://board';
+
 /**
  * 가상 CLI. 실제 OS 명령/네트워크는 절대 실행하지 않는다.
  * 모든 출력은 'cli.output' 이벤트로 기록되어 새로고침/재생 시 그대로 복원된다.
@@ -216,7 +219,7 @@ export function briefText(sim: Simulation): string[] {
     c.dim(
       s.people?.length
         ? "  시작하기: 메신저로 담당자에게 연락해 현황을 파악 → 필요하면 'agent spawn <role>'로 Agent 세션을 열어 프롬프트로 지시"
-        : "  시작하기: 'task graph'로 업무 구조 확인 → 'agent spawn <role>'로 Agent 세션 열기 → 프롬프트로 지시",
+        : `  시작하기: 업무 보드(${BOARD_URL})에서 업무 구조 확인 → 'agent spawn <role>'로 Agent 세션 열기 → 프롬프트로 지시`,
     ),
   ];
 }
@@ -301,15 +304,7 @@ function taskCmd(sim: Simulation, args: string[], say: (l: string | string[]) =>
 
 function taskGraphText(sim: Simulation): string[] {
   const tasks = sim.visibleTasks();
-  const level: Record<string, number> = {};
-  const lv = (id: string, seen = new Set<string>()): number => {
-    if (level[id] !== undefined) return level[id];
-    if (seen.has(id)) return 0;
-    seen.add(id);
-    const deps = (sim.taskDef(id)?.dependsOn ?? []).filter((d) => sim.tasks[d]?.visible);
-    return (level[id] = deps.length ? Math.max(...deps.map((d) => lv(d, seen))) + 1 : 0);
-  };
-  tasks.forEach((t) => lv(t.id));
+  const level = sim.taskLevels();
   const max = Math.max(0, ...Object.values(level));
   const lines = [c.bold('Task 의존성 (같은 단계는 병렬 수행 가능)')];
   for (let i = 0; i <= max; i++) {
@@ -320,6 +315,7 @@ function taskGraphText(sim: Simulation): string[] {
     );
     if (i < max) lines.push(`  ${' '.repeat(7)}${c.dim('│')}`);
   }
+  lines.push(c.dim(`  업무 보드(${BOARD_URL})에서 담당·진행률·막힌 이유까지 볼 수 있습니다.`));
   return lines;
 }
 
@@ -547,6 +543,10 @@ export function lineDiff(a: string, b: string): string[] {
 function openCmd(sim: Simulation, target: string | undefined, pane: string, say: (l: string | string[]) => void): void {
   if (!target) return say(c.yellow('사용: open <file|url>'));
   if (target.startsWith('sim://')) {
+    if (target === BOARD_URL || target === 'sim://home') {
+      sim.emit('ui.request', 'open-page', { paneId: pane, data: { action: 'open-page', url: target } });
+      return say(c.green(`↗ 가상 브라우저에서 ${target} 열기`));
+    }
     const page = sim.scenario.pages.find((p) => p.url === target);
     if (!page) return say(c.red(`open: ${target}: 페이지 없음. 'pages' 참고`));
     if (!sim.files.has(page.source)) return say(c.yellow(`${target}: 아직 생성되지 않은 화면입니다 (${page.source} 없음).`));
@@ -569,6 +569,7 @@ function openCmd(sim: Simulation, target: string | undefined, pane: string, say:
 function pagesText(sim: Simulation): string[] {
   return [
     c.bold('가상 브라우저 화면'),
+    `  ${c.green('●')} ${padEnd(c.cyan(BOARD_URL), 34)}업무 보드 (Task 상태·담당·의존 관계)`,
     ...sim.scenario.pages.map((p) => {
       const ready = sim.files.has(p.source);
       return `  ${ready ? c.green('●') : c.gray('○')} ${padEnd(c.cyan(p.url), 34)}${p.title}${ready ? '' : c.dim(' (아직 없음)')}`;

@@ -4,7 +4,9 @@ import type { Simulation } from '../../engine/engine';
 import { formatSimTime } from '../../engine/engine';
 import { useSession } from '../../store/session';
 import { Btn, agentColor, useSim } from '../common';
+import BoardView from './BoardView';
 import DashboardView from './DashboardView';
+import { BOARD_URL } from '../../engine/cli';
 import Markdown from './Markdown';
 import ScanView from './ScanView';
 
@@ -82,6 +84,8 @@ export default function Browser() {
       <div className="min-h-0 flex-1 overflow-auto bg-paper">
         {url === 'sim://home' ? (
           <HomePage sim={sim} />
+        ) : url === BOARD_URL ? (
+          <BoardView sim={sim} />
         ) : !page ? (
           <ErrorPage title="404 — 페이지를 찾을 수 없습니다" detail={`${url} 은(는) 이 시나리오에 없는 주소입니다.`} />
         ) : !file ? (
@@ -123,6 +127,7 @@ function HomePage({ sim }: { sim: Simulation }) {
       <div className="mb-1 text-xs text-faint">{sim.scenario.company.name} · 사내 포털 (가상)</div>
       <h1 className="mb-4 text-lg font-semibold text-strong">업무 화면</h1>
       <div className="grid gap-2">
+        <BoardLink sim={sim} />
         {sim.scenario.pages.map((p) => {
           const f = sim.files.get(p.source);
           const by = f?.versions[f.versions.length - 1].by;
@@ -159,6 +164,28 @@ function HomePage({ sim }: { sim: Simulation }) {
         })}
       </div>
     </div>
+  );
+}
+
+function BoardLink({ sim }: { sim: Simulation }) {
+  const { navigate } = useSession.getState();
+  const tasks = sim.visibleTasks();
+  const done = tasks.filter((t) => t.status === 'done').length;
+  const attention = tasks.filter((t) => ['waiting', 'blocked', 'failed'].includes(t.status)).length;
+  return (
+    <button
+      onClick={() => navigate(BOARD_URL)}
+      className="mb-2 flex items-center gap-3 rounded-md border border-sky-800/70 bg-sky-500/[0.06] px-3 py-2.5 text-left hover:border-sky-600"
+    >
+      <span className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-sky-400/80" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13.5px] font-medium text-strong">업무 보드</span>
+        <span className="font-mono text-[11px] text-faint">{BOARD_URL}</span>
+      </span>
+      <span className="text-[11px] text-dim">
+        {done}/{tasks.length} 완료{attention > 0 && <span className="ml-1.5 text-amber-300">확인 필요 {attention}</span>}
+      </span>
+    </button>
   );
 }
 

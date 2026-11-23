@@ -1,67 +1,55 @@
 import { useState } from 'react';
 import { useSession } from '../store/session';
-import { AgentAvatar, Btn, Progress, SectionTitle, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
+import { BOARD_URL } from '../engine/cli';
+import { AgentAvatar, Btn, Progress, SectionTitle, StatusBadge, agentColor, useSim } from './common';
 
 export default function Sidebar() {
   const sim = useSim()!;
-  const { input, openAgentPane, focusedPane } = useSession.getState();
+  const { input, openAgentPane, focusedPane, navigate } = useSession.getState();
   const [roleOpen, setRoleOpen] = useState(false);
   const run = (cmd: string) => input(focusedPane.startsWith('shell') ? focusedPane : 'shell-1', cmd);
   const tasks = sim.visibleTasks();
   const agents = sim.agentList();
   const done = tasks.filter((t) => t.status === 'done').length;
+  const attentionTasks = tasks.filter((t) => ['waiting', 'blocked', 'failed'].includes(t.status));
+  const readyFree = tasks.filter((t) => t.status === 'ready' && !t.assignee);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-panel">
       <SectionTitle count={`${done}/${tasks.length}`} right={<Progress value={tasks.length ? done / tasks.length : 0} className="w-16" />}>
-        Tasks
+        업무
       </SectionTitle>
       <div className="px-2 pt-1.5 pb-2">
-        {tasks.map((t) => {
-          const def = sim.taskDef(t.id)!;
-          const st = TASK_STATUS[t.status];
-          const isDone = t.status === 'done';
-          const muted = isDone || t.status === 'locked';
-          return (
-            <div
-              key={t.id}
-              className={`group relative mb-1 overflow-hidden rounded-md py-1.5 pr-2 pl-3 hover:bg-panel2 ${
-                t.status === 'waiting' || t.status === 'blocked' ? 'bg-amber-500/[0.07]' : ''
-              }`}
-              title={def.description}
-            >
-              <span className={`absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-full ${st.rail}`} />
-              <div className="flex items-start gap-2">
-                <span className={`min-w-0 flex-1 text-[12.5px] leading-snug ${isDone ? 'text-dim line-through decoration-faint/60' : muted ? 'text-dim' : 'font-medium text-strong'}`}>
-                  {def.title}
-                </span>
-                <span className={`mt-px shrink-0 rounded px-1.5 py-px text-[10px] ${st.pill}`}>{st.label}</span>
-              </div>
-              {!isDone && (
-                <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-faint">
-                  <span className="font-mono">{t.id}</span>
-                  {def.optional && <span className="rounded border border-line2 px-1 leading-tight">선택</span>}
-                  {def.review && <span className="rounded border border-violet-700/70 px-1 leading-tight text-violet-300">검증</span>}
-                  {def.dependsOn?.length && t.status === 'locked' ? <span className="truncate">← {def.dependsOn.join(', ')}</span> : null}
-                </div>
-              )}
-              {t.assignee && !isDone && (
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="flex items-center gap-1 font-mono text-[10.5px]" style={{ color: agentColor(sim, t.assignee) }}>
-                    <AgentAvatar sim={sim} id={t.assignee} size={13} />
-                    {t.assignee}
-                  </span>
-                  <Progress value={sim.taskProgress(t.id)} className="flex-1" />
-                </div>
-              )}
-              <div className="mt-1 hidden gap-1 group-hover:flex">
-                <Btn variant="outline" onClick={() => run(`task show ${t.id}`)}>
-                  상세
-                </Btn>
-              </div>
+        <button
+          onClick={() => navigate(BOARD_URL)}
+          className="block w-full rounded-md border border-line2 px-2.5 py-2 text-left hover:border-sky-700 hover:bg-panel2"
+          title="업무 보드 열기 (sim://board)"
+        >
+          <div className="flex items-center gap-2 text-[11.5px]">
+            {(
+              [
+                ['할 일', tasks.filter((t) => t.status === 'ready' || t.status === 'locked').length, 'text-dim'],
+                ['진행', tasks.filter((t) => t.status === 'assigned' || t.status === 'in_progress').length, 'text-sky-300'],
+                ['확인', attentionTasks.length, attentionTasks.length ? 'text-amber-300 font-semibold' : 'text-dim'],
+                ['완료', done, 'text-emerald-300'],
+              ] as const
+            ).map(([label, n, cls]) => (
+              <span key={label} className="flex items-baseline gap-1">
+                <span className="text-faint">{label}</span>
+                <span className={`font-mono ${cls}`}>{n}</span>
+              </span>
+            ))}
+          </div>
+          {attentionTasks.map((t) => (
+            <div key={t.id} className="mt-1 truncate text-[11px] text-amber-200">
+              ⏸ {sim.taskDef(t.id)?.title}
             </div>
-          );
-        })}
+          ))}
+          {readyFree.length > 0 && (
+            <div className="mt-1 truncate text-[11px] text-sky-200">시작 가능·미배정 {readyFree.length}건</div>
+          )}
+          <div className="mt-1 text-[10.5px] text-faint">업무 보드 열기 ↗</div>
+        </button>
       </div>
 
       <SectionTitle
