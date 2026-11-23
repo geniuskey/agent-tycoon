@@ -14,6 +14,9 @@ import {
 
 export type Screen = 'home' | 'workspace' | 'feedback';
 export type RightTab = 'browser' | 'files' | 'preview';
+export type BottomTab = 'notify' | 'timeline' | 'events';
+/** 따로 떠 있는 앱 창 (작업표시줄 버튼이 있는 것만) */
+export type AppWindowId = 'messenger' | 'briefing';
 
 export const TICK_MS = 450;
 
@@ -36,6 +39,11 @@ interface SessionState {
   chatWith: string | null;
   /** 메신저 창이 떠 있는지 (false = 최소화) */
   messengerOpen: boolean;
+  /** 터미널 아래 패널 (UI 전용) — 작업표시줄 알림 버튼이 '알림' 탭을 연다 */
+  bottomTab: BottomTab;
+  bottomOpen: boolean;
+  /** 맨 앞에 있는 앱 창 */
+  frontWindow: AppWindowId | null;
   /** 인물별로 마지막으로 읽은 메시지 seq (안 읽은 메시지 표시용, UI 전용) */
   readSeq: Record<string, number>;
   showBriefing: boolean;
@@ -58,6 +66,8 @@ interface SessionState {
   sendMessage: (personId: string, msg: { topic?: string; text?: string }) => void;
   markRead: (personId: string) => void;
   setMessengerOpen: (v: boolean) => void;
+  setBottom: (tab: BottomTab | undefined, open?: boolean) => void;
+  raiseWindow: (id: AppWindowId | null) => void;
   addShellPane: () => void;
   closePane: (paneId: string) => void;
   focusPane: (paneId: string) => void;
@@ -128,6 +138,7 @@ export const useSession = create<SessionState>((set, get) => {
       maximizedPane: null,
       rightTab: 'browser',
       messengerOpen: !!sim.scenario.people?.length,
+      frontWindow: sim.scenario.people?.length ? 'messenger' : null,
       browserUrl: 'sim://home',
       browserHistory: ['sim://home'],
       browserIndex: 0,
@@ -158,6 +169,9 @@ export const useSession = create<SessionState>((set, get) => {
     previewPath: null,
     chatWith: null,
     messengerOpen: false,
+    bottomTab: 'timeline',
+    bottomOpen: true,
+    frontWindow: null,
     readSeq: {},
     showBriefing: false,
     feedbackSessionId: null,
@@ -171,7 +185,7 @@ export const useSession = create<SessionState>((set, get) => {
       if (!scenario) return;
       const sim = new Simulation(scenario, seed, carry);
       boot(sim, { id: newId(), createdAt: Date.now() });
-      set({ showBriefing: true });
+      set({ showBriefing: true, frontWindow: 'briefing' });
       sim.input('brief', { paneId: 'shell-1' });
       get().persist();
     },
@@ -233,10 +247,13 @@ export const useSession = create<SessionState>((set, get) => {
     },
 
     openPersonPane: (personId, focus = true) => {
-      set({ chatWith: personId, ...(focus ? { messengerOpen: true } : {}) });
+      set({ chatWith: personId, ...(focus ? { messengerOpen: true, frontWindow: 'messenger' as const } : {}) });
     },
 
-    setMessengerOpen: (messengerOpen) => set({ messengerOpen }),
+    setMessengerOpen: (messengerOpen) =>
+      set((st) => (messengerOpen ? { messengerOpen, frontWindow: 'messenger' } : { messengerOpen, frontWindow: st.frontWindow === 'messenger' ? (st.showBriefing ? 'briefing' : null) : st.frontWindow })),
+    raiseWindow: (frontWindow) => set((st) => (st.frontWindow === frontWindow ? {} : { frontWindow })),
+    setBottom: (bottomTab, bottomOpen = true) => set((st) => ({ bottomTab: bottomTab ?? st.bottomTab, bottomOpen })),
 
     sendMessage: (personId, msg) => {
       const { sim } = get();
@@ -305,7 +322,8 @@ export const useSession = create<SessionState>((set, get) => {
       sim?.observe('file', path);
     },
 
-    setShowBriefing: (showBriefing) => set({ showBriefing }),
+    setShowBriefing: (showBriefing) =>
+      set((st) => (showBriefing ? { showBriefing, frontWindow: 'briefing' } : { showBriefing, frontWindow: st.frontWindow === 'briefing' ? (st.messengerOpen && st.sim?.scenario.people?.length ? 'messenger' : null) : st.frontWindow })),
 
     persist: () => {
       if (saveTimer) clearTimeout(saveTimer);

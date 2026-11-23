@@ -1,25 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Panel, PanelGroup } from 'react-resizable-panels';
-import { formatSimTime } from '../engine/engine';
 import { TICK_MS, useSession, type RightTab } from '../store/session';
 import { DOMAINS } from '../scenarios';
-import { Btn, SimBadge, useSim } from './common';
+import { Btn, Tab, useSim } from './common';
 import Sidebar from './Sidebar';
 import TerminalGrid, { ResizeHandle } from './terminal/TerminalGrid';
 import Browser from './browser/Browser';
 import { FileExplorer, FilePreview } from './files/Files';
 import { EventLog, Gantt, Notifications } from './Timeline';
 import Briefing from './Briefing';
-import { MessengerButton, MessengerWindow } from './messenger/MessengerWindow';
+import { MessengerWindow } from './messenger/MessengerWindow';
 
 export default function Workspace() {
   const sim = useSim()!;
   const speed = useSession((s) => s.speed);
   const rightTab = useSession((s) => s.rightTab);
   const showBriefing = useSession((s) => s.showBriefing);
-  const { setSpeed, setRightTab, goHome, input, addShellPane, setShowBriefing, persist } = useSession.getState();
-  const [bottomTab, setBottomTab] = useState<'notify' | 'timeline' | 'events'>('timeline');
-  const [bottomOpen, setBottomOpen] = useState(true);
+  const bottomTab = useSession((s) => s.bottomTab);
+  const bottomOpen = useSession((s) => s.bottomOpen);
+  const { setRightTab, goHome, input, addShellPane, setShowBriefing, persist, setBottom } = useSession.getState();
 
   // 시뮬레이션 클럭 — tick 단위 상태 전이 (재현성: 명령은 tick에 기록됨)
   useEffect(() => {
@@ -42,52 +41,16 @@ export default function Workspace() {
   ];
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Top bar */}
-      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
-        <button onClick={goHome} className="font-mono text-sm font-bold text-sky-300" title="홈으로">
-          &gt;_ Agent Tycoon
+    // IDE 아무 곳이나 누르면 IDE가 앞으로 (창 안을 누르면 그 창이 이어서 앞으로 온다)
+    <div className="flex h-full flex-col" onPointerDownCapture={() => useSession.getState().raiseWindow(null)}>
+      {/* Top bar — 제목과 작업 명령만. 상태는 하단 상태바로 */}
+      <header className="flex h-10 shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
+        <button onClick={goHome} className="font-mono text-[13px] font-semibold text-fg hover:text-strong" title="홈으로">
+          <span className="text-sky-400">&gt;_</span> Agent Tycoon
         </button>
-        <SimBadge />
-        <div className="mx-2 h-5 w-px bg-line" />
-        <div className="min-w-0">
-          <div className="truncate text-[13px] font-medium text-fg">{sim.scenario.title}</div>
-          <div className="truncate text-[10.5px] text-faint">
-            {DOMAINS[sim.scenario.domain] ?? sim.scenario.domain} · {sim.scenario.company.org} · seed {sim.seed}
-          </div>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          {/* 상태 묶음: 개입 필요 · 작업 중 · 시계 · 배속 */}
-          {attention > 0 ? (
-            <span className="attn rounded bg-amber-400 px-2 py-0.5 text-[11.5px] font-bold text-amber-950">⏸ 개입 필요 {attention}</span>
-          ) : (
-            <span className="rounded border border-line2 px-2 py-0.5 text-[11px] text-faint">개입 필요 0</span>
-          )}
-          <span className={`flex items-center gap-1.5 rounded px-2 py-0.5 text-[11px] ${busy ? 'bg-sky-500/10 text-sky-200' : 'text-faint'}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${busy ? 'pulse bg-sky-400' : 'bg-faint'}`} />
-            작업 중 {busy}
-          </span>
-          <div className="mx-1 h-5 w-px bg-line" />
-          <span className="font-mono text-[15px] font-semibold tracking-tight text-strong tabular-nums" title="가상 업무 시간 (1 tick = 1분)">
-            {formatSimTime(sim.tick)}
-          </span>
-          <div className="flex items-center rounded border border-line2">
-            {[0, 1, 2, 4].map((s) => (
-              <button
-                key={s}
-                onClick={() => setSpeed(s)}
-                className={`px-2 py-0.5 text-[11px] ${speed === s ? (s === 0 ? 'bg-amber-500/20 text-amber-200' : 'bg-sky-500/20 text-sky-200') : 'text-dim hover:text-fg'}`}
-                title={s === 0 ? '일시정지' : `${s}배속`}
-              >
-                {s === 0 ? '❚❚' : `${s}x`}
-              </button>
-            ))}
-          </div>
-          <div className="mx-1 h-5 w-px bg-line" />
-          <MessengerButton />
-          <Btn variant="outline" onClick={() => setShowBriefing(true)}>
-            브리핑
-          </Btn>
+        <div className="h-4 w-px bg-line2" />
+        <div className="min-w-0 truncate text-[13px] text-fg">{sim.scenario.title}</div>
+        <div className="ml-auto flex items-center gap-1.5">
           <Btn variant="outline" onClick={() => input('shell-1', 'hint')}>
             힌트
           </Btn>
@@ -106,8 +69,8 @@ export default function Workspace() {
           <PanelGroup direction="vertical" autoSaveId="at-center">
             <Panel minSize={30}>
               <div className="flex h-full flex-col">
-                <div className="flex h-7 shrink-0 items-center gap-1 border-b border-line px-2 text-[11px] text-faint">
-                  <span className="font-semibold text-dim">터미널 작업 공간</span>
+                <div className="flex h-8 shrink-0 items-center gap-1 border-b border-line bg-panel px-3 text-[11px] text-faint">
+                  <span className="font-semibold text-fg">터미널</span>
                   <span className="ml-2 hidden xl:inline">Alt+1..9 이동 · Alt+Enter 최대화 · Ctrl+F 검색 · Tab 자동완성</span>
                   <Btn className="ml-auto" onClick={addShellPane} title="셸 패널 추가">
                     ＋ 셸
@@ -122,13 +85,13 @@ export default function Workspace() {
               <>
                 <ResizeHandle dir="v" />
                 <Panel defaultSize={24} minSize={10}>
-                  <BottomPanel tab={bottomTab} setTab={setBottomTab} onClose={() => setBottomOpen(false)} />
+                  <BottomPanel tab={bottomTab} setTab={(t) => setBottom(t)} onClose={() => setBottom(undefined, false)} />
                 </Panel>
               </>
             )}
           </PanelGroup>
           {!bottomOpen && (
-            <button onClick={() => setBottomOpen(true)} className="absolute bottom-1 left-1/2 rounded border border-line2 bg-panel px-2 text-[11px] text-dim">
+            <button onClick={() => setBottom(undefined, true)} className="absolute bottom-1 left-1/2 rounded border border-line2 bg-panel px-2 text-[11px] text-dim hover:text-fg">
               타임라인 열기
             </button>
           )}
@@ -136,15 +99,11 @@ export default function Workspace() {
         <ResizeHandle dir="h" />
         <Panel defaultSize={33} minSize={20}>
           <div className="flex h-full min-h-0 flex-col bg-paper">
-            <div className="flex h-8 shrink-0 items-end gap-0.5 border-b border-line bg-panel px-2">
+            <div className="flex h-8 shrink-0 items-stretch border-b border-line bg-panel px-1">
               {tabs.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setRightTab(t.id)}
-                  className={`rounded-t px-3 py-1 text-xs ${rightTab === t.id ? 'border border-b-0 border-line bg-paper font-medium text-strong' : 'text-dim hover:text-fg'}`}
-                >
+                <Tab key={t.id} active={rightTab === t.id} onClick={() => setRightTab(t.id)}>
                   {t.label}
-                </button>
+                </Tab>
               ))}
             </div>
             <div className="min-h-0 flex-1">
@@ -155,6 +114,7 @@ export default function Workspace() {
           </div>
         </Panel>
       </PanelGroup>
+      <StatusBar attention={attention} busy={busy} />
       <MessengerWindow />
       {showBriefing && <Briefing onClose={() => setShowBriefing(false)} />}
     </div>
@@ -174,7 +134,7 @@ function BottomPanel({
   const n = sim.events.filter((e) => e.type === 'notify').length;
   return (
     <div className="flex h-full min-h-0 flex-col border-t border-line bg-panel">
-      <div className="flex h-7 shrink-0 items-center gap-1 border-b border-line px-1">
+      <div className="flex h-8 shrink-0 items-stretch border-b border-line px-1">
         {(
           [
             ['timeline', '타임라인'],
@@ -182,15 +142,11 @@ function BottomPanel({
             ['events', '이벤트 로그'],
           ] as const
         ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`-mb-px h-7 border-b-2 px-2.5 text-[11.5px] ${tab === id ? 'border-sky-400 font-medium text-strong' : 'border-transparent text-dim hover:text-fg'}`}
-          >
+          <Tab key={id} active={tab === id} onClick={() => setTab(id)}>
             {label}
-          </button>
+          </Tab>
         ))}
-        <Btn className="ml-auto" onClick={onClose}>
+        <Btn className="my-auto ml-auto" onClick={onClose}>
           ✕
         </Btn>
       </div>
@@ -200,5 +156,31 @@ function BottomPanel({
         {tab === 'events' && <EventLog sim={sim} />}
       </div>
     </div>
+  );
+}
+
+/** IDE 상태바 — Agent 상태만. 평소 파랑, 판단을 기다리는 Agent가 있으면 호박색, 제출 후 초록. 시계·배속은 작업표시줄 트레이에 */
+function StatusBar({ attention, busy }: { attention: number; busy: number }) {
+  const sim = useSim()!;
+  const tone = sim.submitted ? 'bg-emerald-700 text-white' : attention > 0 ? 'bg-amber-400 text-amber-950' : 'bg-accent text-white';
+  return (
+    <footer className={`flex h-6 shrink-0 items-center gap-3 px-2 text-[11px] transition-colors ${tone}`}>
+      <span className="truncate opacity-85">
+        {DOMAINS[sim.scenario.domain] ?? sim.scenario.domain} · {sim.scenario.company.org}
+      </span>
+      <span className="font-mono opacity-70">seed {sim.seed}</span>
+      <span className="mx-1 h-3 w-px bg-current opacity-30" />
+      {sim.submitted ? (
+        <span className="font-semibold">✓ 제출됨</span>
+      ) : attention > 0 ? (
+        <span className="font-bold">⏸ 개입 필요 {attention}</span>
+      ) : (
+        <span className="opacity-80">개입 필요 0</span>
+      )}
+      <span className="flex items-center gap-1.5 opacity-90">
+        <span className={`h-1.5 w-1.5 rounded-full bg-current ${busy ? 'pulse' : 'opacity-50'}`} />
+        작업 중 {busy}
+      </span>
+    </footer>
   );
 }

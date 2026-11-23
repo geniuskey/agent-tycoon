@@ -28,7 +28,7 @@ export default function ScanView({ content }: { content: string }) {
     return <div className="p-6 text-xs text-red-300">스캔 파일을 열 수 없습니다.</div>;
   }
   return (
-    <div className="flex min-w-0 justify-center bg-[#2a2d33] p-4">
+    <div className="flex min-w-0 justify-center bg-[#26282b] p-4">
       <div
         className="relative w-full max-w-3xl rounded-sm px-6 py-5 shadow-2xl"
         style={{ background: 'linear-gradient(180deg,#f3efe4,#ebe5d6)', color: '#2b2b2b', transform: 'rotate(-0.4deg)' }}

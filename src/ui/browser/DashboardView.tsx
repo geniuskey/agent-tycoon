@@ -287,7 +287,7 @@ function BarWidget({ w, rows, allRows }: { w: Widget; rows: Record<string, strin
             type: 'bar',
             data: vals.map((v) => (v === null ? null : Number(v.toFixed(2)))),
             barMaxWidth: 28,
-            itemStyle: { color: '#3987e5', borderRadius: [4, 4, 0, 0] },
+            itemStyle: { color: '#3574f0', borderRadius: [4, 4, 0, 0] },
             label: { show: true, position: 'top', color: INK.secondary, fontSize: 10, formatter: (p: { value: number }) => fmt(p.value) },
           },
         ],
@@ -304,7 +304,7 @@ function BarWidget({ w, rows, allRows }: { w: Widget; rows: Record<string, strin
           itemStyle: { color: colorFor(domain, cat), borderRadius: [4, 4, 0, 0] },
           data: rows.map((r) => (r[w.color!] === cat ? num(r[w.y!]) : null)),
         }))
-      : [{ type: 'bar', barMaxWidth: 22, itemStyle: { color: '#3987e5', borderRadius: [4, 4, 0, 0] }, data: rows.map((r) => num(r[w.y!])) }];
+      : [{ type: 'bar', barMaxWidth: 22, itemStyle: { color: '#3574f0', borderRadius: [4, 4, 0, 0] }, data: rows.map((r) => num(r[w.y!])) }];
     return {
       ...baseOption(),
       tooltip: { ...(baseOption().tooltip as object), trigger: 'axis' },
@@ -380,7 +380,7 @@ function HistWidget({ w, rows }: { w: Widget; rows: Record<string, string>[] }) 
         {
           type: 'bar',
           barCategoryGap: '8%',
-          data: counts.map((c, i) => ({ value: c, itemStyle: { color: i < markIdx ? '#e66767' : '#3987e5', borderRadius: [3, 3, 0, 0] } })),
+          data: counts.map((c, i) => ({ value: c, itemStyle: { color: i < markIdx ? '#e66767' : '#3574f0', borderRadius: [3, 3, 0, 0] } })),
           markLine:
             markIdx >= 0
               ? {
@@ -430,7 +430,7 @@ function WaferMapWidget({ w, rows }: { w: Widget; rows: Record<string, string>[]
           return (
             <div key={k} className="text-center">
               <svg width={size} height={size} viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`} className="cursor-pointer" onClick={() => setSel(sel === k ? null : k)}>
-                <circle cx={0} cy={0} r={R - 0.05} fill="#0d121c" stroke="#2c3749" strokeWidth={0.08} />
+                <circle cx={0} cy={0} r={R - 0.05} fill="#26282b" stroke="#4a4d52" strokeWidth={0.08} />
                 {wr.map((r, i) => {
                   const v = num(r[w.value!]);
                   const x = num(r[w.x!]) ?? 0;

@@ -3,7 +3,7 @@ import { evaluate, type Rating } from '../engine/evaluate';
 import { exportCarry, formatSimTime, replay } from '../engine/engine';
 import { SCENARIOS } from '../scenarios';
 import { useSession } from '../store/session';
-import { AgentAvatar, Btn, SimBadge, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
+import { AgentAvatar, Btn, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
 import { EventLog, Gantt } from './Timeline';
 
 const RATING: Record<Rating, { label: string; cls: string; icon: string }> = {
@@ -24,9 +24,11 @@ export default function Feedback() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-panel px-4">
-        <span className="font-mono text-sm font-bold text-sky-300">&gt;_ Agent Tycoon</span>
-        <SimBadge />
+      <header className="flex h-10 shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
+        <span className="font-mono text-[13px] font-semibold text-fg">
+          <span className="text-sky-400">&gt;_</span> Agent Tycoon
+        </span>
+        <span className="h-4 w-px bg-line2" />
         <span className="text-[13px] text-fg">{sim.scenario.title}</span>
         <div className="ml-4 flex gap-1">
           <button onClick={() => setTab('feedback')} className={`rounded px-3 py-1 text-xs ${tab === 'feedback' ? 'bg-line text-fg' : 'text-dim'}`}>

@@ -255,7 +255,7 @@ function Conversation({ id }: { id: string }) {
             else if (e.key === 'ArrowUp') setCur((c) => Math.max(0, c - 1));
             else if (e.key === 'Enter' && choices[cur]) send({ topic: choices[cur].id });
           }}
-          className="max-h-[45%] shrink-0 overflow-y-auto border-t border-line bg-panel px-2 pt-1.5 pb-1.5 outline-none focus:bg-[#141b29]"
+          className="max-h-[45%] shrink-0 overflow-y-auto border-t border-line bg-panel px-2 pt-1.5 pb-1.5 outline-none focus:bg-[#26282b]"
         >
           <div className="flex items-center px-1 pb-1">
             <span className="text-[11.5px] font-semibold text-dim">보낼 메시지</span>

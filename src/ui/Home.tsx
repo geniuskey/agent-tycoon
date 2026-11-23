@@ -4,7 +4,7 @@ import type { CarryState, LoadedScenario } from '../engine/types';
 import { useSession } from '../store/session';
 import { deleteSession, exportSession, type SessionRecord } from '../store/persist';
 import { activeFoundation, carriedTrust, formatSimTime } from '../engine/engine';
-import { Btn, SimBadge } from './common';
+import { Btn } from './common';
 import { BriefingBody } from './Briefing';
 
 export default function Home() {
@@ -46,14 +46,16 @@ export default function Home() {
   const usedTypes = [...new Set(all.map((s) => s.taskType))];
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="flex h-full flex-col">
+      <div className="flex h-10 shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
+        <span className="font-mono text-[13px] font-semibold text-fg">
+          <span className="text-sky-400">&gt;_</span> Agent Tycoon
+        </span>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto">
       <div className="mx-auto max-w-6xl px-6 py-8">
         <header className="mb-8 flex items-start justify-between gap-6">
           <div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="font-mono text-lg font-bold text-sky-300">&gt;_ Agent Tycoon</span>
-              <SimBadge />
-            </div>
             <h1 className="text-3xl font-semibold tracking-tight text-strong">AI가 일할 수 있는 조직을 만든다</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-dim">
               현실의 출발점은 'AI Agent 여러 개를 지휘하는 것'이 아니라 종이·엑셀·메일·사람 머릿속에 흩어진 데이터입니다.
@@ -125,12 +127,13 @@ export default function Home() {
                     <span className="ml-auto text-faint">준비 중</span>
                   )}
                 </div>
-                <div className={`mb-1 ${s.ready ? 'text-[15px] font-semibold text-strong' : 'text-[13px] text-dim'}`}>{s.title}</div>
+                <div className={`mb-1 ${s.ready ? 'text-[14px] font-semibold text-strong' : 'text-[13px] text-dim'}`}>{s.title}</div>
                 <div className={`line-clamp-2 leading-relaxed ${s.ready ? 'text-[12.5px] text-dim' : 'text-[11.5px] text-faint'}`}>{s.summary}</div>
               </button>
             ))}
           </div>
         </section>
+      </div>
       </div>
 
       {sel && (
@@ -282,27 +285,21 @@ function CampaignSection({
         <span className="text-[11px] text-faint">{c.company}</span>
       </div>
       <p className="mb-4 max-w-3xl text-[13px] leading-relaxed text-dim">{c.summary}</p>
-      <ol className="relative grid gap-2 border-l border-line2 pl-5">
+      <ol className="overflow-hidden rounded-lg border border-line bg-panel">
         {c.stages.map((st) => {
           const missions = st.freeplay ? [] : missionsOf(c.id, st.stage);
           const ready = st.status === 'ready';
           return (
-            <li key={st.stage} className="relative">
+            <li key={st.stage} className="flex gap-3 border-t border-line px-4 py-3 first:border-t-0">
               <span
-                className={`absolute top-3 -left-[27px] flex h-3.5 w-3.5 items-center justify-center rounded-full border text-[8px] ${
-                  missions.length && missions.every((m) => doneRec(m.id)) ? 'border-emerald-500 bg-emerald-500/30' : ready ? 'border-sky-500 bg-sky-500/20' : 'border-line2 bg-bg'
+                className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                  missions.length && missions.every((m) => doneRec(m.id)) ? 'bg-emerald-400' : ready ? 'bg-accent' : 'border border-line2'
                 }`}
               />
-              <div
-                className={
-                  ready
-                    ? 'rounded-lg border border-line2 border-l-sky-500 border-l-[3px] bg-panel px-4 py-3'
-                    : 'flex flex-wrap items-baseline gap-x-3 rounded-lg border border-dashed border-line px-4 py-2'
-                }
-              >
+              <div className={`min-w-0 flex-1 ${ready ? '' : 'flex flex-wrap items-baseline gap-x-3'}`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`font-mono text-[11px] ${ready ? 'text-sky-300' : 'text-faint'}`}>STAGE {st.stage}</span>
-                  <span className={ready ? 'text-[15px] font-semibold text-strong' : 'text-[13px] text-dim'}>{st.title}</span>
+                  <span className={`font-mono text-[11px] ${ready ? 'text-dim' : 'text-faint'}`}>STAGE {st.stage}</span>
+                  <span className={ready ? 'text-[14px] font-semibold text-strong' : 'text-[13px] text-dim'}>{st.title}</span>
                   <span className={`rounded px-1.5 py-px text-[10.5px] ${ready ? 'bg-line text-dim' : 'text-faint'}`}>플레이어: {st.role}</span>
                   {!ready && <span className="rounded border border-line px-1.5 text-[10px] text-faint">준비 중</span>}
                   {st.freeplay && <span className="text-[10.5px] text-sky-300">아래 자유 플레이 ↓</span>}
@@ -322,7 +319,7 @@ function CampaignSection({
                               ? 'border-emerald-700/60 bg-emerald-500/[0.06] hover:border-emerald-500'
                               : cf.locked
                                 ? 'border-line2 bg-bg hover:border-line2 hover:bg-panel2'
-                                : 'border-sky-600/70 bg-sky-500/10 hover:border-sky-400 hover:bg-sky-500/15'
+                                : 'border-accent bg-accent/15 hover:bg-accent/25'
                           }`}
                         >
                           <span className={`text-xs ${done ? 'text-emerald-300' : cf.locked ? 'text-faint' : 'text-sky-300'}`}>{done ? '✔' : cf.locked ? '◌' : '▶'}</span>

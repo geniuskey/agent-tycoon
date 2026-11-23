@@ -4,6 +4,7 @@ import Home from './Home';
 import Workspace from './Workspace';
 import Feedback from './Feedback';
 import { preloadTermFont } from './terminal/termRegistry';
+import Taskbar from './Taskbar';
 
 export default function App() {
   const screen = useSession((s) => s.screen);
@@ -21,7 +22,11 @@ export default function App() {
   }, []);
 
   if (!booted) return <div className="flex h-full items-center justify-center text-dim">세션 복구 중…</div>;
-  if (screen === 'workspace') return <Workspace />;
-  if (screen === 'feedback') return <Feedback />;
-  return <Home />;
+  // 모든 화면은 가상 사내 PC 위에서 돈다 — 작업표시줄은 항상 맨 아래
+  return (
+    <div className="flex h-full flex-col">
+      <div className="min-h-0 flex-1">{screen === 'workspace' ? <Workspace /> : screen === 'feedback' ? <Feedback /> : <Home />}</div>
+      <Taskbar />
+    </div>
+  );
 }

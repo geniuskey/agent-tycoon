@@ -76,8 +76,8 @@ export function Btn({
 }) {
   const v = {
     ghost: 'hover:bg-panel2 text-dim hover:text-fg',
-    primary: 'bg-sky-500/90 hover:bg-sky-400 text-slate-950 font-semibold',
-    outline: 'border border-line2 hover:border-sky-600 hover:text-fg text-dim',
+    primary: 'bg-accent hover:bg-sky-600 text-white font-medium',
+    outline: 'border border-line2 hover:bg-panel2 hover:text-fg text-dim',
     danger: 'border border-red-900 text-red-300 hover:bg-red-950',
   }[variant];
   return (
@@ -92,31 +92,33 @@ export function Btn({
   );
 }
 
+/** IDE 탭 — 활성 탭은 아래 2px 강조선 */
+export function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative px-3 text-[12px] transition-colors ${active ? 'text-strong' : 'text-dim hover:bg-panel2 hover:text-fg'}`}
+    >
+      {children}
+      {active && <span className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-accent" />}
+    </button>
+  );
+}
+
 export function SectionTitle({ children, right, count }: { children: ReactNode; right?: ReactNode; count?: ReactNode }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-panel/95 px-3 py-2 backdrop-blur">
-      <span className="text-[12px] font-semibold text-fg">{children}</span>
+    <div className="sticky top-0 z-10 flex h-8 items-center gap-2 bg-panel px-3">
+      <span className="text-[11px] font-semibold tracking-wide text-dim uppercase">{children}</span>
       {count !== undefined && <span className="rounded-full bg-line px-1.5 py-px font-mono text-[10px] text-dim">{count}</span>}
       <span className="ml-auto flex items-center">{right}</span>
     </div>
   );
 }
 
-export function SimBadge() {
-  return (
-    <span
-      title="실제 AI API를 호출하지 않는 시뮬레이션입니다. 모든 데이터는 합성 데이터입니다."
-      className="rounded border border-amber-700/60 bg-amber-500/10 px-1.5 py-px text-[10px] font-semibold tracking-wider text-amber-300"
-    >
-      SIMULATION
-    </span>
-  );
-}
-
 export function Progress({ value, className = '' }: { value: number; className?: string }) {
   return (
     <div className={`h-1 overflow-hidden rounded bg-line ${className}`}>
-      <div className="h-full bg-sky-400 transition-all duration-300" style={{ width: `${Math.round(value * 100)}%` }} />
+      <div className="h-full bg-accent transition-all duration-300" style={{ width: `${Math.round(value * 100)}%` }} />
     </div>
   );
 }

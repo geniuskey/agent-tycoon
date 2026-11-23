@@ -74,8 +74,8 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
   // 결정 요청(gate/confirm)은 색을 입힌 면, 일상 지시(instruct)는 중립 면 — 한눈에 '내가 답해야 하는 것'이 구분되게
   const tone = isGate
     ? blocked
-      ? { box: 'border-red-500/80 bg-[#1c0f12]', head: 'bg-red-500/15', title: 'text-red-100', chip: 'bg-red-400 text-red-950', chipText: tool ? '도구 실행 — 결정 필요' : '차단 — 결정 필요', mark: 'border-red-300 bg-red-400/30', dot: 'bg-red-200', btn: 'bg-red-400 text-red-950 hover:bg-red-300', foot: 'bg-[#1c0f12]', row: 'bg-red-500/10' }
-      : { box: 'border-amber-500/80 bg-[#1a1509]', head: 'bg-amber-500/15', title: 'text-amber-50', chip: 'bg-amber-400 text-amber-950', chipText: tool ? '도구 실행 승인' : '결정 필요', mark: 'border-amber-300 bg-amber-400/30', dot: 'bg-amber-200', btn: 'bg-amber-400 text-amber-950 hover:bg-amber-300', foot: 'bg-[#1a1509]', row: 'bg-amber-500/10' }
+      ? { box: 'border-red-500/80 bg-[#2a1f21]', head: 'bg-red-500/15', title: 'text-red-100', chip: 'bg-red-400 text-red-950', chipText: tool ? '도구 실행 — 결정 필요' : '차단 — 결정 필요', mark: 'border-red-300 bg-red-400/30', dot: 'bg-red-200', btn: 'bg-red-400 text-red-950 hover:bg-red-300', foot: 'bg-[#2a1f21]', row: 'bg-red-500/10' }
+      : { box: 'border-amber-500/80 bg-[#29251b]', head: 'bg-amber-500/15', title: 'text-amber-50', chip: 'bg-amber-400 text-amber-950', chipText: tool ? '도구 실행 승인' : '결정 필요', mark: 'border-amber-300 bg-amber-400/30', dot: 'bg-amber-200', btn: 'bg-amber-400 text-amber-950 hover:bg-amber-300', foot: 'bg-[#29251b]', row: 'bg-amber-500/10' }
     : { box: 'border-line2 bg-term2', head: '', title: 'text-fg', chip: '', chipText: '', mark: 'border-sky-400 bg-sky-500/30', dot: 'bg-sky-300', btn: 'bg-sky-500/90 text-slate-950 hover:bg-sky-400', foot: 'bg-term2', row: 'bg-panel2' };
 
   const toggleMod = (i: number) =>

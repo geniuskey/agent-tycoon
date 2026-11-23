@@ -8,8 +8,8 @@ import { AgentAvatar, agentColor } from './common';
 const STATUS_FILL: Record<AgentStatus, string> = {
   idle: 'transparent',
   completed: 'transparent',
-  planning: '#22d3ee',
-  working: '#3987e5',
+  planning: '#4cb0b8',
+  working: '#3574f0',
   reviewing: '#9085e9',
   waiting: '#c98500',
   blocked: '#e66767',
@@ -70,7 +70,7 @@ export function Gantt({ sim, uptoTick, onPick }: { sim: Simulation; uptoTick?: n
                 <div
                   key={i}
                   title={`${s.status}${s.task ? ' · ' + s.task : ''}  ${formatSimTime(s.from)}–${formatSimTime(s.to)}`}
-                  className="absolute top-0 h-full rounded-[2px] border-r-2 border-[#0b0f17]"
+                  className="absolute top-0 h-full rounded-[2px] border-r-2 border-[#1e1f22]"
                   style={{ left: `${(s.from / span) * 100}%`, width: `${((s.to - s.from) / span) * 100}%`, background: STATUS_FILL[s.status] }}
                 />
               ))}

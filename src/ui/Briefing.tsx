@@ -1,6 +1,7 @@
 import type { LoadedScenario } from '../engine/types';
 import { DOMAINS, FUNCTIONS, TASK_TYPES } from '../scenarios';
 import { Btn, useSim } from './common';
+import AppWindow, { WIN_BOTTOM, WIN_TOP, type Rect } from './AppWindow';
 
 export function BriefingBody({ s }: { s: LoadedScenario }) {
   const b = s.briefing;
@@ -72,28 +73,29 @@ export function BriefingBody({ s }: { s: LoadedScenario }) {
   );
 }
 
+function defaultRect(): Rect {
+  const w = Math.min(780, window.innerWidth - 48);
+  const h = Math.min(680, window.innerHeight - WIN_TOP - WIN_BOTTOM - 32);
+  return { x: Math.round((window.innerWidth - w) / 2), y: WIN_TOP + Math.round((window.innerHeight - WIN_TOP - WIN_BOTTOM - h) / 2), w, h };
+}
+
+/** 업무 브리핑은 작업표시줄의 앱 창이다 — 띄워 둔 채로 터미널·브라우저를 쓸 수 있다 */
 export default function Briefing({ onClose }: { onClose: () => void }) {
   const sim = useSim()!;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6" onClick={onClose}>
-      <div className="max-h-full w-full max-w-3xl overflow-auto rounded-lg border border-line2 bg-panel p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <div className="text-[11px] tracking-wider text-faint uppercase">업무 브리핑</div>
-            <h2 className="text-xl font-semibold text-strong">{sim.scenario.briefing.title}</h2>
-          </div>
-          <Btn onClick={onClose}>✕</Btn>
-        </div>
+    <AppWindow id="briefing" title="업무 브리핑" subtitle={sim.scenario.briefing.requester.name} storageKey="at-briefing-rect" defaultRect={defaultRect} minW={480} minH={360} onMinimize={onClose}>
+      <div className="h-full overflow-auto p-6">
+        <h2 className="mb-4 text-xl font-semibold text-strong">{sim.scenario.briefing.title}</h2>
         <BriefingBody s={sim.scenario} />
-        <div className="mt-5 rounded-md border border-line bg-bg p-3 text-[12px] leading-relaxed text-dim">
+        <div className="mt-5 rounded-md border border-line bg-panel p-3 text-[12px] leading-relaxed text-dim">
           <div className="mb-1 font-semibold text-fg">시작하는 방법</div>
-          1. 왼쪽 <b className="text-fg">＋ 생성</b> 또는 터미널에 <code className="text-sky-300">agent spawn &lt;role&gt;</code> — Agent마다 전용 터미널이 열립니다.
+          1. 왼쪽 <b className="text-fg">＋ 새 세션</b> 또는 터미널에 <code className="text-sky-300">agent spawn &lt;role&gt;</code> — Agent마다 전용 터미널이 열립니다.
           <br />
-          2. Agent 패널 아래 선택 카드에서 <b className="text-fg">지시 하나</b>와 필요한 <b className="text-fg">조건(복수)</b>을 골라 지시합니다. 사람은 왼쪽 목록을 눌러 대화하고 질문을 고릅니다.
+          2. Agent 패널 아래 선택 카드에서 <b className="text-fg">지시 하나</b>와 필요한 <b className="text-fg">조건(복수)</b>을 골라 지시합니다. 사람은 작업표시줄의 <b className="text-fg">메신저</b>에서 대화하고 질문을 고릅니다.
           <br />
           3. Agent가 <span className="text-amber-300">Waiting/Blocked</span> 상태가 되면 선택 카드에서 판단을 내려 주세요 (단일/복수 선택). 결과물은 오른쪽 브라우저·파일에서 확인합니다.
           <br />
-          4. 완료되면 상단 <b className="text-fg">제출</b> → 학습 피드백
+          4. 완료되면 상단 <b className="text-fg">제출</b> → 학습 피드백. 이 창은 작업표시줄의 <b className="text-fg">업무 브리핑</b>으로 언제든 다시 엽니다.
         </div>
         <div className="mt-4 flex justify-end">
           <Btn variant="primary" onClick={onClose}>
@@ -101,6 +103,6 @@ export default function Briefing({ onClose }: { onClose: () => void }) {
           </Btn>
         </div>
       </div>
-    </div>
+    </AppWindow>
   );
 }

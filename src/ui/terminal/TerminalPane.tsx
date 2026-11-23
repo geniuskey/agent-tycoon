@@ -67,26 +67,26 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
   const role = agent ? sim?.roleDef(agent.role) : undefined;
   const removed = agentId && !agent;
   // 패널 정체성 색: Agent는 고유색, 오케스트레이터 셸은 하늘색
-  const idColor = agentId ? agentColor(sim, agentId) : '#38bdf8';
+  const idColor = agentId ? agentColor(sim, agentId) : '#6493f4';
   const attention = agent && (agent.status === 'waiting' || agent.status === 'blocked' || agent.status === 'failed');
   const frame = attention
     ? agent!.status === 'waiting'
       ? 'border-amber-500/80 attn'
       : 'border-red-500/80'
     : focused
-      ? 'border-sky-600/80 shadow-[0_0_0_1px_rgba(56,189,248,0.18)]'
+      ? 'border-accent'
       : 'border-line';
 
   return (
     <div
-      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-md border bg-term ${frame}`}
+      className={`flex h-full min-h-0 flex-col overflow-hidden rounded border bg-term ${frame}`}
       onMouseDown={() => focusPane(paneId)}
     >
       <div
-        className={`flex h-8 shrink-0 items-center gap-2 border-b border-line px-2 text-xs ${focused ? 'bg-panel2' : 'bg-term2'}`}
+        className={`flex h-8 shrink-0 items-center gap-2 border-b border-line px-2 text-xs ${focused ? 'bg-panel2' : 'bg-panel'}`}
         style={{ boxShadow: `inset 0 2px 0 ${idColor}${focused ? '' : '99'}` }}
       >
-        <span className={`rounded px-1 font-mono text-[10px] ${focused ? 'bg-sky-500/20 text-sky-200' : 'bg-line text-faint'}`} title={`Alt+${index + 1}`}>
+        <span className={`rounded px-1 font-mono text-[10px] ${focused ? 'bg-accent text-white' : 'bg-line text-faint'}`} title={`Alt+${index + 1}`}>
           {index + 1}
         </span>
         {agentId ? (
@@ -107,7 +107,7 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
           </>
         ) : (
           <>
-            <span className="font-mono text-[12.5px] font-semibold text-sky-300">❯ orchestrator</span>
+            <span className="font-mono text-[12.5px] font-semibold text-fg"><span className="text-sky-400">❯</span> orchestrator</span>
             <span className="truncate text-faint">셸 · 명령 및 알림</span>
           </>
         )}
@@ -164,7 +164,7 @@ export default function TerminalPane({ paneId, agentId, index }: { paneId: strin
                 inst.term.focus();
               }
             }}
-            className="flex-1 rounded border border-line2 bg-bg px-2 py-0.5 font-mono text-xs outline-none focus:border-sky-700"
+            className="flex-1 rounded border border-line2 bg-bg px-2 py-0.5 font-mono text-xs outline-none focus:border-accent"
           />
           <Btn onClick={() => inst.search.findPrevious(query)}>↑</Btn>
           <Btn onClick={() => inst.search.findNext(query)}>↓</Btn>
