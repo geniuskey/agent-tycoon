@@ -297,25 +297,37 @@ export function syncTerm(inst: TermInstance) {
   }
   inst.lastSeq = evs[evs.length - 1].seq;
   if (!out.length && !cleared) return;
-  eraseInput(inst);
-  if (cleared) inst.term.clear();
-  if (out.length) inst.term.write(out.join('\n').replace(/\n/g, '\r\n') + '\r\n');
-  drawPrompt(inst);
+  const body = out.length ? out.join('\n').replace(/\n/g, '\r\n') + '\r\n' : '';
+  if (cleared) {
+    eraseInput(inst);
+    inst.term.clear();
+    inst.term.write(body + promptSeq(inst));
+  } else {
+    inst.term.write(eraseSeq(inst) + body + promptSeq(inst));
+  }
 }
 
 // ───────────── line editor ─────────────
 
-function eraseInput(inst: TermInstance) {
-  if (inst.cursorRow > 0) inst.term.write(`\x1b[${inst.cursorRow}A`);
-  inst.term.write('\r\x1b[J');
+function eraseSeq(inst: TermInstance): string {
+  const s = (inst.cursorRow > 0 ? `\x1b[${inst.cursorRow}A` : '') + '\r\x1b[J';
   inst.cursorRow = 0;
+  return s;
 }
 
-function drawPrompt(inst: TermInstance) {
+function eraseInput(inst: TermInstance) {
+  inst.term.write(eraseSeq(inst));
+}
+
+/**
+ * 프롬프트+입력을 그리는 이스케이프 문자열. withPrompt=false면 커서가 이미 프롬프트 끝(0행)에 있다고 보고 입력만 그린다.
+ * 호출 전 커서는 입력 영역 0행 0열(withPrompt) 또는 0행 프롬프트 끝에 있어야 한다.
+ */
+function promptSeq(inst: TermInstance, withPrompt = true): string {
   inst.drawn = true;
   const cols = Math.max(10, inst.term.cols);
   const prompt = promptOf(inst);
-  inst.term.write(prompt + inst.buf);
+  let s = (withPrompt ? prompt : '') + inst.buf;
   const pw = displayWidth(stripAnsi(prompt));
   const total = pw + displayWidth(inst.buf);
   const cur = pw + displayWidth(inst.buf.slice(0, inst.cursor));
@@ -325,17 +337,29 @@ function drawPrompt(inst: TermInstance) {
   const tRow = Math.floor(cur / cols);
   const tCol = cur % cols;
   if (endRow !== tRow || endCol !== tCol) {
-    if (endRow > tRow) inst.term.write(`\x1b[${endRow - tRow}A`);
-    else if (tRow > endRow) inst.term.write(`\x1b[${tRow - endRow}B`);
-    inst.term.write('\r');
-    if (tCol > 0) inst.term.write(`\x1b[${tCol}C`);
+    if (endRow > tRow) s += `\x1b[${endRow - tRow}A`;
+    else if (tRow > endRow) s += `\x1b[${tRow - endRow}B`;
+    s += '\r';
+    if (tCol > 0) s += `\x1b[${tCol}C`;
   }
   inst.cursorRow = tRow;
+  return s;
 }
 
+function drawPrompt(inst: TermInstance) {
+  inst.term.write(promptSeq(inst));
+}
+
+/** 키 입력마다 호출 — 프롬프트 셀은 건드리지 않고 그 뒤 입력만 한 번의 write로 다시 그려 깜빡임을 없앤다. */
 function redraw(inst: TermInstance) {
-  eraseInput(inst);
-  drawPrompt(inst);
+  const pw = displayWidth(stripAnsi(promptOf(inst)));
+  if (pw >= Math.max(10, inst.term.cols)) {
+    inst.term.write(eraseSeq(inst) + promptSeq(inst));
+    return;
+  }
+  const up = inst.cursorRow > 0 ? `\x1b[${inst.cursorRow}A` : '';
+  inst.cursorRow = 0;
+  inst.term.write(up + '\r' + (pw > 0 ? `\x1b[${pw}C` : '') + '\x1b[J' + promptSeq(inst, false));
 }
 
 function setBuf(inst: TermInstance, text: string) {
@@ -410,11 +434,13 @@ function handleData(inst: TermInstance, data: string) {
       inst.histIdx--;
       return setBuf(inst, inst.histIdx === -1 ? inst.draft : inst.history[inst.histIdx]);
     case '\x03': // Ctrl+C
-      eraseInput(inst);
-      inst.term.write(promptOf(inst) + inst.buf + c.dim('^C') + '\r\n');
-      inst.buf = '';
-      inst.cursor = 0;
-      return drawPrompt(inst);
+      {
+        const head = eraseSeq(inst) + promptOf(inst) + inst.buf + c.dim('^C') + '\r\n';
+        inst.buf = '';
+        inst.cursor = 0;
+        inst.term.write(head + promptSeq(inst));
+      }
+      return;
     case '\x0c': // Ctrl+L
       inst.term.clear();
       return redraw(inst);
@@ -439,17 +465,16 @@ function insert(inst: TermInstance, text: string) {
 
 function submit(inst: TermInstance) {
   const text = inst.buf.trim();
-  eraseInput(inst);
+  const erase = eraseSeq(inst);
   inst.buf = '';
   inst.cursor = 0;
   inst.histIdx = -1;
   if (!text) {
-    inst.term.write(promptOf(inst) + '\r\n');
-    drawPrompt(inst);
+    inst.term.write(erase + promptOf(inst) + '\r\n' + promptSeq(inst));
     return;
   }
   if (inst.history[0] !== text) inst.history.unshift(text);
-  drawPrompt(inst);
+  inst.term.write(erase + promptSeq(inst));
   inst.onSubmit(text);
 }
 
@@ -470,8 +495,7 @@ function complete(inst: TermInstance) {
   if (common.length > last.length) {
     insert(inst, common.slice(last.length));
   } else if (cands.length > 1) {
-    eraseInput(inst);
-    inst.term.write(promptOf(inst) + inst.buf + '\r\n' + c.dim(cands.slice(0, 40).join('   ')) + '\r\n');
-    drawPrompt(inst);
+    const erase = eraseSeq(inst);
+    inst.term.write(erase + promptOf(inst) + inst.buf + '\r\n' + c.dim(cands.slice(0, 40).join('   ')) + '\r\n' + promptSeq(inst));
   }
 }
