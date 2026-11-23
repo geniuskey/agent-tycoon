@@ -26,7 +26,7 @@ src/scenarios/<scenario-id>/
 | `learningObjectives[]` | 학습 목표 |
 | `roles[]` | 생성 가능한 Agent 역할 `{ id, name, title, skills[], description }` |
 | `files` | 초기 가상 파일 `{ "/path": { src \| content, restricted?, description? } }` |
-| `pages[]` | 가상 브라우저 화면 `{ url: "sim://…", title, view, source }` — `view`: `markdown` `dashboard` `table` `mail` `text` `scan`(종이 스캔본 JSON) |
+| `pages[]` | 가상 브라우저 화면 `{ url: "sim://…", title, view, source }` — `view`: `markdown` `dashboard` `table` `mail` `text` `scan`(종이 스캔본 JSON) `db`(데이터 콘솔) `eval`(시험 결과) `spec`(Agent 명세) `runs`(Agent 실행 로그) — 뒤의 넷은 줄 단위 `종류|값|…` 형식, 각 뷰 컴포넌트 주석 참고 |
 | `tasks[]` | 업무 DAG (아래) |
 | `intents[]` | 자연어 지시 규칙 (아래) |
 | `evaluation[]` | 학습 피드백 규칙 |

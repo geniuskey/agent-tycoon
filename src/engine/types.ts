@@ -338,7 +338,7 @@ export interface ScenarioCampaign {
 export interface PageDef {
   url: string;
   title: string;
-  view: 'markdown' | 'dashboard' | 'table' | 'mail' | 'text' | 'scan' | 'db' | 'eval';
+  view: 'markdown' | 'dashboard' | 'table' | 'mail' | 'text' | 'scan' | 'db' | 'eval' | 'spec' | 'runs';
   source: string;
   description?: string;
 }

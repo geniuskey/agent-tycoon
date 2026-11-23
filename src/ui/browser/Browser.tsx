@@ -10,6 +10,8 @@ import { BOARD_URL, WIKI_URL } from '../../engine/cli';
 import WikiIndex from './WikiIndex';
 import DbConsole from './DbConsole';
 import EvalView from './EvalView';
+import RunsView from './RunsView';
+import SpecView from './SpecView';
 import Markdown from './Markdown';
 import ScanView from './ScanView';
 
@@ -104,6 +106,10 @@ export default function Browser() {
           <TableView content={file.content} title={page.title} />
         ) : page.view === 'eval' ? (
           <EvalView content={file.content} />
+        ) : page.view === 'spec' ? (
+          <SpecView content={file.content} />
+        ) : page.view === 'runs' ? (
+          <RunsView content={file.content} />
         ) : page.view === 'db' ? (
           <DbConsole content={file.content} />
         ) : page.view === 'scan' ? (
