@@ -1,0 +1,3 @@
+D2Coding — Copyright (c) 2016, NAVER Corporation.
+Licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).
+Source: npm package d2coding@1.3.2 (d2coding-full.woff2), unmodified.

@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 @import '@xterm/xterm/css/xterm.css';
 
+/* 터미널 한글: D2Coding은 라틴 0.5em · 한글 1em로 한글이 정확히 2칸을 채운다 (OFL, 사내망 배포를 위해 번들) */
+@font-face {
+  font-family: 'D2Coding';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('./assets/fonts/D2Coding-Regular.woff2') format('woff2');
+}
+
 @theme {
   /* 영역(zone)마다 면의 온도를 달리해 '어디를 보고 있는지'가 먼저 읽히게 한다.
      bg: 앱 바탕 · panel: 탐색/관리(사이드바·상단바) · term: 터미널(중립 흑색) · paper: 가상 브라우저(산출물) */

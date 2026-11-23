@@ -41,6 +41,16 @@ export interface TermInstance {
 
 const registry = new Map<string, TermInstance>();
 
+export const TERM_FONT = "'D2Coding', Menlo, Consolas, monospace";
+export const TERM_FONT_SIZE = 13;
+
+/** xterm은 생성 시점의 글꼴로 셀 크기를 잰다 — 터미널을 만들기 전에 D2Coding을 내려받아 둔다. */
+export function preloadTermFont(timeoutMs = 3000): Promise<void> {
+  if (typeof document === 'undefined' || !document.fonts) return Promise.resolve();
+  const load = document.fonts.load(`${TERM_FONT_SIZE}px 'D2Coding'`, '가A').then(() => undefined);
+  return Promise.race([load, new Promise<void>((r) => setTimeout(r, timeoutMs))]).catch(() => undefined);
+}
+
 const THEME = {
   background: '#0a0c10',
   foreground: '#d7dde8',
@@ -95,8 +105,10 @@ export function getTerm(
   if (inst) return inst;
   const term = new Terminal({
     allowProposedApi: true,
-    fontFamily: "'JetBrains Mono', 'D2Coding', 'SF Mono', Menlo, Consolas, monospace",
-    fontSize: 12.5,
+    // D2Coding이 첫 글꼴이어야 셀 폭(0.5em)과 한글 폭(1em)이 2:1로 맞는다. 앞에 다른 라틴 글꼴을 두면 한글 사이가 벌어진다.
+    fontFamily: TERM_FONT,
+    fontSize: TERM_FONT_SIZE,
+    rescaleOverlappingGlyphs: true,
     lineHeight: 1.25,
     cursorBlink: true,
     convertEol: true,
