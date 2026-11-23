@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { evaluate } from '../src/engine/evaluate';
-import { exportCarry, replay, Simulation } from '../src/engine/engine';
+import { carriedTrust, exportCarry, replay, Simulation } from '../src/engine/engine';
 import { getScenario, missionsOf } from '../src/scenarios';
 import { lastSaid, runUntil, sh, status, talk, taskStatus, to, trust } from './helpers';
 
@@ -120,7 +120,9 @@ describe('0 → 1단계 이월', () => {
     expect(carry.trust['choi']).toBeGreaterThanOrEqual(50);
     expect(carry.files['/work/inventory.md']).toBeTruthy();
     const s1 = new Simulation(getScenario('s1-digitization')!, 32, carry);
-    expect(s1.people['choi'].trust).toBe(carry.trust['choi']);
+    // 쌓은 신뢰는 절반만 이어진다
+    expect(s1.people['choi'].trust).toBe(carriedTrust(s1.personDef('choi')!.trust, carry.trust['choi']));
+    expect(s1.people['choi'].trust).toBeLessThan(carry.trust['choi']);
     expect(s1.files.get('/work/inventory.md')?.createdBy).toBe('carry');
     // 재생도 이월 상태로 결정적
     sh(s1, 'agent spawn assistant');

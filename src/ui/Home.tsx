@@ -3,7 +3,7 @@ import { CAMPAIGNS, CATALOG, DOMAINS, FUNCTIONS, SCENARIOS, TASK_TYPES, missions
 import type { CarryState, LoadedScenario } from '../engine/types';
 import { useSession } from '../store/session';
 import { deleteSession, exportSession, type SessionRecord } from '../store/persist';
-import { formatSimTime } from '../engine/engine';
+import { carriedTrust, formatSimTime } from '../engine/engine';
 import { Btn, SimBadge } from './common';
 import { BriefingBody } from './Briefing';
 
@@ -133,9 +133,18 @@ export default function Home() {
               <div className="mt-4 rounded-md border border-line bg-bg px-3 py-2 text-[12px] text-dim">
                 <span className="font-semibold text-fg">이어받는 상태: </span>
                 {selCarry.label ?? '없음 (캠페인 첫 미션)'}
-                {selCarry.carry && Object.keys(selCarry.carry.trust).length > 0 && (
+                {selCarry.carry && (sel.people ?? []).some((p) => selCarry.carry!.trust[p.id] !== undefined) && (
                   <div className="mt-1 text-[11px] text-faint">
-                    신뢰도 — {Object.entries(selCarry.carry.trust).map(([k, v]) => `${sel.people?.find((p) => p.id === k)?.name ?? k} ${v}`).join(' · ')}
+                    신뢰도 —{' '}
+                    {(sel.people ?? [])
+                      .filter((p) => selCarry.carry!.trust[p.id] !== undefined)
+                      .map((p) => {
+                        const v = selCarry.carry!.trust[p.id];
+                        const eff = selCarry.carry!.from?.length ? carriedTrust(p.trust, v) : v;
+                        return `${p.name} ${eff}${eff !== v ? ` (지난 단계 ${v})` : ''}`;
+                      })
+                      .join(' · ')}
+                    <div className="mt-0.5">새 과제는 새 부탁입니다 — 쌓은 신뢰는 절반만 이어지고, 잃은 신뢰는 그대로 남습니다.</div>
                   </div>
                 )}
               </div>

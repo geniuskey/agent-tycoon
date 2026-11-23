@@ -3,7 +3,7 @@
  * 각 단계는 앞 단계의 결과만으로 시작한다 (defaultCarry를 쓰지 않음).
  */
 import { describe, expect, it } from 'vitest';
-import { exportCarry, formatSimTime, Simulation } from '../src/engine/engine';
+import { carriedTrust, exportCarry, formatSimTime, Simulation } from '../src/engine/engine';
 import { evaluate } from '../src/engine/evaluate';
 import { meetingState } from '../src/engine/groups';
 import type { CarryState } from '../src/engine/types';
@@ -38,6 +38,7 @@ export interface StageReport {
   failed: string[];
   issues: string[];
   leaks: string[];
+  trust: string[];
 }
 function report(sim: Simulation): StageReport {
   const fb = evaluate(sim);
@@ -52,6 +53,11 @@ function report(sim: Simulation): StageReport {
     failed: fb.outcomes.filter((o) => !o.success).map((o) => o.id),
     issues: fb.dimensions.flatMap((d) => d.findings.filter((f) => f.kind === 'issue').map((f) => `[${d.id}] ${f.text}`)),
     leaks,
+    trust: (sim.scenario.people ?? []).map((p) => {
+      const c = sim.carry;
+      const start = c?.from?.length ? carriedTrust(p.trust, c.trust[p.id]) : (c?.trust[p.id] ?? p.trust);
+      return `${p.id} ${start}→${sim.people[p.id].trust}`;
+    }),
   };
 }
 /** CAMPAIGN_REPORT=1 이면 단계별 요약과 이월 차이를 출력한다 */

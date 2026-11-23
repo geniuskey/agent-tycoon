@@ -80,7 +80,7 @@ export default function Feedback() {
               <div className="mb-6 rounded-lg border border-sky-900/60 bg-sky-500/5 p-4">
                 <div className="mb-1 text-xs font-semibold text-sky-300">다음 단계로 이어지는 것</div>
                 <div className="text-[12.5px] leading-relaxed text-dim">
-                  이번 미션에서 파악한 사실, 만든 산출물, 사람들과의 관계가 다음 미션의 시작 상태가 됩니다. 여기서 놓친 것은 다음 단계에서 문제로 돌아옵니다.
+                  이번 미션에서 파악한 사실, 만든 산출물, 사람들과의 관계가 다음 미션의 시작 상태가 됩니다. 여기서 놓친 것은 다음 단계에서 문제로 돌아옵니다. 쌓은 신뢰는 다음 단계에서 절반만 이어지고, 잃은 신뢰는 그대로 남습니다.
                 </div>
                 <div className="mt-2 grid gap-2 text-[12px] md:grid-cols-3">
                   <div>

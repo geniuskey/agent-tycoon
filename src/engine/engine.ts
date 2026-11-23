@@ -108,7 +108,7 @@ export class Simulation {
       observed: (t) => this.observed.has(t),
     };
     for (const p of scenario.people ?? []) {
-      this.people[p.id] = { id: p.id, trust: carry?.trust[p.id] ?? p.trust, met: false, asked: [], pending: [], inbox: [], visitCount: 0, awayUntil: 0 };
+      this.people[p.id] = { id: p.id, trust: carry?.from?.length ? carriedTrust(p.trust, carry.trust[p.id]) : (carry?.trust[p.id] ?? p.trust), met: false, asked: [], pending: [], inbox: [], visitCount: 0, awayUntil: 0 };
     }
     this.groups = initGroups(this);
     for (const r of scenario.roles) this.roleDefs[r.id] = r;
@@ -1066,6 +1066,20 @@ export class Simulation {
       this.finishStep(a);
     }
   }
+}
+
+/**
+ * 이월 신뢰도 — 새 미션은 새 부탁이다.
+ * 그 미션의 기본값보다 높게 쌓은 신뢰는 절반만 이어지고(상한 90), 잃은 신뢰는 그대로 남는다.
+ * (좋은 관계는 유지해야 하고, 나쁜 인상은 오래 간다)
+ * 시나리오의 defaultCarry(from 없음)는 이미 '시작 시점 값'이므로 그대로 쓴다.
+ */
+export const TRUST_CARRY_KEEP = 0.5;
+export const TRUST_CARRY_CAP = 90;
+export function carriedTrust(base: number, carried: number | undefined): number {
+  if (carried === undefined) return base;
+  if (carried <= base) return carried;
+  return Math.min(TRUST_CARRY_CAP, Math.max(base, Math.round(base + (carried - base) * TRUST_CARRY_KEEP)));
 }
 
 /** 미션 종료 시 다음 미션으로 넘길 회사 상태 */
