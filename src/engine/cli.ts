@@ -130,13 +130,14 @@ export function executeCommand(sim: Simulation, cmd: PlayerCommand): void {
       if (!sim.people[args[1].toLowerCase()]) return say(c.red(`✗ '${args[1]}' 인물 없음`));
       return askTopic(sim, args[1].toLowerCase(), args[2], pane);
     case 'do':
-      if (!args[1] || !args[2]) return say(c.yellow('사용: do <agent> <지시ID> [+조건ID ...]  (Agent 패널의 선택지를 쓰는 것이 편합니다)'));
+      if (!args[1] || !args[2]) return say(c.yellow('사용: do <agent> <지시ID> [+조건ID ...] [--plan]  (Agent 패널의 프롬프트 카드를 쓰는 것이 편합니다)'));
       return doInstruct(
         sim,
         pane,
         args[1],
         args[2],
         args.slice(3).filter((x) => x.startsWith('+')).map((x) => x.slice(1)),
+        args.includes('--plan'),
       );
     case 'talk':
       if (!args[1]) return say(peopleText(sim));
@@ -212,7 +213,11 @@ export function briefText(sim: Simulation): string[] {
     ...b.deliverables.map((x) => `   • ${x}`),
     ...(b.constraints?.length ? [c.bold('  제약'), ...b.constraints.map((x) => `   • ${x}`)] : []),
     '',
-    c.dim("  시작하기: 'roles' → 'agent spawn <role>' → 'task list' → Agent에게 지시"),
+    c.dim(
+      s.people?.length
+        ? "  시작하기: 메신저로 담당자에게 연락해 현황을 파악 → 필요하면 'agent spawn <role>'로 Agent 세션을 열어 프롬프트로 지시"
+        : "  시작하기: 'task graph'로 업무 구조 확인 → 'agent spawn <role>'로 Agent 세션 열기 → 프롬프트로 지시",
+    ),
   ];
 }
 
@@ -241,7 +246,7 @@ export function statusText(sim: Simulation, only?: string): string[] {
       detail = `${a.taskId} ${bar(p)} ${p}%`;
       if (a.status === 'waiting' || a.status === 'blocked') {
         const g = sim.openGate(a);
-        detail += c.yellow(g ? `  ⏸ ${g.title}` : a.phase === 'confirm-mismatch' ? '  ⏸ 역량 확인' : '  ⏳ 선행 작업 대기');
+        detail += c.yellow(g ? `  ⏸ ${g.title}` : a.phase === 'confirm-mismatch' ? '  ⏸ 역량 확인' : a.phase === 'plan-approval' ? '  ⏸ 계획 승인' : '  ⏳ 선행 작업 대기');
       } else if (step && BUSY_STATUSES.includes(a.status)) detail += c.dim(`  · ${step.event}`);
       if (a.status === 'failed') detail += c.red(`  ✗ ${a.error ?? ''}`);
     }

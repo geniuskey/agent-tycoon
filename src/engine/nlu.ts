@@ -88,7 +88,8 @@ export function handleNaturalLanguage(sim: Simulation, cmd: PlayerCommand, isRep
   const norm = text.toLowerCase();
   if (target) {
     sim.emit('agent.message', text, { agentId: target.id, paneId: pane, data: { from: 'player' } });
-    sim.agentLog(target, c.white(c.bold('▸ 지시: ')) + c.white(text));
+    sim.agentLog(target, '');
+    sim.agentLog(target, c.white(c.bold('> ')) + c.white(text));
   }
   const reply = (lines: string[]) => {
     if (target) for (const l of lines) sim.agentLog(target, `  ${l}`);
@@ -96,7 +97,7 @@ export function handleNaturalLanguage(sim: Simulation, cmd: PlayerCommand, isRep
   };
 
   // ── 2. 의사결정 응답 ──
-  if (target && target.phase === 'confirm-mismatch') {
+  if (target && (target.phase === 'confirm-mismatch' || target.phase === 'plan-approval')) {
     const yes = YES.test(norm);
     const no = NO.test(norm);
     if (yes || no) {

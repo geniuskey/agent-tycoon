@@ -110,3 +110,34 @@ describe('객관식 대화 (ask)', () => {
     runUntil(sim, () => sim.people['choi'].asked.includes('pain'));
   });
 });
+
+describe('plan mode', () => {
+  it('--plan이면 계획만 보여주고 승인 전에는 실행하지 않는다', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 31);
+    sh(sim, 'agent spawn assistant');
+    sh(sim, 'do assistant inventory --plan');
+    runUntil(sim, () => sim.agents['assistant'].phase === 'plan-approval');
+    expect(status(sim, 'assistant')).toBe('waiting');
+    const ch = agentChoices(sim, 'assistant')!;
+    expect(ch.mode).toBe('confirm');
+    sim.advance(20);
+    expect(sim.tasks['inventory'].stepIndex).toBe(0); // 아직 아무 단계도 실행 안 함
+    sh(sim, 'agent choose assistant 1');
+    expect(sim.agents['assistant'].planMode).toBe(false);
+    runUntil(sim, () => taskStatus(sim, 'inventory') === 'done' || status(sim, 'assistant') === 'waiting');
+    expect(sim.events.some((e) => e.type === 'plan.resolved' && e.data?.approved)).toBe(true);
+  });
+
+  it('계획을 반려하면 작업이 풀리고 다시 지시할 수 있다', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 32);
+    sh(sim, 'agent spawn assistant');
+    sh(sim, 'do assistant inventory --plan');
+    runUntil(sim, () => sim.agents['assistant'].phase === 'plan-approval');
+    sh(sim, 'agent choose assistant 2');
+    expect(status(sim, 'assistant')).toBe('idle');
+    expect(sim.tasks['inventory'].assignee).toBeUndefined();
+    sh(sim, 'do assistant inventory');
+    runUntil(sim, () => status(sim, 'assistant') === 'working' || status(sim, 'assistant') === 'waiting');
+    expect(sim.agents['assistant'].phase).not.toBe('plan-approval');
+  });
+});

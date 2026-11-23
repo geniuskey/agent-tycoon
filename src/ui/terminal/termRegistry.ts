@@ -249,7 +249,7 @@ function relevant(inst: TermInstance, e: SimEvent): boolean {
 function render(inst: TermInstance, e: SimEvent): string | null {
   switch (e.type) {
     case 'command':
-      // 객관식 선택은 구조화 명령으로 기록되지만, Agent 패널에는 '▸ 지시' 로그로 보인다
+      // 객관식 선택은 구조화 명령으로 기록되지만, Agent 패널에는 '> 프롬프트' 로그로 보인다
       if (inst.agentId && /^(do|ask|agent choose)\s/.test(e.message)) return null;
       return promptOf(inst) + e.message;
     case 'cli.output':

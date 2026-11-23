@@ -92,6 +92,11 @@ export interface GateDef {
   title: string;
   prompt: LogLine[];
   options: GateOption[];
+  /**
+   * 도구 실행 승인 프롬프트로 표시 — Agent가 실행하려는 도구 호출 (예: "Bash(psql -h mes-prod-db …)").
+   * 위험한 실행(운영 DB 접속, 외부 발송, 권한 밖 파일)을 사람이 승인/거절하는 장면.
+   */
+  tool?: string;
   /** 복수 선택 (체크박스). 선택한 모든 선택지의 효과가 적용된다 */
   multi?: boolean;
   min?: number;
@@ -360,7 +365,9 @@ export interface AgentRuntime {
   prevStatus?: AgentStatus;
   taskId?: string;
   /** -1 = planning phase */
-  phase: 'none' | 'planning' | 'step' | 'gate' | 'waiting-deps' | 'confirm-mismatch';
+  phase: 'none' | 'planning' | 'step' | 'gate' | 'waiting-deps' | 'confirm-mismatch' | 'plan-approval';
+  /** plan mode로 지시받음 — 계획만 세우고 승인을 기다린다 */
+  planMode?: boolean;
   stepTick: number;
   stepTicks: number;
   pending: PendingLog[];
@@ -418,6 +425,8 @@ export type EventType =
   | 'step.completed'
   | 'gate.opened'
   | 'gate.resolved'
+  | 'plan.presented'
+  | 'plan.resolved'
   | 'file.created'
   | 'file.updated'
   | 'file.deleted'

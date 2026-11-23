@@ -577,6 +577,7 @@
           ],
           "gate": {
             "id": "recipients",
+            "tool": "send_mail(to: 참석자 명단 전체 5명 — 외부 vela-systems.com 1명 포함)",
             "kind": "waiting",
             "when": "!ext.preinstructed",
             "title": "외부 수신자 포함 여부",

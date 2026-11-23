@@ -535,9 +535,9 @@ export class Simulation {
     this.agents[id] = a;
     this.agentOrder.push(id);
     this.emit('agent.spawned', `Agent 생성: ${id} (${role.name})`, { agentId: id, data: { role: roleId } });
-    this.agentLog(a, c.dim(`[${formatSimTime(this.tick)}] `) + c.bold(`${role.name}`) + c.dim(` 세션 시작 — ${role.title}`));
-    this.agentLog(a, c.dim(`  역량: ${role.skills.join(', ')}`));
-    this.agentLog(a, c.dim(`  대기 중. 업무를 지시하거나 'agent assign ${id} <task>' 를 사용하세요.`));
+    this.agentLog(a, c.cyan('✻ ') + c.bold(role.name) + c.dim(`  ${role.title}`));
+    this.agentLog(a, c.dim(`  세션 시작 ${formatSimTime(this.tick)} · cwd: /work · 역량: ${role.skills.join(', ')}`));
+    this.agentLog(a, c.dim('  아래 카드에서 프롬프트를 골라 보내세요. Shift+Tab: plan mode (계획을 먼저 보고 승인)'));
     return ok(id);
   }
 
@@ -727,14 +727,37 @@ export class Simulation {
     this.startStep(a);
   }
 
+  /** plan mode: 실행하지 않고 계획만 보여준 뒤 승인을 기다린다 */
+  private presentPlan(a: AgentRuntime): void {
+    const t = this.tasks[a.taskId!];
+    const def = this.taskDefs[t.id];
+    const steps = def.steps.slice(t.stepIndex).filter((s) => this.cond(s.when));
+    const reads = [...new Set(steps.flatMap((s) => s.reads ?? []).concat(def.inputs ?? []))];
+    const decisions = steps.filter((s) => s.gate).length;
+    a.phase = 'plan-approval';
+    this.setStatus(a, 'waiting', '계획 승인 대기');
+    this.setTaskStatus(t, 'waiting');
+    this.agentLog(a, '');
+    this.agentLog(a, c.bold(c.cyan('● 계획')) + c.dim(' — plan mode: 아직 아무것도 실행하지 않았습니다'));
+    steps.forEach((s, i) => this.agentLog(a, `  ${c.dim(`${i + 1}.`)} ${s.event}`));
+    if (reads.length) this.agentLog(a, c.dim(`  ⎿ 읽을 자료: ${reads.join(', ')}`));
+    if (def.outputs?.length) this.agentLog(a, c.dim(`  ⎿ 만들 산출물: ${def.outputs.join(', ')}`));
+    if (decisions) this.agentLog(a, c.dim(`  ⎿ 진행 중 판단을 요청할 지점: ${decisions}곳`));
+    if (a.mismatch) this.agentLog(a, c.yellow(`  ⎿ 주의: 역량 부족 상태로 진행 (속도 ×${MISMATCH_FACTOR})`));
+    this.agentLog(a, c.cyan('  ▾ 이 계획대로 진행할까요? 아래 카드에서 고르세요'));
+    this.emit('plan.presented', `${a.id}: ${def.id} 계획 제시`, { agentId: a.id, taskId: t.id, data: { steps: steps.length } });
+    this.notifyPlayer('warn', `${a.id}: '${def.id}' 계획 승인 요청`, { agentId: a.id, taskId: t.id });
+  }
+
   private raiseGate(a: AgentRuntime, step: StepDef, gate: GateDef): void {
     const t = this.tasks[a.taskId!];
     a.gate = { taskId: t.id, stepId: step.id, gateId: gate.id };
     a.phase = 'gate';
     this.setStatus(a, gate.kind, gate.title);
     this.setTaskStatus(t, gate.kind === 'blocked' ? 'blocked' : 'waiting');
-    const icon = gate.kind === 'blocked' ? c.red('⛔ 진행 불가') : c.yellow('⏸ 의사결정 필요');
+    const icon = gate.kind === 'blocked' ? c.red('⛔ 진행 불가') : gate.tool ? c.yellow('⏺ 도구 실행 승인 필요') : c.yellow('⏸ 의사결정 필요');
     this.agentLog(a, '');
+    if (gate.tool) this.agentLog(a, c.bold(`⏺ ${gate.tool}`));
     this.agentLog(a, `${icon}: ${c.bold(gate.title)}`);
     for (const l of this.resolveLines(gate.prompt, a)) this.agentLog(a, `  ${l}`);
     const kind = gate.multi ? `복수 선택 ${gate.min ?? 1}~${gate.max ?? gate.options.length}개` : '단일 선택';
@@ -749,6 +772,26 @@ export class Simulation {
     if (!a) return err(`Agent '${agentId}' 없음`);
     const indices = (Array.isArray(choice) ? choice : [choice]).filter((v, i, arr) => arr.indexOf(v) === i);
     const optionIndex = indices[0] ?? -1;
+    if (a.phase === 'plan-approval') {
+      const t = this.tasks[a.taskId!];
+      const approved = optionIndex === 0;
+      a.planMode = false;
+      this.emit('plan.resolved', `${a.id}: ${t.id} 계획 ${approved ? '승인' : '반려'}`, { agentId: a.id, taskId: t.id, data: { approved, via } });
+      if (approved) {
+        this.agentLog(a, c.green('  ✓ 계획 승인 — 실행합니다.'));
+        this.startStep(a);
+        return ok('계획 승인');
+      }
+      t.assignee = undefined;
+      this.setTaskStatus(t, 'locked');
+      this.agentLog(a, c.dim('  → 계획을 반려했습니다. 지시나 조건을 바꿔 다시 보내세요.'));
+      a.taskId = undefined;
+      a.mismatch = false;
+      a.phase = 'none';
+      this.setStatus(a, 'idle', '계획 반려');
+      this.refreshTasks();
+      return ok('계획 반려');
+    }
     if (a.phase === 'confirm-mismatch') {
       if (optionIndex === 0) {
         this.agentLog(a, c.dim('  → 진행합니다.'));
@@ -980,7 +1023,8 @@ export class Simulation {
     if (a.stepTick < a.stepTicks) return;
     if (a.phase === 'planning') {
       this.flushLogs(a, true);
-      this.startStep(a);
+      if (a.planMode) this.presentPlan(a);
+      else this.startStep(a);
     } else if (a.phase === 'step') {
       this.finishStep(a);
     }

@@ -375,6 +375,7 @@
           ],
           "gate": {
             "id": "db-access",
+            "tool": "Bash(psql -h mes-prod-db -U fab_shared -c \"SELECT * FROM sensor_log\")",
             "kind": "blocked",
             "title": "데이터 소스 — 운영 DB 공용 계정 사용 여부",
             "prompt": [

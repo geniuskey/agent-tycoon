@@ -67,8 +67,8 @@ export default function Sidebar() {
       <SectionTitle
         count={agents.length}
         right={
-          <Btn onClick={() => setRoleOpen((v) => !v)} title="Agent 생성">
-            ＋ 생성
+          <Btn onClick={() => setRoleOpen((v) => !v)} title="Agent 세션 열기 (agent spawn)">
+            ＋ 새 세션
           </Btn>
         }
       >
@@ -96,7 +96,7 @@ export default function Sidebar() {
         </div>
       )}
       <div className="px-2 pt-1.5 pb-3">
-        {!agents.length && <div className="px-2 py-2 text-[11.5px] text-faint">Agent가 없습니다. ＋ 생성 또는 `agent spawn &lt;role&gt;`</div>}
+        {!agents.length && <div className="px-2 py-2 text-[11.5px] text-faint">Agent 세션이 없습니다. ＋ 새 세션 또는 `agent spawn &lt;role&gt;`</div>}
         {agents.map((a) => {
           const gate = sim.openGate(a);
           const needs = a.status === 'waiting' || a.status === 'blocked' || a.status === 'failed';
@@ -126,7 +126,7 @@ export default function Sidebar() {
               </div>
               {needs && (
                 <div className={`mt-1 truncate pl-[24px] text-[11.5px] font-medium ${a.status === 'waiting' ? 'text-amber-200' : 'text-red-200'}`}>
-                  {gate ? `⏸ ${gate.title}` : a.phase === 'confirm-mismatch' ? '⏸ 역량 확인 요청' : a.phase === 'waiting-deps' ? '⏳ 선행 작업 대기' : a.error ?? ''}
+                  {gate ? `⏸ ${gate.title}` : a.phase === 'confirm-mismatch' ? '⏸ 역량 확인 요청' : a.phase === 'plan-approval' ? '⏸ 계획 승인 요청' : a.phase === 'waiting-deps' ? '⏳ 선행 작업 대기' : a.error ?? ''}
                 </div>
               )}
             </button>
