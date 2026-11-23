@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from '../../store/session';
 import { AgentAvatar, Btn, StatusBadge, Progress, agentColor, useSim } from '../common';
-import { fitTerm, getTerm, mountTerm } from './termRegistry';
+import { copySelection, fitTerm, getTerm, mountTerm } from './termRegistry';
 import ChatBody from './ChatBody';
 import ChoiceCard from './ChoiceCard';
 
@@ -13,6 +13,7 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
   const { input, focusPane, toggleMaximize, closePane } = useSession.getState();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [copied, setCopied] = useState<{ ok: boolean; chars: number; at: number } | null>(null);
 
   const inst = getTerm(paneId, agentId, sim, (text) => input(paneId, text), personId);
   const isChat = !!personId;
@@ -35,11 +36,30 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
         return false;
       }
       if (e.altKey && (/^Digit[1-9]$/.test(e.code) || e.key === 'Enter')) return false;
+      // Ctrl/Cmd+C: 선택이 있으면 복사, 없으면 기존대로 입력 취소(^C). Ctrl+Shift+C는 항상 복사.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && (inst.term.hasSelection() || e.shiftKey)) {
+        e.preventDefault();
+        void copySelection(inst, true);
+        return false;
+      }
+      // Ctrl/Cmd+V(·Ctrl+Shift+V): xterm이 ^V로 삼키지 않게 넘겨 브라우저 붙여넣기 → onData로 들어온다
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') return false;
       return true;
     });
+    let hide: ReturnType<typeof setTimeout> | undefined;
+    const onCopied = (ev: Event) => {
+      const { ok, chars } = (ev as CustomEvent<{ ok: boolean; chars: number }>).detail;
+      if (!chars) return;
+      setCopied({ ok, chars, at: Date.now() });
+      clearTimeout(hide);
+      hide = setTimeout(() => setCopied(null), 1400);
+    };
+    inst.el.addEventListener('term-copied', onCopied);
     return () => {
       ro.disconnect();
       d?.removeEventListener('focus', onFocus);
+      inst.el.removeEventListener('term-copied', onCopied);
+      clearTimeout(hide);
     };
   }, [inst, paneId, focusPane, isChat]);
 
@@ -102,6 +122,14 @@ export default function TerminalPane({ paneId, agentId, personId, index }: { pan
           </>
         )}
         <div className="ml-auto flex items-center">
+          {copied && (
+            <span
+              key={copied.at}
+              className={`mr-1 rounded px-1.5 py-px text-[10.5px] ${copied.ok ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200'}`}
+            >
+              {copied.ok ? `✓ 복사됨 · ${copied.chars}자` : '복사 실패'}
+            </span>
+          )}
           {agent && ['working', 'planning', 'reviewing', 'waiting', 'blocked'].includes(agent.status) && (
             <Btn title="작업 중단" onClick={() => input(paneId, `agent interrupt ${agentId}`)}>
               ■

@@ -147,8 +147,51 @@ export function getTerm(
   };
   const i = inst;
   term.onData((d) => handleData(i, d));
+  // herdr처럼 드래그(또는 더블클릭) 선택이 끝나면 곧바로 클립보드에 넣는다
+  el.addEventListener('mouseup', () => {
+    if (term.hasSelection()) void copySelection(i, false);
+  });
   registry.set(paneId, inst);
   return inst;
+}
+
+/** 클립보드 복사 — https/localhost에서는 Clipboard API, 그 밖(사내망 http 등)에서는 execCommand로 대체 */
+export async function copyText(text: string): Promise<boolean> {
+  if (!text) return false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* 아래 대체 경로 */
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+  const prev = document.activeElement as HTMLElement | null;
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  ta.remove();
+  prev?.focus();
+  return ok;
+}
+
+/** 선택 영역을 복사하고, 패널이 '복사됨'을 띄울 수 있게 이벤트를 보낸다. clear=true면 선택을 지운다(Ctrl+C). */
+export async function copySelection(inst: TermInstance, clear: boolean): Promise<boolean> {
+  // 줄 끝 공백은 셀 채움일 뿐이므로 걷어낸다
+  const text = inst.term.getSelection().replace(/[ \t]+$/gm, '');
+  const ok = await copyText(text);
+  if (clear) inst.term.clearSelection();
+  inst.el.dispatchEvent(new CustomEvent('term-copied', { detail: { ok, chars: [...text].length } }));
+  return ok;
 }
 
 export function disposeTerm(paneId: string) {
