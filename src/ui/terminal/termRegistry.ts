@@ -32,6 +32,8 @@ export interface TermInstance {
   history: string[];
   histIdx: number;
   draft: string;
+  /** 커서 뒤에 회색으로 보여 주는 자동완성 제안(→ / End로 수락) */
+  ghost: string;
   onSubmit: (text: string) => void;
   sim: Simulation | null;
   opened: boolean;
@@ -136,6 +138,7 @@ export function getTerm(
     history: [],
     histIdx: -1,
     draft: '',
+    ghost: '',
     onSubmit,
     sim,
     opened: false,
@@ -256,7 +259,7 @@ function render(inst: TermInstance, e: SimEvent): string | null {
     case 'agent.log':
       return e.message;
     case 'session.start':
-      return c.dim(`── ${e.message} ──`) + '\n' + c.dim("  'help' 명령 목록 · 'hint' 힌트 · Tab 자동완성");
+      return c.dim(`── ${e.message} ──`) + '\n' + c.dim("  'help' 명령 목록 · 'hint' 힌트 · Tab 자동완성 · → 회색 제안 수락");
     case 'task.activated':
       return c.magenta(`[${formatSimTime(e.tick)}] ＋ ${e.message}`);
     case 'notify': {
@@ -343,7 +346,66 @@ function promptSeq(inst: TermInstance, withPrompt = true): string {
     if (tCol > 0) s += `\x1b[${tCol}C`;
   }
   inst.cursorRow = tRow;
+  // 회색 제안: 커서가 입력 끝일 때만, 현재 줄 남은 칸 안에서만 그린다(줄바꿈하면 커서 계산이 어긋난다)
+  inst.ghost = '';
+  if (inst.cursor === inst.buf.length && endCol < cols) {
+    const full = suggestion(inst);
+    let room = cols - endCol - 1;
+    let shown = '';
+    for (const ch of full) {
+      const w = displayWidth(ch);
+      if (w > room) break;
+      shown += ch;
+      room -= w;
+    }
+    if (shown) {
+      // 잘려 보이더라도 수락하면 제안 전체가 들어간다
+      inst.ghost = full;
+      s += '\x1b[2;37m' + shown + '\x1b[0m' + `\x1b[${displayWidth(shown)}D`;
+    }
+  }
   return s;
+}
+
+/** 입력 중인 줄에 대한 제안: 1) 최근 명령 기록 중 같은 접두어 2) 자동완성 후보가 하나로 좁혀질 때 */
+function suggestion(inst: TermInstance): string {
+  const buf = inst.buf;
+  if (!buf.trim()) return '';
+  const seen = new Set<string>();
+  const tryLine = (line: string) => {
+    if (seen.has(line)) return '';
+    seen.add(line);
+    return line.length > buf.length && line.startsWith(buf) ? line.slice(buf.length) : '';
+  };
+  for (const h of inst.history) {
+    const g = tryLine(h);
+    if (g) return g;
+  }
+  const evs = inst.sim?.events ?? [];
+  for (let i = evs.length - 1, n = 0; i >= 0 && n < 3000; i--, n++) {
+    const e = evs[i];
+    if (e.type !== 'command') continue;
+    const g = tryLine(e.message);
+    if (g) return g;
+  }
+  if (!inst.sim) return '';
+  const cands = completions(inst.sim, buf);
+  if (!cands.length) return '';
+  const last = buf.split(/\s+/).pop() ?? '';
+  let common = cands[0];
+  for (const x of cands) {
+    let i = 0;
+    while (i < common.length && i < x.length && common[i] === x[i]) i++;
+    common = common.slice(0, i);
+  }
+  if (cands.length === 1) return cands[0].slice(last.length);
+  return common.length > last.length ? common.slice(last.length) : '';
+}
+
+function acceptGhost(inst: TermInstance): boolean {
+  if (!inst.ghost || inst.cursor !== inst.buf.length) return false;
+  insert(inst, inst.ghost);
+  return true;
 }
 
 function drawPrompt(inst: TermInstance) {
@@ -410,6 +472,7 @@ function handleData(inst: TermInstance, data: string) {
       }
       return;
     case '\x1b[C':
+      if (acceptGhost(inst)) return;
       if (inst.cursor < inst.buf.length) {
         const ch = [...inst.buf.slice(inst.cursor)][0];
         inst.cursor += ch.length;
@@ -422,6 +485,7 @@ function handleData(inst: TermInstance, data: string) {
       return redraw(inst);
     case '\x1b[F':
     case '\x05':
+      if (acceptGhost(inst)) return;
       inst.cursor = inst.buf.length;
       return redraw(inst);
     case '\x1b[A':

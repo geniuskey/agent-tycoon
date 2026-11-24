@@ -3,6 +3,7 @@ import { formatSimTime } from '../engine/engine';
 import { useSession } from '../store/session';
 import { useSim } from './common';
 import { totalUnread } from './messenger/Messenger';
+import { BriefingIcon, IdeIcon, MessengerIcon } from './icons/AppIcons';
 
 /**
  * 가상 사내 PC의 작업표시줄. 무대가 'Nova 사내 PC'라는 것을 화면 구조로 보여 준다.
@@ -19,20 +20,20 @@ export default function Taskbar() {
 
   return (
     <footer
-      className="relative z-[60] flex shrink-0 items-stretch gap-0.5 border-t border-black/60 bg-[#151618] px-1 text-[12px] text-fg select-none"
+      className="relative z-[60] flex shrink-0 items-stretch gap-1 border-t border-black/70 bg-gradient-to-b from-[#1c1d20] to-[#131416] px-1.5 text-[12px] text-fg shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] select-none"
       style={{ height: TASKBAR_H }}
     >
       <TaskBtn title="시작 — 미션 목록" onClick={goHome} active={screen === 'home'}>
-        <span className="flex h-5 w-5 items-center justify-center rounded-[3px] bg-accent font-mono text-[11px] font-bold text-white">N</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-[5px] bg-accent font-mono text-[12px] font-bold text-white">N</span>
       </TaskBtn>
       <span className="mx-1 my-2 w-px bg-line" />
       <IdeApp />
       {inWork && <BriefingApp />}
       {inWork && <MessengerApp />}
 
-      <div className="ml-auto flex items-stretch">
+      <div className="ml-auto flex items-stretch gap-1">
         <span
-          className="my-auto mr-2 rounded-[3px] border border-amber-700/60 px-1.5 text-[10px] font-semibold tracking-wider text-amber-300"
+          className="my-auto mr-1 rounded-[4px] border border-amber-600/50 bg-amber-500/10 px-1.5 py-px text-[10px] font-semibold tracking-wider text-amber-300"
           title="실제 AI API를 호출하지 않는 시뮬레이션입니다. 모든 데이터는 합성 데이터입니다."
         >
           SIMULATION
@@ -61,12 +62,12 @@ function AppBtn({ label, icon, open, active, badge, onClick, title }: { label: s
     <button
       title={title ?? label}
       onClick={onClick}
-      className={`relative my-0.5 flex min-w-[120px] items-center gap-2 rounded-[4px] px-2.5 transition-colors ${active ? 'bg-white/[0.08]' : 'hover:bg-white/[0.06]'}`}
+      className={`relative my-[3px] flex min-w-[128px] items-center gap-2 rounded-[5px] px-2 transition-colors ${active ? 'bg-white/[0.08] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]' : 'hover:bg-white/[0.05]'}`}
     >
-      {icon}
-      <span className={active ? 'text-strong' : 'text-dim'}>{label}</span>
+      <span className={`flex shrink-0 transition-transform ${active ? '' : 'opacity-90 saturate-[0.85]'}`}>{icon}</span>
+      <span className={active ? 'font-medium text-strong' : 'text-dim'}>{label}</span>
       {!!badge && <span className="ml-auto rounded-full bg-red-500 px-1.5 text-[10px] leading-4 font-bold text-white">{badge}</span>}
-      {open && <span className={`absolute bottom-0 left-1/2 h-[3px] -translate-x-1/2 rounded-full ${active ? 'w-5 bg-accent' : 'w-2 bg-faint'}`} />}
+      {open && <span className={`absolute bottom-0 left-1/2 h-[3px] -translate-x-1/2 rounded-full transition-all ${active ? 'w-6 bg-accent' : 'w-2 bg-faint'}`} />}
     </button>
   );
 }
@@ -74,7 +75,7 @@ function AppBtn({ label, icon, open, active, badge, onClick, title }: { label: s
 function IdeApp() {
   const front = useSession((s) => s.frontWindow === null);
   const { raiseWindow } = useSession.getState();
-  return <AppBtn label="Agent Tycoon" icon={<span className="font-mono text-[11px] text-sky-400">&gt;_</span>} open active={front} onClick={() => raiseWindow(null)} />;
+  return <AppBtn label="Agent Tycoon" icon={<IdeIcon />} open active={front} onClick={() => raiseWindow(null)} />;
 }
 
 function BriefingApp() {
@@ -84,7 +85,7 @@ function BriefingApp() {
   return (
     <AppBtn
       label="업무 브리핑"
-      icon={<span className="text-[12px] leading-none text-amber-300">▤</span>}
+      icon={<BriefingIcon />}
       open={open}
       active={open && front}
       onClick={() => (!open ? setShowBriefing(true) : front ? setShowBriefing(false) : raiseWindow('briefing'))}
@@ -103,7 +104,7 @@ function MessengerApp() {
   return (
     <AppBtn
       label="메신저"
-      icon={<span className="text-[13px] leading-none text-emerald-400">●</span>}
+      icon={<MessengerIcon />}
       open
       active={open && front}
       badge={totalUnread(sim, readSeq)}
@@ -124,26 +125,38 @@ function Tray() {
   return (
     <>
       <TaskBtn title="알림 — 아래 패널의 알림 탭" onClick={() => setBottom(notifyShown ? 'timeline' : 'notify')} active={notifyShown}>
-        <span className="text-dim">알림</span>
-        <span className={`font-mono ${notes ? 'text-fg' : 'text-faint'}`}>{notes}</span>
+        <span className="relative text-[14px] leading-none text-dim">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+          {notes > 0 && (
+            <span className="absolute -top-1.5 -right-2 min-w-[15px] rounded-full bg-sky-500 px-1 text-center text-[9.5px] leading-[15px] font-bold text-white">
+              {notes > 99 ? '99+' : notes}
+            </span>
+          )}
+        </span>
       </TaskBtn>
-      <div className="my-auto flex items-center px-1">
+      <span className="mx-0.5 my-2 w-px bg-line" />
+      <div className="my-auto flex items-center rounded-[5px] border border-line bg-black/20 p-0.5" role="group" aria-label="시뮬레이션 속도">
         {[0, 1, 2, 4].map((s) => (
           <button
             key={s}
             onClick={() => setSpeed(s)}
-            className={`rounded-[3px] px-1.5 py-0.5 text-[11px] ${
-              speed === s ? (s === 0 ? 'bg-amber-500/25 text-amber-200' : 'bg-white/10 text-strong') : 'text-dim hover:bg-white/[0.06] hover:text-fg'
+            className={`rounded-[3px] px-1.5 py-0.5 text-[11px] transition-colors ${
+              speed === s ? (s === 0 ? 'bg-amber-500/25 text-amber-200' : 'bg-accent/30 text-strong') : 'text-dim hover:bg-white/[0.06] hover:text-fg'
             }`}
             title={s === 0 ? '일시정지' : `${s}배속`}
+            aria-pressed={speed === s}
           >
             {s === 0 ? '❚❚' : `${s}x`}
           </button>
         ))}
       </div>
-      <div className="flex flex-col items-end justify-center px-2 leading-tight" title="가상 업무 시간 (1 tick = 1분)">
-        <span className="font-mono text-[12px] font-semibold text-strong tabular-nums">{formatSimTime(sim.tick)}</span>
-        <span className="text-[10px] text-faint">가상 업무 시간{speed === 0 ? ' · 정지' : ''}</span>
+      <span className="mx-0.5 my-2 w-px bg-line" />
+      <div className="flex min-w-[64px] flex-col items-end justify-center px-2 leading-tight" title="가상 업무 시간 (1 tick = 1분)">
+        <span className={`font-mono text-[13px] font-semibold tabular-nums ${speed === 0 ? 'text-amber-200' : 'text-strong'}`}>{formatSimTime(sim.tick)}</span>
+        <span className={`text-[10px] ${speed === 0 ? 'text-amber-300/80' : 'text-faint'}`}>{speed === 0 ? '일시정지됨' : '가상 업무 시간'}</span>
       </div>
     </>
   );
