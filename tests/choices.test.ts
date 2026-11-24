@@ -45,28 +45,31 @@ describe('객관식 지시 (do)', () => {
 
 describe('Agent 질문 응답 (choose)', () => {
   it('단일 선택 질문에 복수 선택은 거부, 복수 선택은 min/max 검증', () => {
-    const sim = new Simulation(getScenario('s0-data-discovery')!, 7);
-    sh(sim, 'ask park process');
-    sh(sim, 'agent spawn assistant');
-    sh(sim, 'do assistant inventory');
-    runUntil(sim, () => taskStatus(sim, 'inventory') === 'done');
-    sh(sim, 'do assistant prioritize');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    const g = agentChoices(sim, 'assistant')!;
+    const sc = getScenario('s3-data-foundation')!;
+    const sim = new Simulation(sc, 7, sc.campaign!.defaultCarry);
+    sh(sim, 'agent spawn data-engineer');
+    sh(sim, 'do data-engineer model');
+    runUntil(sim, () => status(sim, 'data-engineer') === 'waiting');
+    const g = agentChoices(sim, 'data-engineer')!;
     expect(g.mode === 'gate' && !g.multi).toBe(true);
-    sh(sim, 'agent choose assistant 1,2');
+    sh(sim, 'agent choose data-engineer 1,2');
     expect(lastOutput(sim, 1)).toContain('하나만');
-    sh(sim, 'agent choose assistant 1');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    const m = agentChoices(sim, 'assistant')!;
+    sh(sim, 'agent choose data-engineer 1');
+    runUntil(sim, () => status(sim, 'data-engineer') === 'waiting');
+    sh(sim, 'agent choose data-engineer 1');
+    runUntil(sim, () => taskStatus(sim, 'model') === 'done');
+    sh(sim, 'agent spawn quality');
+    sh(sim, 'do quality rules');
+    runUntil(sim, () => status(sim, 'quality') === 'waiting');
+    const m = agentChoices(sim, 'quality')!;
     expect(m.mode === 'gate' && m.multi).toBe(true);
-    sh(sim, 'agent choose assistant 1,5');
-    runUntil(sim, () => taskStatus(sim, 'prioritize') === 'done');
-    expect(sim.flags['gate.preconditions.access']).toBe(true);
-    expect(sim.flags['gate.preconditions.cloud']).toBe(true);
-    expect(sim.flags['gate.preconditions.pii']).toBe(false);
-    const sec = evaluate(sim).dimensions.find((d) => d.id === 'security')!;
-    expect(sec.findings.some((f) => f.text.includes('외부 클라우드'))).toBe(true);
+    sh(sim, 'agent choose quality 1');
+    expect(status(sim, 'quality')).toBe('waiting'); // min 2
+    sh(sim, 'agent choose quality 1,5');
+    runUntil(sim, () => taskStatus(sim, 'rules') === 'done');
+    expect(sim.flags['gate.rules.key-integrity']).toBe(true);
+    expect(sim.flags['gate.rules.no-null']).toBe(true);
+    expect(sim.flags['gate.rules.duplicate']).toBe(false);
     // 고르지 않은 좋은 선택지는 '빠뜨림'으로 피드백
     expect(evaluate(sim).dimensions.some((d) => d.findings.some((f) => f.text.includes('빠뜨렸습니다')))).toBe(true);
   });
@@ -113,30 +116,30 @@ describe('객관식 대화 (ask)', () => {
 
 describe('plan mode', () => {
   it('--plan이면 계획만 보여주고 승인 전에는 실행하지 않는다', () => {
-    const sim = new Simulation(getScenario('s0-data-discovery')!, 31);
+    const sim = new Simulation(getScenario('s1-digitization')!, 31);
     sh(sim, 'agent spawn assistant');
-    sh(sim, 'do assistant inventory --plan');
+    sh(sim, 'do assistant ocr --plan');
     runUntil(sim, () => sim.agents['assistant'].phase === 'plan-approval');
     expect(status(sim, 'assistant')).toBe('waiting');
     const ch = agentChoices(sim, 'assistant')!;
     expect(ch.mode).toBe('confirm');
     sim.advance(20);
-    expect(sim.tasks['inventory'].stepIndex).toBe(0); // 아직 아무 단계도 실행 안 함
+    expect(sim.tasks['ocr-checksheet'].stepIndex).toBe(0); // 아직 아무 단계도 실행 안 함
     sh(sim, 'agent choose assistant 1');
     expect(sim.agents['assistant'].planMode).toBe(false);
-    runUntil(sim, () => taskStatus(sim, 'inventory') === 'done' || status(sim, 'assistant') === 'waiting');
+    runUntil(sim, () => taskStatus(sim, 'ocr-checksheet') === 'done' || status(sim, 'assistant') === 'waiting');
     expect(sim.events.some((e) => e.type === 'plan.resolved' && e.data?.approved)).toBe(true);
   });
 
   it('계획을 반려하면 작업이 풀리고 다시 지시할 수 있다', () => {
-    const sim = new Simulation(getScenario('s0-data-discovery')!, 32);
+    const sim = new Simulation(getScenario('s1-digitization')!, 32);
     sh(sim, 'agent spawn assistant');
-    sh(sim, 'do assistant inventory --plan');
+    sh(sim, 'do assistant ocr --plan');
     runUntil(sim, () => sim.agents['assistant'].phase === 'plan-approval');
     sh(sim, 'agent choose assistant 2');
     expect(status(sim, 'assistant')).toBe('idle');
-    expect(sim.tasks['inventory'].assignee).toBeUndefined();
-    sh(sim, 'do assistant inventory');
+    expect(sim.tasks['ocr-checksheet'].assignee).toBeUndefined();
+    sh(sim, 'do assistant ocr');
     runUntil(sim, () => status(sim, 'assistant') === 'working' || status(sim, 'assistant') === 'waiting');
     expect(sim.agents['assistant'].phase).not.toBe('plan-approval');
   });

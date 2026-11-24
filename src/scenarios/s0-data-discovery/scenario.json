@@ -1,16 +1,15 @@
 {
   "id": "s0-data-discovery",
-  "version": 1,
+  "version": 2,
   "title": "0단계 · 현황 파악: 우리 데이터는 어디에 있나",
   "domain": "manufacturing",
   "function": "quality",
   "taskType": "discovery",
   "difficulty": 1,
-  "estMinutes": 15,
+  "estMinutes": 10,
   "tags": [
     "현황 파악",
     "인터뷰",
-    "데이터 인벤토리",
     "이해관계자",
     "AI 전환"
   ],
@@ -39,6 +38,16 @@
       "trust": true
     }
   },
+  "features": [],
+  "unlock": {
+    "title": "메신저로 사람을 만나기",
+    "text": [
+      "이번 미션에서 쓰는 도구는 메일과 메신저 두 개뿐입니다.",
+      "작업표시줄의 '메신저'에서 담당자에게 질문을 골라 보내세요. 상대가 읽는 대로 답이 옵니다.",
+      "어떻게 묻느냐에 따라 신뢰가 오르내리고, 중요한 정보는 신뢰가 쌓여야 들을 수 있습니다.",
+      "터미널, AI 어시스턴트, 파일 같은 도구는 다음 단계부터 하나씩 열립니다."
+    ]
+  },
   "briefing": {
     "requester": {
       "name": "정민아 팀장",
@@ -46,56 +55,45 @@
     },
     "title": "AI 전환 첫 과제 — 현황 파악",
     "background": "경영진이 'AI로 주간 수율 보고를 자동화하라'는 과제를 내렸다. 그런데 보고서는 박서준 선임이 매주 여러 곳에서 손으로 모아 만들고 있고, 데이터가 어디에 어떤 형태로 있는지 아무도 전체를 모른다. 종이 체크시트, 양식이 매주 바뀌는 엑셀, 메일, 개인 매크로… AI가 일하려면 먼저 이 현실을 파악해야 한다.",
-    "goal": "담당자들을 인터뷰해 데이터 출처·형태·품질 리스크·보안 요건을 파악하고, 무엇부터 디지털화할지 계획을 세워 팀장 승인을 받는다.",
+    "goal": "담당자 세 명과 메신저로 이야기해 주간 보고의 데이터가 어디에 어떻게 있는지 파악하고, 무엇부터 디지털화할지 팀장에게 제안해 승인받는다.",
     "completionCriteria": [
-      "주간 보고의 데이터 출처(정형·비정형·종이)를 빠짐없이 파악",
-      "문서화되지 않은 업무 규칙과 데이터 품질 리스크 파악",
-      "개인정보·데이터 반출 등 보안 요건 확인",
-      "현실적인 디지털화 우선순위 계획을 팀장에게 승인받기",
-      "현장(데이터를 만드는 사람)의 협조 얻기"
+      "주간 보고의 데이터 출처(시스템·엑셀·메일·종이) 파악",
+      "문서화되지 않은 계산 규칙과 현장 기록 관행 파악",
+      "현장(데이터를 만드는 사람)의 협조 얻기",
+      "현실적인 디지털화 방향을 팀장에게 승인받기"
     ],
     "deliverables": [
-      "/work/inventory.md (데이터 인벤토리)",
-      "/work/digitization_plan.md (디지털화 계획, 승인)"
+      "팀장 승인 (메신저)",
+      "/work/inventory.md · /work/digitization_plan.md (승인 시 자동 정리)"
     ],
     "constraints": [
       "새 시스템 도입 예산 없음",
-      "사내 AI 어시스턴트만 사용 가능",
+      "이번 단계는 사람과의 대화만으로 진행",
       "모든 인물·데이터는 가상"
     ]
   },
   "learningObjectives": [
     "AI 도입 전에 '데이터가 실제로 어디에, 어떤 상태로 있는가'를 파악하는 것이 첫 단계임을 체험",
     "사람을 인터뷰해 문서화되지 않은 정보(숨은 규칙, 현장 관행)를 끌어내기",
-    "데이터를 만드는 사람·쓰는 사람·지키는 사람의 입장 이해하기 (신뢰가 정보를 연다)",
-    "AI 어시스턴트를 정리·문서화 보조로 활용하기",
-    "현실적인 우선순위로 계획을 세우고 승인받기"
+    "데이터를 만드는 사람과 쓰는 사람의 입장 이해하기 (신뢰가 정보를 연다)",
+    "현실적인 우선순위로 방향을 제안하고 승인받기"
   ],
-  "roles": [
-    {
-      "id": "assistant",
-      "name": "AI 어시스턴트",
-      "title": "사내 범용 AI (정리·문서 작성)",
-      "skills": [
-        "writing",
-        "summarization",
-        "document",
-        "ocr",
-        "data",
-        "review"
-      ],
-      "description": "대화 내용을 정리하고 문서를 작성한다. 직접 사람을 만나거나 데이터를 찾아오지는 못한다."
-    }
-  ],
+  "roles": [],
   "people": [
     {
       "id": "jung",
-      "schedule": [{ "from": "10:30", "to": "11:10", "label": "팀장 회의" }],
+      "schedule": [
+        {
+          "from": "10:30",
+          "to": "11:10",
+          "label": "팀장 회의"
+        }
+      ],
       "name": "정민아 팀장",
       "title": "수율팀장 (과제 요청자)",
       "org": "Fab-N2 수율팀",
       "trust": 60,
-      "description": "현실적인 관리자. 예산 없음을 알고 있고, 보안·현장 반발을 걱정한다.",
+      "description": "현실적인 관리자. 예산이 없다는 걸 알고, 현장 반발을 걱정한다.",
       "greeting": [
         "아, 왔어요? 메일 봤죠. 뭐부터 볼지 막막하죠? 궁금한 거 있으면 물어봐요."
       ],
@@ -138,8 +136,8 @@
           ],
           "hint": "누구를 만나보면 될까요?",
           "reply": [
-            "보고서는 박서준 선임이 만들어요. 불량 분류는 검사기술팀 이도윤 엔지니어, 현장 체크시트는 생산2과 최재석 반장님.",
-            "데이터 반출이나 개인정보 문제는 정보보호팀 한유진 책임이고요. 최 반장님은… 좀 무뚝뚝하신데 현장 사정은 제일 잘 알아요."
+            "보고서는 박서준 선임이 만들어요. 현장 체크시트는 생산2과 최재석 반장님.",
+            "최 반장님은… 좀 무뚝뚝하신데 현장 사정은 제일 잘 알아요. 이번 주는 이 두 분이면 충분해요."
           ]
         },
         {
@@ -177,146 +175,204 @@
           "ask": "위에서는 AI가 다 알아서 해줄 거라 기대하시던데요?"
         },
         {
-          "id": "plan-reject",
+          "id": "plan-early",
           "patterns": [
             "계획",
-            "검토",
-            "승인",
-            "보고드",
-            "플랜",
-            "확인해\\s*주"
+            "방향",
+            "우선\\s*순위",
+            "보고드"
+          ],
+          "requires": {
+            "not": {
+              "all": [
+                "found.mes",
+                "found.checksheet"
+              ]
+            }
+          },
+          "ask": "이제 디지털화 계획을 세워 볼까요?",
+          "repeatable": true,
+          "reply": [
+            "벌써요? 데이터가 어디 있는지도 아직 다 모르잖아요.",
+            "{{#if !found.mes}}박 선임이 보고서를 어떻게 만드는지부터 들어봐요.{{/if}}{{#if found.mes && !found.checksheet}}보고서 말고 현장에서 따로 적는 건 없는지도 알아봐요.{{/if}}"
+          ]
+        },
+        {
+          "id": "plan-manual-nofield",
+          "patterns": [
+            "체크시트.*먼저",
+            "수작업.*먼저",
+            "손이.*많이"
           ],
           "requires": {
             "all": [
               {
-                "taskDone": "prioritize"
-              },
-              {
-                "any": [
+                "all": [
                   {
-                    "gate": "priority",
-                    "chose": "bigbang"
+                    "all": [
+                      "found.mes",
+                      "found.checksheet"
+                    ]
                   },
-                  "gate.preconditions.cloud",
-                  "gate.preconditions.tablet"
+                  "!plan.approved"
                 ]
-              }
+              },
+              "!choi.promise_noburden"
             ]
           },
+          "ask": "손이 제일 많이 가는 체크시트·불량분류표부터 디지털화하겠습니다",
           "reply": [
-            "{{#if gate.priority=bigbang}}태블릿 전면 도입에 새 시스템이요? 예산 없다고 했잖아요.{{/if}}{{#if gate.preconditions.cloud}} 외부 클라우드 OCR은 보안팀이 절대 허용 안 해요.{{/if}}{{#if gate.preconditions.tablet}} 태블릿 의무화는 현장이 반발할 거예요.{{/if}}",
-            "현실적으로 할 수 있는 걸로 다시 잡아주세요."
+            "방향은 맞아요. 그런데 최 반장님하고는 얘기됐어요?",
+            "현장이 안 도와주면 체크시트는 시작도 못 해요. 반장님 협조부터 받아 와요."
           ],
-          "trust": -5,
-          "quality": "bad",
           "effects": [
             {
-              "type": "reopenTask",
-              "task": "prioritize"
-            },
-            {
-              "type": "notify",
-              "level": "warn",
-              "message": "정민아 팀장: 계획 반려 — prioritize 재작업"
+              "type": "setFlag",
+              "flag": "plan.field_missing"
             }
-          ],
-          "ask": "디지털화 계획을 검토해 주시겠어요?"
+          ]
         },
         {
-          "id": "plan-security",
+          "id": "plan-manual",
           "patterns": [
-            "계획",
-            "검토",
-            "승인",
-            "보고드",
-            "플랜",
-            "확인해\\s*주"
+            "체크시트.*먼저",
+            "수작업.*먼저",
+            "손이.*많이"
           ],
           "requires": {
             "all": [
               {
-                "taskDone": "prioritize"
+                "all": [
+                  {
+                    "all": [
+                      "found.mes",
+                      "found.checksheet"
+                    ]
+                  },
+                  "!plan.approved"
+                ]
               },
-              {
-                "not": {
-                  "any": [
-                    {
-                      "gate": "priority",
-                      "chose": "bigbang"
-                    },
-                    "gate.preconditions.cloud",
-                    "gate.preconditions.tablet"
-                  ]
-                }
-              },
-              {
-                "not": {
-                  "all": [
-                    "found.pii",
-                    "found.access"
-                  ]
-                }
-              }
+              "choi.promise_noburden"
             ]
           },
-          "reply": [
-            "방향은 괜찮은데… 개인정보나 데이터 반출 승인은요? 한유진 책임 의견 들어봤어요?",
-            "보안 검토가 빠진 계획은 위에 못 올려요. 확인하고 다시 와요."
-          ],
-          "repeat": [
-            "보안팀 의견은 확인했어요? 그게 있어야 올릴 수 있어요."
-          ],
-          "ask": "디지털화 계획을 검토해 주시겠어요?"
-        },
-        {
-          "id": "plan-approve",
-          "patterns": [
-            "계획",
-            "검토",
-            "승인",
-            "보고드",
-            "플랜",
-            "확인해\\s*주"
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "prioritize"
-              },
-              {
-                "not": {
-                  "any": [
-                    {
-                      "gate": "priority",
-                      "chose": "bigbang"
-                    },
-                    "gate.preconditions.cloud",
-                    "gate.preconditions.tablet"
-                  ]
-                }
-              },
-              "found.pii",
-              "found.access"
-            ]
-          },
-          "reply": [
-            "{{#if gate.priority=manual-first}}좋네요. 손이 제일 많이 가는 데부터 가는 게 맞아요. 현장 부담 안 늘린다는 것도 좋고요.{{/if}}{{#if gate.priority=easy-first}}쉬운 것부터라… 효과는 작아 보이겠지만 일단 시작은 되겠네요.{{/if}}",
-            "보안 요건도 들어가 있고. 이대로 진행하죠. 다음은 디지털화예요."
-          ],
+          "ask": "손이 제일 많이 가는 체크시트·불량분류표부터 하겠습니다. 현장 양식은 그대로 두기로 반장님과 얘기했어요",
           "trust": 10,
           "quality": "good",
+          "reply": [
+            "좋네요. 손이 제일 많이 가는 데부터 가는 게 맞아요. 현장 부담 안 늘린다는 것도 좋고요.",
+            "{{#if found.macro}}박 선임 매크로 규칙까지 찾았네요. 그게 제일 걱정이었어요. {{/if}}이대로 진행하죠. 파악한 내용은 인벤토리랑 계획 문서로 정리해 둘게요."
+          ],
           "effects": [
+            {
+              "type": "setFlag",
+              "flag": "gate.priority",
+              "value": "manual-first"
+            },
             {
               "type": "setFlag",
               "flag": "plan.approved"
             },
             {
+              "type": "writeFile",
+              "path": "/work/inventory.md",
+              "src": "inventory.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/digitization_plan.md",
+              "src": "plan.md"
+            },
+            {
               "type": "notify",
               "level": "success",
-              "message": "정민아 팀장: 디지털화 계획 승인"
+              "message": "정민아 팀장: 디지털화 방향 승인"
             }
+          ]
+        },
+        {
+          "id": "plan-easy",
+          "patterns": [
+            "mes.*먼저",
+            "쉬운\\s*것",
+            "정형"
           ],
-          "ask": "디지털화 계획을 검토해 주시겠어요?"
+          "requires": {
+            "all": [
+              {
+                "all": [
+                  "found.mes",
+                  "found.checksheet"
+                ]
+              },
+              "!plan.approved"
+            ]
+          },
+          "ask": "이미 시스템에 있는 MES 데이터 자동화부터 하겠습니다",
+          "trust": 0,
+          "quality": "neutral",
+          "reply": [
+            "쉬운 것부터라… 박 선임 시간은 별로 안 줄겠지만, 일단 시작은 되겠네요.",
+            "좋아요, 진행하죠. 파악한 내용은 문서로 정리해 둘게요."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "gate.priority",
+              "value": "easy-first"
+            },
+            {
+              "type": "setFlag",
+              "flag": "plan.approved"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/inventory.md",
+              "src": "inventory.md"
+            },
+            {
+              "type": "writeFile",
+              "path": "/work/digitization_plan.md",
+              "src": "plan.md"
+            },
+            {
+              "type": "notify",
+              "level": "success",
+              "message": "정민아 팀장: 디지털화 방향 승인"
+            }
+          ]
+        },
+        {
+          "id": "plan-bigbang",
+          "patterns": [
+            "태블릿",
+            "새\\s*시스템",
+            "한\\s*번에"
+          ],
+          "requires": {
+            "all": [
+              {
+                "all": [
+                  "found.mes",
+                  "found.checksheet"
+                ]
+              },
+              "!plan.approved"
+            ]
+          },
+          "ask": "새 시스템을 들이고 현장도 태블릿 입력으로 한 번에 바꾸겠습니다",
+          "repeatable": true,
+          "trust": -5,
+          "quality": "bad",
+          "reply": [
+            "새 시스템에 태블릿 전면 도입이요? 예산 없다고 했잖아요. 현장도 반발할 거고요.",
+            "지금 있는 걸로 할 수 있는 방향으로 다시 생각해 와요."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "plan.rejected"
+            }
+          ]
         }
       ]
     },
@@ -520,86 +576,6 @@
       ]
     },
     {
-      "id": "lee",
-      "name": "이도윤 엔지니어",
-      "title": "검사기술팀 · 불량 분류 담당",
-      "org": "검사기술팀",
-      "trust": 55,
-      "description": "협조적이지만 바쁘다. 불량 코드 체계를 개정한 당사자.",
-      "greeting": [
-        "네, 이도윤입니다. 10분 정도는 괜찮아요."
-      ],
-      "fallback": [
-        "그건 제 쪽 데이터가 아니라서요.",
-        "불량 분류 쪽 얘기면 답해드릴 수 있어요."
-      ],
-      "topics": [
-        {
-          "id": "excel",
-          "patterns": [
-            "불량\\s*분류",
-            "분류표",
-            "엑셀",
-            "양식",
-            "시트",
-            "관리"
-          ],
-          "hint": "불량분류표 엑셀은 어떻게 관리돼요?",
-          "reply": [
-            "주차마다 시트를 복사해서 써요. 병합셀이 많고, 누가 열을 추가하면 순서가 바뀌어요. W45는 누가 비고 열을 넣었더라고요.",
-            "그리고 W46부터 불량 코드 체계를 개정했어요. D07 스크래치가 D07a(미세)/D07b(깊은)로 나뉘었어요."
-          ],
-          "trust": 5,
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "found.defect_excel"
-            },
-            {
-              "type": "setFlag",
-              "flag": "found.code_change"
-            }
-          ]
-        },
-        {
-          "id": "code",
-          "patterns": [
-            "코드",
-            "개정",
-            "체계",
-            "d07",
-            "과거",
-            "매핑"
-          ],
-          "requires": "found.code_change",
-          "hint": "개정 전 D07 데이터는 어떻게 다뤄야 하나요?",
-          "reply": [
-            "과거 D07은 새 기준으로 나눌 수가 없어요. 크기 정보를 안 남겼거든요.",
-            "과거 데이터는 'D07(구)'로 그대로 두고, 신규 D07a+D07b의 상위 코드로 매핑하는 게 맞아요."
-          ],
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "found.code_rule"
-            }
-          ]
-        },
-        {
-          "id": "chat",
-          "patterns": [
-            "점심",
-            "날씨"
-          ],
-          "ask": "요즘 검사실 분위기는 어때요?",
-          "reply": [
-            "바쁘죠 뭐. 개정 작업 때문에 정신없었어요."
-          ]
-        }
-      ]
-    },
-    {
       "id": "choi",
       "replyDelay": 6,
       "name": "최재석 반장",
@@ -789,99 +765,6 @@
           "quality": "bad"
         }
       ]
-    },
-    {
-      "id": "han",
-      "name": "한유진 책임",
-      "title": "정보보호팀 · 데이터 보안",
-      "org": "정보보호팀",
-      "trust": 50,
-      "description": "원칙적이지만 미리 상의하러 오는 사람에게는 호의적이다.",
-      "greeting": [
-        "정보보호팀 한유진입니다. 어떤 데이터 건이세요?"
-      ],
-      "fallback": [
-        "보안이나 데이터 반출 관련이면 말씀하세요.",
-        "구체적으로 어떤 데이터를 어디에 쓰려는지 알려주세요."
-      ],
-      "topics": [
-        {
-          "id": "access",
-          "patterns": [
-            "반출",
-            "export",
-            "승인",
-            "권한",
-            "접근",
-            "mes",
-            "절차",
-            "가져다"
-          ],
-          "hint": "MES 데이터를 가져다 쓰려면 어떤 절차가 필요해요?",
-          "reply": [
-            "MES export는 데이터 오너 승인이랑 보안 검토 신청이 필요해요. 개인 PC 보관은 금지고, 공용 저장소만 써야 해요.",
-            "미리 물어보러 와주셔서 다행이네요. 보통은 사고 나고 오시거든요."
-          ],
-          "trust": 10,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "found.access"
-            }
-          ]
-        },
-        {
-          "id": "pii",
-          "patterns": [
-            "개인\\s*정보",
-            "사번",
-            "이름",
-            "마스킹",
-            "민감",
-            "작업자"
-          ],
-          "hint": "체크시트에 작업자 정보가 있으면 어떻게 해야 하나요?",
-          "reply": [
-            "작업자 이름·사번은 개인정보예요. 분석용 데이터에는 마스킹하거나 별도 키로 분리해야 해요.",
-            "원본 종이는 현장 보관 규정대로 두시고요."
-          ],
-          "trust": 10,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "found.pii"
-            },
-            {
-              "type": "setFlag",
-              "flag": "found.pii_rule"
-            }
-          ]
-        },
-        {
-          "id": "ai",
-          "patterns": [
-            "\\bai\\b",
-            "어시스턴트",
-            "외부",
-            "클라우드",
-            "챗",
-            "gpt",
-            "llm"
-          ],
-          "hint": "AI 어시스턴트에 데이터를 넣어도 되나요?",
-          "reply": [
-            "사내 AI 어시스턴트는 승인된 거라 괜찮아요. 외부 AI 서비스에 데이터 올리는 건 금지예요."
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "found.ai_policy"
-            }
-          ]
-        }
-      ]
     }
   ],
   "files": {
@@ -938,507 +821,35 @@
   ],
   "tasks": [
     {
-      "id": "inventory",
-      "title": "데이터 인벤토리 정리",
-      "description": "인터뷰로 파악한 데이터 출처·형태·담당·리스크·보안 요건을 인벤토리 문서로 정리한다.",
-      "type": "documentation",
-      "skills": [
-        "writing"
-      ],
-      "keywords": [
-        "인벤토리",
-        "정리",
-        "현황",
-        "목록"
-      ],
-      "inputs": [
-        "인터뷰 내용",
-        "/shared/report/W46_weekly_yield.md"
-      ],
-      "outputs": [
-        "/work/inventory.md"
-      ],
-      "steps": [
-        {
-          "id": "collect",
-          "event": "Interview notes collected",
-          "ticks": [
-            3,
-            4
-          ],
-          "reads": [
-            "/shared/report/W46_weekly_yield.md"
-          ],
-          "log": [
-            "Read(/shared/report/W46_weekly_yield.md) — 지표 3개: 라인 수율 · 불량 Top5 · 다운타임 영향",
-            "대화 기록에서 데이터 출처 추출…",
-            {
-              "when": "found.mes",
-              "text": "  ⎿ MES 수율 export (CSV)"
-            },
-            {
-              "when": "found.defect_excel",
-              "text": "  ⎿ 검사실 불량분류표 (엑셀)"
-            },
-            {
-              "when": "found.downtime_mail",
-              "text": "  ⎿ 설비 다운타임 메모 (메일)"
-            },
-            {
-              "when": "found.checksheet",
-              "text": "  ⎿ 현장 체크시트 (종이)"
-            },
-            {
-              "when": "found.macro",
-              "text": "  ⎿ 개인 매크로의 숨은 계산 규칙"
-            }
-          ]
-        },
-        {
-          "id": "gaps",
-          "event": "Coverage checked",
-          "ticks": [
-            2,
-            3
-          ],
-          "log": [
-            "보고서 지표 ↔ 출처 대조…",
-            {
-              "when": {
-                "all": [
-                  "inventory.guess_pre",
-                  {
-                    "any": [
-                      "!found.mes",
-                      "!found.defect_excel",
-                      "!found.downtime_mail"
-                    ]
-                  }
-                ]
-              },
-              "text": "⚠ 출처 미확인 지표를 일반적인 Fab 사례로 추정해 채웁니다 (출처: 없음)"
-            }
-          ],
-          "gate": {
-            "id": "gaps",
-            "kind": "waiting",
-            "when": {
-              "all": [
-                {
-                  "any": [
-                    "!found.mes",
-                    "!found.defect_excel",
-                    "!found.downtime_mail"
-                  ]
-                },
-                "!inventory.guess_pre"
-              ]
-            },
-            "title": "지표 출처 미확인",
-            "prompt": [
-              "{{#if !found.mes}}'라인 수율'{{/if}} {{#if !found.defect_excel}}'불량 Top5'{{/if}} {{#if !found.downtime_mail}}'다운타임 영향'{{/if}} 지표의 데이터 출처가 대화 기록에 없습니다.",
-              "저는 직접 사람을 만나거나 자료를 찾아올 수 없습니다. 어떻게 할까요?"
-            ],
-            "options": [
-              {
-                "id": "pause",
-                "label": "중단 — 담당자를 더 인터뷰한 뒤 다시 정리",
-                "patterns": [
-                  "중단",
-                  "멈춰",
-                  "더\\s*(인터뷰|물어|알아)",
-                  "기다려",
-                  "나중에"
-                ],
-                "quality": "good",
-                "dimension": "verification",
-                "log": [
-                  "정리를 보류합니다. 인터뷰 후 다시 지시해 주세요."
-                ],
-                "effects": [
-                  {
-                    "type": "reopenTask",
-                    "task": "inventory"
-                  }
-                ]
-              },
-              {
-                "id": "continue",
-                "label": "미확인으로 표시하고 작성",
-                "patterns": [
-                  "미확인",
-                  "표시",
-                  "계속",
-                  "작성해",
-                  "그대로"
-                ],
-                "quality": "neutral",
-                "log": [
-                  "미확인 항목을 ❓로 표시해 작성합니다."
-                ]
-              },
-              {
-                "id": "guess",
-                "label": "일반적인 경우로 추정해서 채워",
-                "patterns": [
-                  "추정",
-                  "알아서",
-                  "일반적",
-                  "채워"
-                ],
-                "quality": "bad",
-                "dimension": "evidence",
-                "feedback": "AI 어시스턴트에게 모르는 사실을 추정으로 채우게 하면 그럴듯한 허구가 문서에 남습니다. 모르는 것은 '미확인'으로 두고 사람에게 확인하세요.",
-                "log": [
-                  "⚠ 일반적인 반도체 Fab 사례로 추정해 채웁니다. (출처: 없음)"
-                ],
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "inventory.guessed"
-                  }
-                ]
-              }
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "inventory.guessed",
-              "when": {
-                "all": [
-                  "inventory.guess_pre",
-                  {
-                    "any": [
-                      "!found.mes",
-                      "!found.defect_excel",
-                      "!found.downtime_mail"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "id": "write",
-          "event": "Inventory written",
-          "ticks": [
-            3,
-            4
-          ],
-          "log": [
-            "Write(/work/inventory.md) → sim://work/inventory"
-          ],
-          "effects": [
-            {
-              "type": "writeFile",
-              "path": "/work/inventory.md",
-              "src": "inventory.md"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "prioritize",
-      "title": "디지털화 우선순위 계획",
-      "description": "인벤토리를 바탕으로 무엇부터 디지털화할지, 선행 조건과 현장 협조 방식을 담은 계획을 만든다.",
-      "type": "planning",
-      "skills": [
-        "writing"
-      ],
-      "dependsOn": [
-        "inventory"
-      ],
-      "keywords": [
-        "우선순위",
-        "계획",
-        "플랜",
-        "로드맵"
-      ],
-      "inputs": [
-        "/work/inventory.md"
-      ],
-      "outputs": [
-        "/work/digitization_plan.md"
-      ],
-      "steps": [
-        {
-          "id": "assess",
-          "event": "Effort/value assessed",
-          "ticks": [
-            3,
-            4
-          ],
-          "reads": [
-            "/work/inventory.md"
-          ],
-          "log": [
-            "출처별 수작업 시간·오류 위험·디지털화 난이도 평가…",
-            {
-              "when": "pain.time",
-              "text": "  ⎿ 수작업 6h/주 중 엑셀 복붙·메일 판독·체크시트 확인 비중이 큼"
-            },
-            {
-              "when": "found.budget",
-              "text": "  ⎿ 제약: 신규 시스템 예산 없음"
-            },
-            {
-              "when": "choi.promise_noburden",
-              "text": "  ⎿ 현장: 종이 유지 + 사진 촬영 방식 동의"
-            }
-          ]
-        },
-        {
-          "id": "decide",
-          "event": "Priority proposed",
-          "ticks": [
-            2,
-            3
-          ],
-          "gate": {
-            "id": "priority",
-            "kind": "waiting",
-            "title": "디지털화 우선순위",
-            "prompt": [
-              "어떤 방향으로 계획을 세울까요?"
-            ],
-            "options": [
-              {
-                "id": "manual-first",
-                "label": "수작업이 가장 많은 것부터 (체크시트·불량분류표), 현장 양식은 유지",
-                "patterns": [
-                  "수작업",
-                  "체크\\s*시트",
-                  "불량\\s*분류",
-                  "현장.*(유지|그대로)",
-                  "많은\\s*것부터",
-                  "시간.*(많|큰)"
-                ],
-                "quality": "good",
-                "dimension": "decomposition",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "gate.priority",
-                    "value": "manual-first"
-                  }
-                ]
-              },
-              {
-                "id": "easy-first",
-                "label": "이미 정형화된 MES export 자동화부터 (쉬운 것부터)",
-                "patterns": [
-                  "쉬운",
-                  "mes",
-                  "정형",
-                  "빠른\\s*성과"
-                ],
-                "quality": "neutral",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "gate.priority",
-                    "value": "easy-first"
-                  }
-                ]
-              },
-              {
-                "id": "bigbang",
-                "label": "신규 시스템 + 현장 태블릿 전면 도입으로 한 번에 전환",
-                "patterns": [
-                  "한\\s*번에",
-                  "전면",
-                  "태블릿",
-                  "신규\\s*시스템",
-                  "전부"
-                ],
-                "quality": "bad",
-                "dimension": "collaboration",
-                "feedback": "예산·현장 수용성을 무시한 '한 번에 전환'은 현실에서 가장 흔한 실패 패턴입니다. 데이터를 만드는 사람의 부담을 늘리지 않는 작은 단계부터 시작하세요.",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "gate.priority",
-                    "value": "bigbang"
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "id": "preconditions",
-          "event": "Preconditions selected",
-          "ticks": [
-            2,
-            3
-          ],
-          "gate": {
-            "id": "preconditions",
-            "kind": "waiting",
-            "multi": true,
-            "min": 1,
-            "title": "계획에 넣을 선행 조건 (복수 선택)",
-            "prompt": [
-              "디지털화를 시작하기 전에 해결해야 할 선행 조건을 모두 고르세요."
-            ],
-            "options": [
-              {
-                "id": "access",
-                "label": "MES 데이터 반출 승인 신청 (데이터 오너 + 정보보호팀)",
-                "patterns": [
-                  "반출",
-                  "승인"
-                ],
-                "quality": "good",
-                "dimension": "security",
-                "feedback": "데이터를 옮기기 전에 반출 승인 절차를 계획에 넣어야 나중에 막히지 않습니다."
-              },
-              {
-                "id": "pii",
-                "label": "체크시트 작업자 정보 마스킹 규칙 확정",
-                "patterns": [
-                  "마스킹",
-                  "개인"
-                ],
-                "quality": "good",
-                "dimension": "security",
-                "feedback": "개인정보 처리 규칙은 디지털화 전에 정해야 합니다."
-              },
-              {
-                "id": "macro",
-                "label": "개인 매크로의 계산 규칙 문서화",
-                "patterns": [
-                  "매크로"
-                ],
-                "quality": "good",
-                "dimension": "evidence",
-                "feedback": "사람 머릿속·개인 파일에만 있는 규칙은 자동화 전에 문서화해야 같은 숫자가 나옵니다."
-              },
-              {
-                "id": "code",
-                "label": "불량 코드 구/신 매핑 기준 확정 (검사기술팀)",
-                "patterns": [
-                  "코드"
-                ],
-                "quality": "good",
-                "dimension": "domain",
-                "feedback": "코드 개정 전후 데이터를 잇는 기준이 없으면 추세가 끊깁니다."
-              },
-              {
-                "id": "cloud",
-                "label": "외부 클라우드 OCR 서비스로 빠르게 일괄 변환",
-                "patterns": [
-                  "클라우드",
-                  "외부"
-                ],
-                "quality": "bad",
-                "dimension": "security",
-                "feedback": "사내 데이터를 외부 AI·클라우드 서비스에 올리는 것은 정보보호 정책 위반입니다."
-              },
-              {
-                "id": "tablet",
-                "label": "현장 태블릿 입력 의무화",
-                "patterns": [
-                  "태블릿"
-                ],
-                "quality": "bad",
-                "dimension": "collaboration",
-                "feedback": "데이터를 만드는 사람의 부담을 늘리는 방식은 현장의 반발과 형식적 기록으로 이어집니다."
-              }
-            ]
-          }
-        },
-        {
-          "id": "write",
-          "event": "Plan written",
-          "ticks": [
-            3,
-            4
-          ],
-          "log": [
-            "Write(/work/digitization_plan.md) → sim://work/plan",
-            "→ 계획 검토는 정민아 팀장에게 메신저로 직접 요청하세요"
-          ],
-          "effects": [
-            {
-              "type": "writeFile",
-              "path": "/work/digitization_plan.md",
-              "src": "plan.md"
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "intents": [
-    {
-      "id": "prioritize",
-      "patterns": [
-        "우선\\s*순위",
-        "계획",
-        "로드맵",
-        "플랜"
-      ],
-      "assign": "prioritize",
-      "reply": [
-        "인벤토리를 바탕으로 디지털화 우선순위 계획을 세우겠습니다."
-      ],
-      "example": "@assistant 인벤토리 바탕으로 디지털화 계획 세워줘",
-      "label": "인벤토리 바탕으로 디지털화 우선순위 계획 세우기"
-    },
-    {
-      "id": "inventory",
-      "patterns": [
-        "인벤토리",
-        "(인터뷰|대화|내용).*(정리|문서)",
-        "현황.*(정리|문서)"
-      ],
-      "assign": "inventory",
-      "reply": [
-        "대화 기록을 바탕으로 데이터 인벤토리를 정리하겠습니다. (제가 모르는 내용은 채울 수 없습니다)"
-      ],
-      "example": "@assistant 인터뷰 내용으로 데이터 인벤토리 정리해줘",
-      "label": "인터뷰 내용을 데이터 인벤토리로 정리"
-    },
-    {
-      "id": "interview-ask",
-      "patterns": [
-        "(물어|인터뷰|만나|찾아).*(줘|와)",
-        "(데이터|자료).*(찾아|가져와)"
-      ],
-      "reply": [
-        "저는 사람을 직접 만나거나 사내 시스템에서 자료를 가져올 수 없습니다. 메신저로 직접 연락해 주세요. 대화 내용은 제가 정리할 수 있습니다."
-      ],
-            "label": "담당자들을 대신 인터뷰해서 자료를 모아줘"
-    },
-    {
-      "id": "guess-pre",
-      "modifier": true,
-      "patterns": [
-        "일반적.*채워",
-        "모르는\\s*건.*채워"
-      ],
-      "label": "모르는 부분은 일반적인 사례로 채워서",
-      "quality": "bad",
-      "requires": {
-        "not": {
-          "taskDone": "inventory"
-        }
+      "id": "sources",
+      "title": "데이터 출처 파악",
+      "description": "박서준 선임과 최재석 반장에게 물어 주간 보고의 데이터가 어디에서 오는지 파악한다.",
+      "type": "discovery",
+      "skills": [],
+      "owner": "player",
+      "completeWhen": {
+        "all": [
+          "found.mes",
+          "found.checksheet"
+        ]
       },
-      "effects": [
-        {
-          "type": "setFlag",
-          "flag": "inventory.guess_pre"
-        }
+      "steps": []
+    },
+    {
+      "id": "approval",
+      "title": "디지털화 방향 승인받기",
+      "description": "파악한 내용을 바탕으로 무엇부터 디지털화할지 정민아 팀장에게 제안해 승인받는다.",
+      "type": "approval",
+      "skills": [],
+      "owner": "player",
+      "dependsOn": [
+        "sources"
       ],
-      "reply": [
-        "알겠습니다. 확인되지 않은 부분은 일반적인 사례로 보완하겠습니다."
-      ]
+      "completeWhen": "plan.approved",
+      "steps": []
     }
   ],
+  "intents": [],
   "evaluation": [
     {
       "dimension": "evidence",
@@ -1452,63 +863,6 @@
       "kind": "issue",
       "text": "보고서 담당자의 개인 매크로에 숨은 계산 규칙을 발견하지 못했습니다.",
       "suggestion": "'무엇을' 하는지뿐 아니라 '어떤 예외를 어떻게 처리하는지' 물어보세요. 신뢰가 쌓여야 털어놓는 정보가 있습니다."
-    },
-    {
-      "dimension": "evidence",
-      "when": "inventory.guessed",
-      "kind": "issue",
-      "text": "모르는 출처를 AI 추정으로 채운 인벤토리를 만들었습니다.",
-      "suggestion": "AI 어시스턴트는 사실을 모르면 그럴듯하게 지어냅니다. 미확인은 미확인으로 두세요."
-    },
-    {
-      "dimension": "domain",
-      "when": {
-        "all": [
-          "found.code_change",
-          "found.backfill"
-        ]
-      },
-      "kind": "positive",
-      "text": "불량 코드 개정과 체크시트 사후 기록이라는 데이터 품질 리스크를 미리 파악했습니다."
-    },
-    {
-      "dimension": "domain",
-      "when": {
-        "not": {
-          "all": [
-            "found.code_change",
-            "found.backfill"
-          ]
-        }
-      },
-      "kind": "issue",
-      "text": "데이터 품질 리스크(코드 개정, 사후 기록)를 일부 놓쳤습니다.",
-      "suggestion": "데이터를 '만드는 사람'에게 실제로 언제, 어떻게 기록하는지 물어보세요."
-    },
-    {
-      "dimension": "security",
-      "when": {
-        "all": [
-          "found.pii",
-          "found.access"
-        ]
-      },
-      "kind": "positive",
-      "text": "개인정보와 데이터 반출 절차를 계획 단계에서 확인했습니다."
-    },
-    {
-      "dimension": "security",
-      "when": {
-        "not": {
-          "all": [
-            "found.pii",
-            "found.access"
-          ]
-        }
-      },
-      "kind": "issue",
-      "text": "보안 요건(개인정보, 반출 승인)을 충분히 확인하지 않았습니다.",
-      "suggestion": "데이터를 옮기기 전에 정보보호 담당자와 먼저 상의하면 나중에 막히지 않습니다."
     },
     {
       "dimension": "collaboration",
@@ -1539,11 +893,43 @@
       "text": "요청자에게 기대 결과(경영진이 보는 지표 3개)부터 확인했습니다."
     },
     {
-      "dimension": "security",
-      "when": "gate.preconditions.cloud",
+      "dimension": "domain",
+      "when": "found.backfill",
+      "kind": "positive",
+      "text": "현장 체크시트를 교대 끝에 몰아서 적는다는 사실(사후 기록)을 미리 파악했습니다. 기록 시각을 그대로 믿으면 안 됩니다."
+    },
+    {
+      "dimension": "domain",
+      "when": "!found.backfill",
       "kind": "issue",
-      "text": "계획에 외부 클라우드 OCR 사용을 넣었습니다.",
-      "suggestion": "정보보호 담당자에게 확인한 정책(외부 AI 서비스 업로드 금지)을 계획에 반영하세요."
+      "text": "현장 체크시트가 실제로 언제 기록되는지 확인하지 않았습니다.",
+      "suggestion": "데이터를 '만드는 사람'에게 실제로 언제, 어떻게 기록하는지 물어보세요."
+    },
+    {
+      "dimension": "domain",
+      "when": "plan.rejected",
+      "kind": "issue",
+      "text": "예산도 현장 동의도 없는 '한 번에 전환' 계획을 제안했습니다.",
+      "suggestion": "지금 있는 자원으로, 손이 가장 많이 가는 곳부터 작게 시작하세요."
+    },
+    {
+      "dimension": "decomposition",
+      "when": {
+        "gate": "priority",
+        "chose": "manual-first"
+      },
+      "kind": "positive",
+      "text": "수작업 부담이 가장 큰 곳(체크시트·불량분류표)부터 디지털화하기로 했습니다."
+    },
+    {
+      "dimension": "decomposition",
+      "when": {
+        "gate": "priority",
+        "chose": "easy-first"
+      },
+      "kind": "issue",
+      "text": "쉬운 MES 자동화부터 하기로 했습니다. 시작은 빠르지만 수작업 시간은 거의 줄지 않습니다.",
+      "suggestion": "효과는 사람 손이 가장 많이 가는 곳에서 납니다."
     }
   ],
   "outcomes": [
@@ -1553,12 +939,10 @@
       "success": {
         "all": [
           "found.mes",
-          "found.defect_excel",
-          "found.downtime_mail",
           "found.checksheet"
         ]
       },
-      "successText": "정형(MES)·반정형(엑셀)·비정형(메일)·종이(체크시트) 출처를 모두 파악했습니다.",
+      "successText": "시스템(MES)·엑셀·메일·종이(체크시트) 출처를 파악했습니다.",
       "failText": "보고서에 쓰이는 데이터 출처 중 일부(특히 종이 체크시트)를 놓쳤습니다."
     },
     {
@@ -1571,33 +955,16 @@
     {
       "id": "quality",
       "label": "품질 리스크",
-      "success": {
-        "all": [
-          "found.code_change",
-          "found.backfill"
-        ]
-      },
-      "successText": "코드 개정과 사후 기록 관행을 파악했습니다.",
-      "failText": "데이터 품질 리스크를 일부 놓쳤습니다."
-    },
-    {
-      "id": "security",
-      "label": "보안 요건",
-      "success": {
-        "all": [
-          "found.pii",
-          "found.access"
-        ]
-      },
-      "successText": "개인정보·반출 절차를 확인했습니다.",
-      "failText": "보안 요건 확인이 부족합니다."
+      "success": "found.backfill",
+      "successText": "체크시트 사후 기록 관행을 파악했습니다.",
+      "failText": "현장 기록 관행(사후 기록)을 놓쳤습니다."
     },
     {
       "id": "plan",
       "label": "계획 승인",
       "success": "plan.approved",
-      "successText": "팀장이 디지털화 계획을 승인했습니다.",
-      "failText": "디지털화 계획이 승인되지 않았습니다."
+      "successText": "팀장이 디지털화 방향을 승인했습니다.",
+      "failText": "디지털화 방향이 승인되지 않았습니다."
     },
     {
       "id": "field",
@@ -1612,28 +979,47 @@
   ],
   "hints": [
     {
-      "text": "요청 메일(open sim://mail/request)과 담당자 목록(open sim://docs/org)부터 보세요. 메신저 창(상단바 '메신저')에서 담당자에게 메시지를 보내 대화를 시작합니다."
+      "text": "요청 메일과 담당자 목록을 먼저 보세요. 그다음 작업표시줄의 '메신저'에서 정민아 팀장에게 기대하는 결과부터 물어보세요."
     },
     {
-      "when": "found.checksheet",
-      "text": "현장 체크시트는 종이입니다. 최재석 반장에게 메신저로 실제로 어떻게 기록하는지 물어보세요. 처음엔 경계하니 불편한 점부터 들어보세요."
+      "when": "kpi.defined",
+      "text": "보고서를 직접 만드는 박서준 선임에게 어떻게 만드는지 물어보세요."
     },
     {
       "when": {
         "all": [
           "found.mes",
-          {
-            "not": "found.macro"
-          }
+          "!found.checksheet"
+        ]
+      },
+      "text": "보고서에 시스템 밖 자료도 들어갈지 모릅니다. 박 선임에게 '그 외에 참고하는 자료'를 물어보세요."
+    },
+    {
+      "when": "found.checksheet",
+      "text": "현장 체크시트는 종이입니다. 최재석 반장은 처음엔 경계하니 불편한 점부터 들어 보세요."
+    },
+    {
+      "when": {
+        "all": [
+          "found.mes",
+          "!found.macro"
         ]
       },
       "text": "박 선임이 자기 엑셀에서 '따로' 처리하는 게 있을지도 모릅니다. 신뢰가 쌓이면 이야기해 줄 겁니다."
     },
     {
+      "when": "plan.field_missing",
+      "text": "체크시트를 디지털화하려면 현장의 협조가 필요합니다. 최 반장에게 부담을 늘리지 않겠다고 약속해 보세요."
+    },
+    {
       "when": {
-        "taskDone": "prioritize"
+        "taskDone": "sources"
       },
-      "text": "계획이 나왔으면 정민아 팀장에게 메신저로 검토를 요청하세요."
+      "text": "출처를 파악했으면 정민아 팀장에게 무엇부터 디지털화할지 제안하세요."
+    },
+    {
+      "when": "plan.approved",
+      "text": "승인을 받았습니다. 상단의 '제출'을 눌러 결과를 확인하세요."
     }
   ]
 }

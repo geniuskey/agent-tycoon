@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { evaluate } from '../src/engine/evaluate';
 import { carriedTrust, exportCarry, replay, Simulation } from '../src/engine/engine';
 import { getScenario, missionsOf } from '../src/scenarios';
-import { lastSaid, runUntil, sh, status, talk, taskStatus, to, trust } from './helpers';
+import { lastSaid, runUntil, sh, status, talk, taskStatus, to, trust, waitReply } from './helpers';
 
 const outcomes = (sim: Simulation) => Object.fromEntries(evaluate(sim).outcomes.map((o) => [o.id, o.success]));
 
@@ -16,24 +16,11 @@ function playS0Good(seed = 21) {
   talk(sim, 'park', '반복 작업을 줄여서 분석에 집중하실 수 있게 하려는 거예요');
   talk(sim, 'park', '그 외에 참고하는 자료가 또 있나요?');
   talk(sim, 'park', '선임님 엑셀에서 따로 처리하는 규칙이 있나요?');
-  talk(sim, 'lee', '불량분류표 엑셀은 어떻게 관리돼요?');
-  talk(sim, 'lee', '개정 전 D07 데이터는 어떻게 다뤄야 하나요?');
   talk(sim, 'choi', '현장에서 기록할 때 불편한 점이 있으세요?');
   talk(sim, 'choi', '현장 기록 방식은 그대로 두고 부담을 늘리지 않을게요');
   talk(sim, 'choi', '체크시트에 쓰는 기호나 약어가 있나요?');
   talk(sim, 'choi', '점검 기록은 보통 언제 적으세요?');
-  talk(sim, 'han', 'MES 데이터를 가져다 쓰려면 어떤 절차가 필요해요?');
-  talk(sim, 'han', '체크시트에 작업자 이름이 있으면 개인정보 어떻게 해야 하나요?');
-  sh(sim, 'agent spawn assistant');
-  to(sim, 'assistant', '인터뷰 내용으로 데이터 인벤토리 정리해줘');
-  runUntil(sim, () => taskStatus(sim, 'inventory') === 'done');
-  to(sim, 'assistant', '인벤토리 바탕으로 디지털화 계획 세워줘');
-  runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-  to(sim, 'assistant', '수작업이 가장 많은 체크시트부터, 현장 양식은 유지');
-  runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-  sh(sim, 'agent choose assistant 1,2,3,4');
-  runUntil(sim, () => taskStatus(sim, 'prioritize') === 'done');
-  talk(sim, 'jung', '계획 검토 부탁드립니다');
+  talk(sim, 'jung', '손이 제일 많이 가는 체크시트부터 먼저 하겠습니다');
   sh(sim, 'open sim://work/plan');
   return sim;
 }
@@ -47,14 +34,28 @@ describe('캠페인 구성', () => {
 });
 
 describe('0단계 · 현황 파악', () => {
-  it('신뢰를 쌓는 인터뷰 → 인벤토리 → 계획 승인 → 모든 결과 성공', () => {
+  it('터미널 없이 메신저만 쓴다 — 단계마다 기능이 하나씩 열린다', () => {
+    const sim = new Simulation(getScenario('s0-data-discovery')!, 20);
+    expect(sim.has('terminal')).toBe(false);
+    expect(sim.scenario.people!.map((p) => p.id)).toEqual(['jung', 'park', 'choi']);
+    expect(sim.scenario.tasks.every((t) => t.owner === 'player')).toBe(true);
+    const order = ['s0-data-discovery', 's1-digitization', 's3-data-foundation', 's5-single-agent'];
+    const counts = order.map((id) => getScenario(id)!.features!.length);
+    expect(counts).toEqual([...counts].sort((x, y) => x - y));
+    expect(new Simulation(getScenario('dram-retention')!, 1).has('timeline')).toBe(true); // 자유 플레이는 전부
+  });
+
+  it('신뢰를 쌓는 인터뷰 → 팀장 승인 → 인벤토리·계획 정리 → 모든 결과 성공', () => {
     const sim = playS0Good();
     expect(sim.flags['found.macro']).toBe(true);
     expect(sim.files.has('/shared/report/macro_rules.md')).toBe(true);
     expect(sim.flags['plan.approved']).toBe(true);
+    expect(sim.flags['gate.priority']).toBe('manual-first');
+    expect(taskStatus(sim, 'approval')).toBe('done');
     const inv = sim.files.get('/work/inventory.md')!.content;
     expect(inv).toContain('사후 일괄 기록');
     expect(inv).not.toContain('{{');
+    expect(sim.files.get('/work/digitization_plan.md')!.content).toContain('최재석 반장 동의');
     sh(sim, 'submit');
     expect(Object.values(outcomes(sim)).every(Boolean)).toBe(true);
     const collab = evaluate(sim).dimensions.find((d) => d.id === 'collaboration')!;
@@ -81,33 +82,26 @@ describe('0단계 · 현황 파악', () => {
     expect(lastSaid(sim, 'park', 2)).toContain('질문 예');
   });
 
-  it('보안 검토 없이 계획 승인 요청 → 보류, 빅뱅 계획 → 반려 후 재작업', () => {
+  it('너무 이른 계획 → 되묻기, 빅뱅 → 반려, 현장 협조 없이 → 보류, 협조 후 승인', () => {
     const sim = new Simulation(getScenario('s0-data-discovery')!, 24);
+    talk(sim, 'jung', '이제 디지털화 계획을 세워 볼까요?');
+    expect(lastSaid(sim, 'jung', 2)).toContain('아직');
     talk(sim, 'park', '주간보고는 어떻게 만드세요?');
-    sh(sim, 'agent spawn assistant');
-    to(sim, 'assistant', '인벤토리 정리해');
-    runUntil(sim, () => taskStatus(sim, 'inventory') === 'done');
-    to(sim, 'assistant', '계획 세워');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    to(sim, 'assistant', '3');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    sh(sim, 'agent choose assistant 1,2');
-    runUntil(sim, () => taskStatus(sim, 'prioritize') === 'done');
-    talk(sim, 'jung', '계획 검토해 주세요');
-    expect(sim.tasks['prioritize'].status).not.toBe('done');
+    talk(sim, 'park', '그 외에 참고하는 자료가 또 있나요?');
+    expect(taskStatus(sim, 'sources')).toBe('done');
+    talk(sim, 'jung', '새 시스템이랑 태블릿으로 한 번에 바꾸겠습니다');
+    expect(sim.flags['plan.rejected']).toBe(true);
     expect(sim.flags['plan.approved']).toBeUndefined();
-    to(sim, 'assistant', '계획 다시 세워');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    to(sim, 'assistant', '1');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    sh(sim, 'agent choose assistant 1,2');
-    runUntil(sim, () => taskStatus(sim, 'prioritize') === 'done');
-    talk(sim, 'jung', '계획 검토해 주세요');
-    expect(lastSaid(sim, 'jung', 2)).toContain('보안');
-    talk(sim, 'han', '반출 승인 절차가 어떻게 돼요?');
-    talk(sim, 'han', '개인정보 마스킹은요?');
-    talk(sim, 'jung', '다시 계획 검토 부탁드려요');
+    talk(sim, 'jung', '손이 제일 많이 가는 체크시트부터 먼저 하겠습니다');
+    expect(lastSaid(sim, 'jung', 2)).toContain('반장님');
+    expect(sim.flags['plan.approved']).toBeUndefined();
+    sh(sim, 'ask choi promise');
+    waitReply(sim, 'choi');
+    sh(sim, 'ask jung plan-manual');
+    waitReply(sim, 'jung');
     expect(sim.flags['plan.approved']).toBe(true);
+    sh(sim, 'submit');
+    expect(evaluate(sim).dimensions.some((d) => d.findings.some((f) => f.text.includes('한 번에 전환')))).toBe(true);
   });
 });
 

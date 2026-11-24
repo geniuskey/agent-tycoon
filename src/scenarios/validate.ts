@@ -1,4 +1,4 @@
-import type { Cond, Effect, LoadedScenario } from '../engine/types';
+import { ALL_FEATURES, type Cond, type Effect, type LoadedScenario } from '../engine/types';
 
 /**
  * 시나리오 정적 검증기. 시나리오 제작 시 `npm run validate:scenarios` 로 실행된다.
@@ -14,7 +14,14 @@ export function validateScenario(s: LoadedScenario): string[] {
   const personIds = new Set((s.people ?? []).map((p) => p.id));
 
   for (const k of ['id', 'title', 'domain', 'function', 'taskType'] as const) if (!s[k]) e(`필수 필드 누락: ${k}`);
-  if (!s.roles.length) e('roles 비어 있음');
+  const terminal = !s.features || s.features.includes('terminal');
+  s.features?.forEach((f) => ALL_FEATURES.includes(f) || e(`features: 알 수 없는 기능 '${f}'`));
+  if (!s.roles.length && terminal) e('roles 비어 있음');
+  // 터미널이 없으면 Agent에게 맡길 방법이 없다 — 모든 업무는 사람이 직접 (owner: player)
+  if (!terminal) {
+    s.tasks.forEach((t) => t.owner === 'player' || e(`task ${t.id}: 터미널이 없는 미션의 업무는 owner: player여야 함`));
+    if (s.intents.length) e('터미널이 없는 미션에 intents가 있음');
+  }
   if (!s.tasks.length) e('tasks 비어 있음');
   if (!s.outcomes.length) e('outcomes 비어 있음');
 
@@ -71,7 +78,7 @@ export function validateScenario(s: LoadedScenario): string[] {
       if (!t.steps.length) e(`${w}: steps 비어 있음`);
       if (!t.skills.some((sk) => skills.has(sk))) e(`${w}: 어떤 role도 필요 역량(${t.skills.join(',')})을 갖고 있지 않음`);
     }
-    if (!s.roles.some((r) => t.skills.every((sk) => r.skills.includes(sk)))) e(`${w}: 모든 역량을 갖춘 role이 없음 (항상 역량 부족 경고)`);
+    if (t.owner !== 'player' && !s.roles.some((r) => t.skills.every((sk) => r.skills.includes(sk)))) e(`${w}: 모든 역량을 갖춘 role이 없음 (항상 역량 부족 경고)`);
     const stepIds = new Set<string>();
     for (const st of t.steps) {
       if (stepIds.has(st.id)) e(`${w}: 중복 step id ${st.id}`);

@@ -76,26 +76,14 @@ function s0(): Simulation {
     ['park', '반복 작업을 줄여서 분석에 집중하실 수 있게 하려는 거예요'],
     ['park', '그 외에 참고하는 자료가 또 있나요?'],
     ['park', '선임님 엑셀에서 따로 처리하는 규칙이 있나요?'],
-    ['lee', '불량분류표 엑셀은 어떻게 관리돼요?'],
-    ['lee', '개정 전 D07 데이터는 어떻게 다뤄야 하나요?'],
     ['choi', '현장에서 기록할 때 불편한 점이 있으세요?'],
     ['choi', '현장 기록 방식은 그대로 두고 부담을 늘리지 않을게요'],
     ['choi', '체크시트에 쓰는 기호나 약어가 있나요?'],
     ['choi', '점검 기록은 보통 언제 적으세요?'],
-    ['han', 'MES 데이터를 가져다 쓰려면 어떤 절차가 필요해요?'],
-    ['han', '체크시트에 작업자 이름이 있으면 개인정보 어떻게 해야 하나요?'],
+    ['choi', '체크시트에 작업자 정보도 적나요?'],
+    ['jung', '손이 제일 많이 가는 체크시트부터 먼저 하겠습니다'],
   ])
     talk(sim, p, t);
-  sh(sim, 'agent spawn assistant');
-  to(sim, 'assistant', '인터뷰 내용으로 데이터 인벤토리 정리해줘');
-  runUntil(sim, () => taskStatus(sim, 'inventory') === 'done');
-  to(sim, 'assistant', '인벤토리 바탕으로 디지털화 계획 세워줘');
-  runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-  to(sim, 'assistant', '수작업이 가장 많은 체크시트부터, 현장 양식은 유지');
-  runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-  sh(sim, 'agent choose assistant 1,2,3,4');
-  runUntil(sim, () => taskStatus(sim, 'prioritize') === 'done');
-  talk(sim, 'jung', '계획 검토 부탁드립니다');
   sh(sim, 'open sim://work/plan');
   return sim;
 }

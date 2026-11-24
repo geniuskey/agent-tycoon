@@ -142,7 +142,7 @@ function HomePage({ sim }: { sim: Simulation }) {
       <div className="mb-1 text-xs text-faint">{sim.scenario.company.name} · 사내 포털 (가상)</div>
       <h1 className="mb-4 text-lg font-semibold text-strong">업무 화면</h1>
       <div className="grid gap-2">
-        <BoardLink sim={sim} />
+        {sim.has('multiAgent') && <BoardLink sim={sim} />}
         {sim.scenario.pages.some((p) => p.url.startsWith(WIKI_URL + '/')) && (
           <button
             onClick={() => navigate(WIKI_URL)}

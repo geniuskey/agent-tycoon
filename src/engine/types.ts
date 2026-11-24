@@ -420,7 +420,24 @@ export interface ScenarioDef {
   initialFlags?: Record<string, FlagValue>;
   /** 캠페인 결과를 사내 공통 지침으로 이어 받는다 (캠페인 밖 자유 플레이 미션) */
   foundation?: FoundationRule[];
+  /**
+   * 이 미션에서 쓸 수 있는 작업 환경 기능. 없으면 전부 (자유 플레이).
+   * 캠페인은 처음엔 메신저·브라우저만 주고, 단계마다 기능을 하나씩 연다.
+   */
+  features?: FeatureId[];
+  /** 이 미션에서 새로 열린 기능 소개 (브리핑 맨 위에 표시) */
+  unlock?: { title: string; text: string[] };
 }
+
+/**
+ * 단계별로 열리는 작업 환경 기능. 메신저·브라우저·브리핑·업무 목록은 항상 있다.
+ *  - terminal   : 터미널(셸)과 Agent 세션 — AI 어시스턴트에게 지시
+ *  - files      : 파일 탐색기·미리보기
+ *  - multiAgent : 셸 추가, 업무 보드 — 여러 Agent를 나눠 맡긴다
+ *  - timeline   : 타임라인·알림·이벤트 로그
+ */
+export type FeatureId = 'terminal' | 'files' | 'multiAgent' | 'timeline';
+export const ALL_FEATURES: FeatureId[] = ['terminal', 'files', 'multiAgent', 'timeline'];
 
 /**
  * 사내 공통 지침 원칙 (7단계 자유 플레이) — 캠페인 이월 상태(carry)에서 when이 참이면 /org/AGENTS.md에 들어가고

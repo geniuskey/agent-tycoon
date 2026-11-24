@@ -592,16 +592,16 @@ function pagesText(sim: Simulation): string[] {
   ];
 }
 
-function hintText(sim: Simulation): string[] {
+export function hintText(sim: Simulation): string[] {
   const hints = sim.scenario.hints.filter((h) => sim.cond(h.when));
   const generic: string[] = [];
   const agents = sim.agentList();
-  if (!agents.length) generic.push("먼저 'roles'로 역할을 보고 'agent spawn <role>'로 Agent를 만드세요.");
+  if (!agents.length && sim.has('terminal')) generic.push("먼저 'roles'로 역할을 보고 'agent spawn <role>'로 Agent를 만드세요.");
   const waiting = agents.filter((a) => a.status === 'waiting' || a.status === 'blocked');
   if (waiting.length) generic.push(`응답을 기다리는 Agent가 있습니다: ${waiting.map((a) => a.id).join(', ')}`);
   const failed = agents.filter((a) => a.status === 'failed');
   if (failed.length) generic.push(`실패한 Agent: ${failed.map((a) => a.id).join(', ')} — 원인을 해결한 뒤 'agent retry'`);
-  const ready = sim.visibleTasks().filter((t) => t.status === 'ready' && !t.assignee);
+  const ready = sim.visibleTasks().filter((t) => t.status === 'ready' && !t.assignee && sim.taskDef(t.id)?.owner !== 'player');
   if (ready.length) generic.push(`바로 시작 가능한 Task: ${ready.map((t) => t.id).join(', ')}`);
   return [c.bold('💡 힌트'), ...[...generic, ...hints.slice(-3).map((h) => h.text)].map((h) => `  • ${h}`)];
 }

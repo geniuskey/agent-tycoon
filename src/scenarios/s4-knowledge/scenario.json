@@ -74,6 +74,18 @@
       "from": []
     }
   },
+  "features": [
+    "terminal",
+    "files",
+    "multiAgent"
+  ],
+  "unlock": {
+    "title": "지식 시험 (eval)",
+    "text": [
+      "AI가 읽을 지식 패키지를 만들고, 지식 시험(eval)으로 AI가 정말 맞게 답하는지 확인합니다.",
+      "틀린 문항이 나오면 답이 아니라 지식 패키지를 고쳐서 다시 시험하세요."
+    ]
+  },
   "briefing": {
     "requester": {
       "name": "정민아 팀장",

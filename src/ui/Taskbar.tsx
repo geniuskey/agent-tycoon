@@ -124,20 +124,24 @@ function Tray() {
   const notifyShown = bottomOpen && bottomTab === 'notify';
   return (
     <>
-      <TaskBtn title="알림 — 아래 패널의 알림 탭" onClick={() => setBottom(notifyShown ? 'timeline' : 'notify')} active={notifyShown}>
-        <span className="relative text-[14px] leading-none text-dim">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-          </svg>
-          {notes > 0 && (
-            <span className="absolute -top-1.5 -right-2 min-w-[15px] rounded-full bg-sky-500 px-1 text-center text-[9.5px] leading-[15px] font-bold text-white">
-              {notes > 99 ? '99+' : notes}
+      {sim.has('timeline') && (
+        <>
+          <TaskBtn title="알림 — 아래 패널의 알림 탭" onClick={() => setBottom(notifyShown ? 'timeline' : 'notify')} active={notifyShown}>
+            <span className="relative text-[14px] leading-none text-dim">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              {notes > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[15px] rounded-full bg-sky-500 px-1 text-center text-[9.5px] leading-[15px] font-bold text-white">
+                  {notes > 99 ? '99+' : notes}
+                </span>
+              )}
             </span>
-          )}
-        </span>
-      </TaskBtn>
-      <span className="mx-0.5 my-2 w-px bg-line" />
+          </TaskBtn>
+          <span className="mx-0.5 my-2 w-px bg-line" />
+        </>
+      )}
       <div className="my-auto flex items-center rounded-[5px] border border-line bg-black/20 p-0.5" role="group" aria-label="시뮬레이션 속도">
         {[0, 1, 2, 4].map((s) => (
           <button

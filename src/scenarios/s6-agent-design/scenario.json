@@ -72,6 +72,19 @@
       "from": []
     }
   },
+  "features": [
+    "terminal",
+    "files",
+    "multiAgent",
+    "timeline"
+  ],
+  "unlock": {
+    "title": "Agent 명세와 섀도 운영",
+    "text": [
+      "이제 지시 없이 스스로 도는 Agent를 설계합니다. 트리거·도구·사람 확인·실패 시 동작을 명세에 적으세요.",
+      "섀도 운영 동안 Agent는 혼자 일합니다. 실행 기록을 열어 무엇이 잘못됐는지 직접 찾아야 합니다."
+    ]
+  },
   "briefing": {
     "requester": {
       "name": "정민아 팀장",

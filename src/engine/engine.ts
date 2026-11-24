@@ -10,6 +10,7 @@ import type {
   AgentStatus,
   Cond,
   Effect,
+  FeatureId,
   FlagValue,
   FoundationRule,
   GateDef,
@@ -309,6 +310,10 @@ export class Simulation {
   }
   cond(c: Cond | undefined): boolean {
     return evalCond(c, this.condCtx);
+  }
+  /** 이 미션에서 열린 작업 환경 기능인지 (features가 없으면 전부 열림) */
+  has(f: FeatureId): boolean {
+    return !this.scenario.features || this.scenario.features.includes(f);
   }
   currentStep(a: AgentRuntime): StepDef | undefined {
     if (!a.taskId) return undefined;
