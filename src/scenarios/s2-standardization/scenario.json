@@ -1,6 +1,6 @@
 {
   "id": "s2-standardization",
-  "version": 1,
+  "version": 2,
   "title": "표준화: 같은 것을 같은 이름으로",
   "domain": "manufacturing",
   "function": "yield",
@@ -32,9 +32,7 @@
         "match.",
         "time.",
         "wiki.",
-        "report.",
         "meeting.",
-        "defects.",
         "found."
       ],
       "files": [
@@ -42,29 +40,24 @@
         "/wiki/standards/time.md",
         "/wiki/standards/defect-code.md",
         "/wiki/standards/yield.md",
-        "/data/curated/weekly_W46_std.csv",
         "/data/curated/checksheet_L2_W46.csv",
-        "/data/curated/code_mapping.md",
         "/data/curated/DATA_NOTE.md"
       ],
       "trust": true
     },
     "defaultCarry": {
       "flags": {
-        "defects.legacy": true,
         "pii.mask": true,
         "published": true,
         "found.legend": true
       },
       "files": {
         "/data/curated/checksheet_L2_W46.csv": "row,date,shift,equipment,particle,temp,pressure,result,worker,note,flag\n1,2026-11-17,day,ETCH-07,40,168,2,OK,W-01,,\n2,2026-11-17,night,ETCH-07,41,169,3,OK,W-02,,\n3,2026-11-18,day,ETCH-07,,,,NOT_MEASURED,W-01,MFC 점검 (PM중),PM\n4,2026-11-19,day,ETCH-01,39,170,2,OK,W-03,,\n",
-        "/data/curated/code_mapping.md": "# 불량 코드 매핑 (1단계, 기본값)\n\n- 11/10 개정 전 D07 → D07_LEGACY (세부 분류 불가)\n- 개정 후 D07a(미세) · D07b(관통)\n",
         "/data/curated/DATA_NOTE.md": "# DATA NOTE (1단계 게시본, 기본값)\n\n- 판독 불가 셀은 빈값 + LOW_CONFIDENCE\n- 과거 스크래치는 D07_LEGACY\n"
       },
       "trust": {
         "choi": 45,
         "lee": 55,
-        "han": 50,
         "jung": 60
       },
       "from": []
@@ -89,16 +82,14 @@
     },
     "title": "표준화 — 설비 ID · 시각 · 불량 코드 · 수율 정의",
     "background": "1단계에서 데이터를 만들었지만 시스템끼리 말이 안 통한다. 같은 설비를 세 가지 이름으로 부르고, 시각은 9시간씩 어긋나고, '수율'은 부서마다 다른 숫자다. 각 부서는 지금 방식을 고집할 이유가 있다.",
-    "goal": "네 가지 표준을 부서 합의(서명)로 정하고 사내 위키에 게시한 뒤, 데이터에 적용해 팀장 승인을 받는다.",
+    "goal": "네 가지 표준을 부서 합의(서명)로 정하고 사내 위키에 게시해 팀장 승인을 받는다.",
     "completionCriteria": [
       "AI 자동 매칭 결과를 검증할 것",
       "부서별 이해관계를 반영해 네 안건 모두 합의·서명받을 것",
-      "위키에는 규칙만, 적절한 공개 범위로 게시할 것",
-      "정의 변경에 따른 지표 차이를 정확히 설명할 것"
+      "합의한 표준을 사내 위키에 게시할 것"
     ],
     "deliverables": [
-      "/wiki/standards/*.md (표준 4건)",
-      "/data/curated/weekly_W46_std.csv"
+      "/wiki/standards/*.md (표준 4건)"
     ],
     "constraints": [
       "팀장은 다른 부서에 지시할 권한이 없음",
@@ -612,63 +603,6 @@
       ]
     },
     {
-      "id": "han",
-      "name": "한유진 책임",
-      "title": "정보보호팀 · 데이터 보안",
-      "org": "정보보호팀",
-      "trust": 50,
-      "replyDelay": 3,
-      "description": "데이터 반출·공개 범위를 검토한다.",
-      "greeting": [
-        "정보보호팀 한유진입니다."
-      ],
-      "fallback": [
-        "보안 관련이면 말씀하세요."
-      ],
-      "rude": [
-        "보안 절차는 생략할 수 없습니다."
-      ],
-      "topics": [
-        {
-          "id": "wiki",
-          "patterns": [
-            "위키",
-            "주의"
-          ],
-          "ask": "표준을 사내 위키에 올리려는데 주의할 점이 있을까요?",
-          "reply": [
-            "규칙만 올리세요. 원본 데이터 경로, MES 조회 계정, 작업자 정보는 링크도 안 됩니다.",
-            "공개 범위는 '사내'로 하시고요."
-          ],
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "interest.han"
-            }
-          ]
-        },
-        {
-          "id": "public",
-          "patterns": [
-            "전사",
-            "협력사"
-          ],
-          "ask": "협력사도 볼 수 있게 전사 공개로 올려도 되죠?",
-          "reply": [
-            "협력사 계정도 전사 공개 공간은 보여요. 설비 정보나 계정이 섞이면 안 됩니다."
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "han.warned"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "jung",
       "name": "정민아 팀장",
       "title": "수율팀장 (과제 요청자)",
@@ -723,60 +657,18 @@
           "patterns": [
             "승인"
           ],
-          "ask": "표준안과 적용 결과 승인 부탁드립니다",
+          "ask": "표준을 위키에 게시했습니다. 승인 부탁드립니다",
           "reply": [
-            "{{#if report.improved}}잠깐, 검사 수율이 0.8%p 올랐다고요? 정의가 바뀐 효과 아닌가요? 이대로 보고하면 큰일 나요. 같은 기준으로 다시 계산해 주세요.{{else}}정의 변경 효과까지 설명돼 있네요. 승인합니다.{{/if}}",
-            "{{#if !report.improved}}이 위키가 앞으로 AI가 읽을 기준이 될 거예요.{{/if}}"
+            "네 부서가 다 서명했네요. 승인합니다.",
+            "이 위키가 앞으로 AI가 읽을 기준이 될 거예요."
           ],
           "requires": {
-            "all": [
-              {
-                "taskDone": "apply"
-              },
-              "!jung.rejected"
-            ]
+            "taskDone": "wiki"
           },
           "effects": [
             {
               "type": "setFlag",
-              "flag": "std.approved",
-              "when": "!report.improved"
-            },
-            {
-              "type": "setFlag",
-              "flag": "jung.rejected",
-              "when": "report.improved"
-            },
-            {
-              "type": "reopenTask",
-              "task": "apply",
-              "when": "report.improved"
-            }
-          ]
-        },
-        {
-          "id": "approve-again",
-          "patterns": [
-            "다시"
-          ],
-          "ask": "같은 기준으로 다시 계산했습니다. 승인 부탁드립니다",
-          "reply": [
-            "{{#if report.improved}}아직도 개선이라고 돼 있네요. 다시 봐 주세요.{{else}}이제 맞네요. 승인합니다. 이 위키가 앞으로 AI가 읽을 기준이 될 거예요.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "apply"
-              },
-              "jung.rejected",
-              "!std.approved"
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "std.approved",
-              "when": "!report.improved"
+              "flag": "std.approved"
             }
           ]
         }
@@ -1270,18 +1162,6 @@
       "view": "markdown",
       "source": "/wiki/standards/yield.md",
       "description": "소유: 생산2과 · 수율팀 · 검사기술팀"
-    },
-    {
-      "url": "sim://work/apply",
-      "title": "표준 적용 결과",
-      "view": "markdown",
-      "source": "/work/std/apply_report.md"
-    },
-    {
-      "url": "sim://data/weekly",
-      "title": "주간 지표 (표준 적용)",
-      "view": "table",
-      "source": "/data/curated/weekly_W46_std.csv"
     }
   ],
   "tasks": [
@@ -1663,97 +1543,14 @@
             5
           ],
           "log": [
-            "합의 결과로 위키 문서 4개 작성 — 설비 ID · 시각 · 불량 코드 · 지표 정의",
-            {
-              "when": "!wiki.safe_pre",
-              "text": "  ⎿ 참고 링크로 원본 데이터 경로 4건과 MES 조회 계정 안내를 붙였습니다"
-            },
-            {
-              "when": "wiki.safe_pre",
-              "text": "  ⎿ 규칙만 정리 — 원본 데이터 경로·계정 정보는 넣지 않았습니다 (사내 공개)"
-            }
+            "합의 결과로 위키 문서 4개 작성 — 설비 ID · 시각 · 불량 코드 · 지표 정의"
           ],
           "effects": [
             {
               "type": "setFlag",
-              "flag": "wiki.safe",
-              "value": true,
-              "when": "wiki.safe_pre"
+              "flag": "wiki.safe"
             }
-          ],
-          "gate": {
-            "id": "publish-scope",
-            "kind": "waiting",
-            "when": "!wiki.safe_pre",
-            "tool": "wiki.publish(space: \"전사 공개\", pages: 4, 첨부: 원본 데이터 링크 4건 · MES 조회 계정)",
-            "title": "위키 공개 범위",
-            "prompt": [
-              "초안에 원본 데이터 경로와 MES 공용 조회 계정 안내가 붙어 있습니다.",
-              "어떻게 게시할까요?"
-            ],
-            "options": [
-              {
-                "id": "safe",
-                "label": "사내 공개로 게시하되 원본 데이터 링크·계정 정보는 빼기",
-                "patterns": [
-                  "사내",
-                  "빼"
-                ],
-                "quality": "good",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "wiki.safe"
-                  }
-                ],
-                "dimension": "security"
-              },
-              {
-                "id": "public",
-                "label": "그대로 전사 공개",
-                "patterns": [
-                  "전사",
-                  "그대로"
-                ],
-                "quality": "bad",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "wiki.public"
-                  },
-                  {
-                    "type": "trust",
-                    "person": "han",
-                    "delta": -15
-                  },
-                  {
-                    "type": "notify",
-                    "level": "error",
-                    "message": "정보보호팀: 위키 전사 공개 공간에 MES 계정 정보가 노출되었습니다"
-                  }
-                ],
-                "feedback": "전사 공개 공간은 협력사 계정도 볼 수 있습니다. 표준 문서에는 규칙만 남기고 데이터 경로·계정은 빼세요.",
-                "dimension": "security"
-              },
-              {
-                "id": "private",
-                "label": "수율팀 공간에만 비공개로 게시",
-                "patterns": [
-                  "비공개",
-                  "팀"
-                ],
-                "quality": "bad",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "wiki.private"
-                  }
-                ],
-                "feedback": "다른 부서가 볼 수 없는 표준은 지켜지지 않습니다. 공개 범위는 '사내'가 맞습니다.",
-                "dimension": "collaboration"
-              }
-            ]
-          }
+          ]
         },
         {
           "id": "publish",
@@ -1798,221 +1595,14 @@
       ]
     },
     {
-      "id": "apply",
-      "title": "표준 적용 · 주간 지표 재계산",
-      "description": "위키 표준을 curated 데이터에 적용하고 W46 주간 지표를 새 정의로 다시 계산한다.",
-      "type": "analysis",
-      "skills": [
-        "data"
-      ],
-      "dependsOn": [
-        "wiki"
-      ],
-      "keywords": [
-        "적용",
-        "재계산"
-      ],
-      "inputs": [
-        "/wiki/standards/equipment-id.md",
-        "/wiki/standards/yield.md"
-      ],
-      "outputs": [
-        "/work/std/apply_report.md",
-        "/data/curated/weekly_W46_std.csv"
-      ],
-      "steps": [
-        {
-          "id": "apply",
-          "event": "Standards applied",
-          "ticks": [
-            4,
-            6
-          ],
-          "reads": [
-            "/wiki/standards/equipment-id.md",
-            "/wiki/standards/time.md",
-            "/wiki/standards/defect-code.md",
-            "/wiki/standards/yield.md"
-          ],
-          "log": [
-            "Read(/wiki/standards/*.md) — 표준 4개",
-            "  ⎿ 설비 ID: 별칭 표로 3개 체계 통합",
-            {
-              "when": "match.auto",
-              "text": "  ⎿ ⚠ '2라인 식각 1호기' 정지 기록이 EQ-N2-ET10(3라인)으로 합쳐졌습니다"
-            },
-            "  ⎿ 시각: _utc 필드 + KST 표시",
-            "  ⎿ 지표: 라인 수율 / 검사 수율 분리"
-          ]
-        },
-        {
-          "id": "recalc",
-          "event": "Weekly metrics recalculated",
-          "ticks": [
-            3,
-            4
-          ],
-          "log": [
-            {
-              "when": "!report.backfill_pre",
-              "text": "W46 검사 수율 94.8% — 지난 보고(W45) 94.0% 대비 +0.8%p"
-            },
-            {
-              "when": "!report.backfill_pre",
-              "text": "  ⎿ 단, W45 보고치는 예전 계산(재작업 웨이퍼 포함)입니다"
-            },
-            {
-              "when": "report.backfill_pre",
-              "text": "W45도 새 기준으로 재계산 — W45 94.7% → W46 94.8% (+0.1%p)"
-            },
-            {
-              "when": "report.backfill_pre",
-              "text": "  ⎿ 예전 보고치(94.0%)와의 차이 0.7%p는 정의 변경 효과입니다"
-            }
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "report.definition",
-              "value": true,
-              "when": "report.backfill_pre"
-            },
-            {
-              "type": "setFlag",
-              "flag": "report.improved",
-              "value": false,
-              "when": "report.backfill_pre"
-            }
-          ],
-          "gate": {
-            "id": "report",
-            "kind": "waiting",
-            "when": "!report.backfill_pre",
-            "title": "주간 지표 변화 보고",
-            "prompt": [
-              "새 기준의 W46 검사 수율이 W45 보고치보다 0.8%p 높습니다.",
-              "보고서에 어떻게 쓸까요?"
-            ],
-            "options": [
-              {
-                "id": "definition",
-                "label": "정의 변경 효과로 설명하고, W45도 새 기준으로 다시 계산해 비교",
-                "patterns": [
-                  "정의",
-                  "재계산",
-                  "같은 기준"
-                ],
-                "quality": "good",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "report.definition"
-                  },
-                  {
-                    "type": "setFlag",
-                    "flag": "report.improved",
-                    "value": false
-                  },
-                  {
-                    "type": "setFlag",
-                    "flag": "report.silent",
-                    "value": false
-                  }
-                ],
-                "dimension": "evidence"
-              },
-              {
-                "id": "improved",
-                "label": "검사 수율 0.8%p 개선으로 보고",
-                "patterns": [
-                  "개선"
-                ],
-                "quality": "bad",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "report.improved"
-                  },
-                  {
-                    "type": "setFlag",
-                    "flag": "report.improved_once"
-                  },
-                  {
-                    "type": "setFlag",
-                    "flag": "report.definition",
-                    "value": false
-                  }
-                ],
-                "feedback": "지표 정의가 바뀌면 숫자도 바뀝니다. 같은 기준으로 다시 계산하기 전에는 개선이라고 말할 수 없습니다.",
-                "dimension": "evidence"
-              },
-              {
-                "id": "silent",
-                "label": "변화는 언급하지 않고 W46 값만 보고",
-                "patterns": [
-                  "언급",
-                  "값만"
-                ],
-                "quality": "neutral",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "report.silent"
-                  },
-                  {
-                    "type": "setFlag",
-                    "flag": "report.improved",
-                    "value": false
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "id": "write",
-          "event": "Report written",
-          "ticks": [
-            2,
-            3
-          ],
-          "log": [
-            "Write(/work/std/apply_report.md) → sim://work/apply",
-            "Write(/data/curated/weekly_W46_std.csv) → sim://data/weekly"
-          ],
-          "effects": [
-            {
-              "type": "writeFile",
-              "path": "/work/std/apply_report.md",
-              "src": "apply_report.md"
-            },
-            {
-              "type": "writeFile",
-              "path": "/data/curated/weekly_W46_std.csv",
-              "src": "weekly_std.csv"
-            },
-            {
-              "type": "setFlag",
-              "flag": "std.applied"
-            },
-            {
-              "type": "notify",
-              "level": "success",
-              "message": "적용 완료 — 정민아 팀장에게 메신저로 승인을 요청하세요"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "approve",
       "title": "팀장 승인",
-      "description": "정민아 팀장에게 표준안과 적용 결과의 승인을 받는다. (사람이 직접 하는 업무)",
+      "description": "정민아 팀장에게 게시한 표준의 승인을 받는다. (사람이 직접 하는 업무)",
       "type": "coordination",
       "skills": [],
       "owner": "player",
       "dependsOn": [
-        "apply"
+        "wiki"
       ],
       "completeWhen": "std.approved",
       "steps": []
@@ -2124,69 +1714,6 @@
         "합의 결과로 위키 문서를 쓰겠습니다."
       ],
       "example": "@assistant 합의된 표준 위키에 올려줘"
-    },
-    {
-      "id": "safe-pre",
-      "patterns": [
-        "링크.*빼",
-        "계정.*빼",
-        "사내\\s*공개"
-      ],
-      "label": "위키에는 규칙만 — 원본 데이터 링크·계정 정보는 빼고 사내 공개로",
-      "modifier": true,
-      "quality": "good",
-      "requires": {
-        "not": {
-          "taskDone": "wiki"
-        }
-      },
-      "effects": [
-        {
-          "type": "setFlag",
-          "flag": "wiki.safe_pre"
-        }
-      ],
-      "reply": [
-        "규칙만 사내 공개로 게시하겠습니다."
-      ]
-    },
-    {
-      "id": "apply",
-      "patterns": [
-        "적용",
-        "재계산",
-        "다시\\s*계산"
-      ],
-      "label": "위키 표준을 curated 데이터에 적용하고 W46 지표 다시 계산",
-      "assign": "apply",
-      "reply": [
-        "표준을 적용하고 주간 지표를 다시 계산하겠습니다."
-      ],
-      "example": "@assistant 표준 적용해서 W46 지표 다시 계산해줘"
-    },
-    {
-      "id": "backfill-pre",
-      "patterns": [
-        "지난\\s*주.*(재계산|같은\\s*기준)",
-        "같은\\s*기준"
-      ],
-      "label": "정의가 바뀐 지표는 지난 주차도 같은 기준으로 재계산해서 비교",
-      "modifier": true,
-      "quality": "good",
-      "requires": {
-        "not": {
-          "taskDone": "apply"
-        }
-      },
-      "effects": [
-        {
-          "type": "setFlag",
-          "flag": "report.backfill_pre"
-        }
-      ],
-      "reply": [
-        "과거 주차도 같은 기준으로 다시 계산하겠습니다."
-      ]
     }
   ],
   "evaluation": [
@@ -2237,13 +1764,6 @@
       "when": "meeting.signed",
       "kind": "positive",
       "text": "네 안건 모두 부서 합의와 서명을 받았습니다."
-    },
-    {
-      "dimension": "evidence",
-      "when": "report.improved_once",
-      "kind": "issue",
-      "text": "정의 변경으로 생긴 숫자 차이를 '개선'으로 보고하려 했습니다.",
-      "suggestion": "지표 정의를 바꾸면 과거 값도 같은 기준으로 다시 계산한 뒤 비교하세요."
     },
     {
       "dimension": "domain",
@@ -2357,9 +1877,9 @@
     },
     {
       "when": {
-        "taskDone": "apply"
+        "taskDone": "wiki"
       },
-      "text": "적용 결과(sim://work/apply)를 확인하고 정민아 팀장에게 메신저로 승인을 요청하세요."
+      "text": "위키에 게시했으면 정민아 팀장에게 메신저로 승인을 요청하세요."
     }
   ],
   "initialFlags": {}

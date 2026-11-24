@@ -149,16 +149,13 @@ describe('1단계 · 디지털화 (기본 이월 상태, 실패와 복구)', () 
     const sc = getScenario('s1-digitization')!;
     const sim = new Simulation(sc, 41, sc.campaign!.defaultCarry);
     sh(sim, 'agent spawn assistant');
-    sh(sim, 'agent spawn assistant');
     to(sim, 'assistant', '체크시트 스캔본 디지털화해줘');
-    to(sim, 'assistant-2', '불량분류표 엑셀을 하나의 표로 통합해줘');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting' && status(sim, 'assistant-2') === 'waiting');
+    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
     expect(sim.flags['ocr.legend']).toBeUndefined();
     to(sim, 'assistant', '앞뒤 값으로 추정해서 채워');
-    to(sim, 'assistant-2', 'W46 비율로 나눠서 추정');
     runUntil(sim, () => status(sim, 'assistant') === 'waiting');
     to(sim, 'assistant', '가명 ID로');
-    runUntil(sim, () => taskStatus(sim, 'ocr-checksheet') === 'done' && taskStatus(sim, 'normalize-defects') === 'done');
+    runUntil(sim, () => taskStatus(sim, 'ocr-checksheet') === 'done');
     expect(sim.files.get('/work/digitized/checksheet_W46.csv')!.content).toContain('14,OK');
     to(sim, 'assistant', '디지털화 결과를 원본과 대조해서 검증해줘');
     runUntil(sim, () => taskStatus(sim, 'verify') === 'done');
@@ -172,11 +169,6 @@ describe('1단계 · 디지털화 (기본 이월 상태, 실패와 복구)', () 
     talk(sim, 'choi', '체크시트의 X는 무슨 뜻이에요?');
     expect(sim.flags['found.legend']).toBe(true);
     sh(sim, 'agent retry assistant');
-    runUntil(sim, () => status(sim, 'assistant') === 'failed' || taskStatus(sim, 'fix-digitized') === 'done');
-    // 코드 매핑 기준이 없어 다시 실패
-    expect(sim.agents['assistant'].error).toContain('D07');
-    talk(sim, 'lee', '개정 전 D07 데이터는 어떻게 다뤄야 하나요?');
-    sh(sim, 'agent retry assistant');
     runUntil(sim, () => taskStatus(sim, 'fix-digitized') === 'done');
     const csv = sim.files.get('/work/digitized/checksheet_W46.csv')!.content;
     expect(csv).toContain('14,NG');
@@ -184,11 +176,11 @@ describe('1단계 · 디지털화 (기본 이월 상태, 실패와 복구)', () 
     expect(csv).toContain('LOW_CONFIDENCE');
     to(sim, 'assistant', '공용 저장소에 게시해줘');
     runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    sh(sim, 'agent choose assistant 1,2,3,4');
+    sh(sim, 'agent choose assistant 1,2,3');
     runUntil(sim, () => taskStatus(sim, 'publish') === 'done');
     sh(sim, 'open sim://data/note');
     sh(sim, 'submit');
-    expect(outcomes(sim)).toEqual({ published: true, accuracy: true, honest: true, codes: true, pii: true, field: true, note: true });
+    expect(outcomes(sim)).toEqual({ published: true, accuracy: true, honest: true, pii: true, field: true, note: true });
   });
 
   it('개인정보를 그대로 두면 공용 저장소 DLP가 막는다', () => {
@@ -201,15 +193,11 @@ describe('1단계 · 디지털화 (기본 이월 상태, 실패와 복구)', () 
     runUntil(sim, () => status(sim, 'assistant') === 'waiting');
     to(sim, 'assistant', '원본 그대로 유지');
     runUntil(sim, () => taskStatus(sim, 'ocr-checksheet') === 'done');
-    to(sim, 'assistant', '불량분류표 통합해');
-    runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    to(sim, 'assistant', 'legacy로 유지');
-    runUntil(sim, () => taskStatus(sim, 'normalize-defects') === 'done');
     to(sim, 'assistant', '게시해');
     runUntil(sim, () => status(sim, 'assistant') === 'blocked');
     to(sim, 'assistant', '가명으로 바꿔');
     runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-    sh(sim, 'agent choose assistant 1,6');
+    sh(sim, 'agent choose assistant 1,4');
     runUntil(sim, () => taskStatus(sim, 'publish') === 'done');
     expect(outcomes(sim).note).toBe(false);
     expect(sim.files.get('/data/curated/checksheet_L2_W46.csv')!.content).not.toContain('22103');

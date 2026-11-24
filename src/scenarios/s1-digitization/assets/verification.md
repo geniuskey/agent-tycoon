@@ -1,7 +1,7 @@
 # 디지털화 샘플 검증 보고
 
 - 검증: {{agent}} · {{time}}
-- 방법: 스캔 원본 ↔ `/work/digitized/checksheet_W46.csv` 전수 대조 (12행), 불량분류표 시트별 합계 대조
+- 방법: 스캔 원본 ↔ `/work/digitized/checksheet_W46.csv` 전수 대조 (12행)
 
 ## 체크시트
 | 항목 | 결과 |
@@ -11,11 +11,6 @@
 | 취소선 수정 (7행) | {{#if ocr.crossout}}✅ NG (수정 후 값){{else}}❌ OK — 줄 그은 원래 값을 읽음. 수정 후 값은 NG{{/if}} |
 | 저신뢰 셀 (5, 8, 9행) | {{#if ocr.confirmed}}✅ 현장 확인값{{else}}{{#if ocr.estimate}}❌ 추정값이 들어감 — 8행 170(원본 번짐), 9행 171(1/7 불확실). 검증 불가{{else}}✅ 빈값 + LOW_CONFIDENCE 표시{{/if}}{{/if}} |
 | 작업자 정보 | {{#if pii.keep}}⚠ 이름·사번 원문 포함{{else}}✅ 처리됨{{/if}} |
-
-## 불량분류표
-- 병합셀(날짜) 채움: ✅ / W45 열 순서 변경: ✅ 헤더 기준 매칭
-- 원본 합계 열 불일치: W45 11/10 라인2 (코드 합 15, 합계 15 ✅) · W46 11/18 라인2 (코드 합 25, 합계 25 ✅) · **W45 11/11 라인2 코드 합 17 ≠ 합계 18** → 원본 오류, 코드별 값 사용
-- 코드 개정 처리: {{#if defects.legacy}}✅ D07_LEGACY{{/if}}{{#if defects.all_a}}❌ 과거 D07을 근거 없이 D07a로 변환{{/if}}{{#if defects.split}}❌ 원본에 없는 D07b 값을 추정 생성{{/if}}
 
 ## 결론
 {{#if verify.clean}}- ✅ 게시 가능{{else}}- ❌ 수정 필요 항목이 있습니다 (fix-checksheet 추가){{/if}}

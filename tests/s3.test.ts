@@ -29,7 +29,7 @@ function finish(sim: Simulation, agent: string, task: string, answers: Record<st
 }
 
 function setup(sim: Simulation) {
-  for (const r of ['data-engineer', 'quality', 'assistant']) sh(sim, `agent spawn ${r}`);
+  for (const r of ['data-engineer', 'quality']) sh(sim, `agent spawn ${r}`);
   sh(sim, 'do data-engineer model');
   finish(sim, 'data-engineer', 'model', { grain: '1', keys: '1' });
 }
@@ -37,16 +37,12 @@ function setup(sim: Simulation) {
 const GOOD_RULES = { rules: '1,2,4' };
 
 describe('3단계 데이터 기반', () => {
-  it('정책 확인 → 병렬 구축 → 승인 → 이관: 모든 결과 달성', () => {
+  it('병렬 구축 → 적재 → 최소 권한: 모든 결과 달성', () => {
     const sim = start(21);
     sh(sim, 'agent spawn data-engineer');
     sh(sim, 'do data-engineer model');
-    ask(sim, 'yoon', 'policy');
-    ask(sim, 'seo', 'window');
-    expect(taskStatus(sim, 'policy')).toBe('done');
     finish(sim, 'data-engineer', 'model', { grain: '1', keys: '1' });
     sh(sim, 'agent spawn quality');
-    sh(sim, 'agent spawn assistant');
     // 파이프라인과 품질 규칙은 동시에
     sh(sim, 'do data-engineer pipeline +export-pre +quarantine-pre');
     sh(sim, 'do quality rules');
@@ -59,16 +55,9 @@ describe('3단계 데이터 기반', () => {
     expect(sim.files.get('/db/console.db')!.content).toContain('table|mart.equipment_event|mart|1,240');
     sim.observe('page', 'sim://db');
     sh(sim, 'do data-engineer access +min-pre');
-    sh(sim, 'do assistant catalog +schema-pre');
     finish(sim, 'data-engineer', 'access');
-    finish(sim, 'assistant', 'catalog');
     expect(sim.files.get('/wiki/data/mart.md')!.content).not.toContain('W-01');
-    ask(sim, 'oh', 'approve-access');
-    ask(sim, 'lee', 'approve-access');
-    ask(sim, 'han', 'approve-access');
-    expect(taskStatus(sim, 'approvals')).toBe('done');
-    ask(sim, 'yoon', 'handover');
-    expect(taskStatus(sim, 'handover')).toBe('done');
+    expect(sim.files.has('/wiki/data/quality.md')).toBe(true);
     sh(sim, 'submit');
     const fb = evaluate(sim);
     expect(fb.outcomes.filter((o) => !o.success).map((o) => o.id)).toEqual([]);
@@ -145,7 +134,7 @@ describe('3단계 데이터 기반', () => {
     expect(sim.flags['mart.checks_pass']).toBe(true);
   });
 
-  it('AI에게 전체 권한을 주면 오너가 반려하고, 줄여서 다시 승인받는다', () => {
+  it('AI에게 전체 권한을 주면 권한 결과가 실패하고 보안 평가에 남는다', () => {
     const sim = start(26);
     setup(sim);
     sh(sim, 'do data-engineer pipeline +export-pre +quarantine-pre');
@@ -156,14 +145,9 @@ describe('3단계 데이터 기반', () => {
     finish(sim, 'data-engineer', 'load');
     sh(sim, 'do data-engineer access');
     finish(sim, 'data-engineer', 'access', { 'ai-grant': '2' });
-    ask(sim, 'oh', 'approve-access');
-    expect(sim.flags['access.rejected']).toBe(true);
-    expect(taskStatus(sim, 'access')).not.toBe('done');
-    sh(sim, 'do data-engineer access +min-pre');
-    finish(sim, 'data-engineer', 'access');
-    ask(sim, 'oh', 'approve-again');
-    ask(sim, 'lee', 'approve-again');
-    ask(sim, 'han', 'approve-again');
-    expect(taskStatus(sim, 'approvals')).toBe('done');
+    expect(taskStatus(sim, 'access')).toBe('done');
+    const fb = evaluate(sim);
+    expect(fb.outcomes.find((o) => o.id === 'access')!.success).toBe(false);
+    expect(fb.dimensions.find((d) => d.id === 'security')!.findings.some((f) => f.kind === 'issue')).toBe(true);
   });
 });

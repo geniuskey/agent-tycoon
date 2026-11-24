@@ -34,13 +34,12 @@ function interviews(sim: Simulation) {
 }
 
 describe('4단계 지식화', () => {
-  it('인터뷰 → 나눈 구조 → 시험 통과 → 관리된 배포 → 승인', () => {
+  it('인터뷰 → 나눈 구조 → 시험 통과 → 배포', () => {
     const sim = start(31);
     sh(sim, 'agent spawn assistant');
     sh(sim, 'agent spawn evaluator');
     sh(sim, 'do assistant inventory +curated-pre');
     interviews(sim);
-    ask(sim, 'han', 'advice');
     expect(taskStatus(sim, 'interview')).toBe('done');
     finish(sim, 'assistant', 'inventory');
     sh(sim, 'do assistant draft +layered-pre');
@@ -51,10 +50,9 @@ describe('4단계 지식화', () => {
     finish(sim, 'evaluator', 'eval');
     expect(sim.flags['eval.pass_all']).toBe(true);
     expect(sim.files.get('/work/knowledge/eval.txt')!.content.match(/\|pass\|/g)?.length).toBe(8);
-    sh(sim, 'do assistant publish +governed-pre');
+    sh(sim, 'do assistant publish');
     finish(sim, 'assistant', 'publish');
-    ask(sim, 'jung', 'approve');
-    expect(taskStatus(sim, 'approve')).toBe('done');
+    expect(sim.files.get('/knowledge/AGENTS.md')!.content).toContain('검토 주기');
     sh(sim, 'submit');
     expect(evaluate(sim).outcomes.filter((o) => !o.success).map((o) => o.id)).toEqual([]);
   });
@@ -94,7 +92,7 @@ describe('4단계 지식화', () => {
     expect(lastSaid(sim, 'park', 1)).toContain('별거 없어요');
   });
 
-  it('시험에 실패한 채 배포하면 팀장이 승인하지 않는다', () => {
+  it('시험에 실패한 채 배포하면 평가에 남는다', () => {
     const sim = start(34);
     sh(sim, 'agent spawn assistant');
     sh(sim, 'agent spawn evaluator');
@@ -106,10 +104,8 @@ describe('4단계 지식화', () => {
     finish(sim, 'evaluator', 'eval');
     expect(sim.flags['eval.pass_all']).toBe(false);
     sh(sim, 'do assistant publish');
-    finish(sim, 'assistant', 'publish', { publish: '1' });
-    ask(sim, 'jung', 'approve');
-    expect(sim.flags['know.approved']).toBeUndefined();
-    expect(lastSaid(sim, 'jung', 1)).toContain('시험');
+    finish(sim, 'assistant', 'publish');
+    expect(sim.flags['pub.with_fail']).toBe(true);
     expect(evaluate(sim).dimensions.flatMap((d) => d.findings).some((f) => f.text.includes('실패한 문항이 남은'))).toBe(true);
   });
 

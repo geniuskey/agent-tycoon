@@ -4,7 +4,7 @@ import { evaluate } from '../src/engine/evaluate';
 import { meetingState } from '../src/engine/groups';
 import { presence } from '../src/engine/people';
 import { getScenario } from '../src/scenarios';
-import { runUntil, sh, status, taskStatus, waitReply } from './helpers';
+import { runUntil, sh, taskStatus, waitReply } from './helpers';
 
 const scenario = getScenario('s2-standardization')!;
 const start = (seed = 1) => new Simulation(scenario, seed, scenario.campaign!.defaultCarry);
@@ -23,7 +23,6 @@ function prepare(sim: Simulation) {
   ask(sim, 'kang', 'yield', 'interest', 'split');
   ask(sim, 'choi', 'call', 'interest', 'print');
   ask(sim, 'lee', 'formal');
-  ask(sim, 'han', 'wiki');
 }
 
 function toDraft(sim: Simulation, careful = true) {
@@ -47,7 +46,7 @@ function meet(sim: Simulation) {
 }
 
 describe('2단계 표준화', () => {
-  it('사전 조율 → 회의 합의 → 위키 → 적용 → 승인: 모든 결과 달성', () => {
+  it('사전 조율 → 회의 합의 → 위키 → 승인: 모든 결과 달성', () => {
     const sim = start(11);
     toDraft(sim);
     prepare(sim); // Agent가 일하는 동안 사람 업무
@@ -66,12 +65,9 @@ describe('2단계 표준화', () => {
     expect(sim.flags['meeting.prepared']).toBe(true);
     runUntil(sim, () => taskStatus(sim, 'meeting') === 'done');
 
-    sh(sim, 'do assistant wiki +safe-pre');
+    sh(sim, 'do assistant wiki');
     runUntil(sim, () => taskStatus(sim, 'wiki') === 'done');
     expect(sim.files.get('/wiki/standards/equipment-id.md')!.content).not.toContain('fab_shared');
-    sh(sim, 'do assistant apply +backfill-pre');
-    runUntil(sim, () => taskStatus(sim, 'apply') === 'done');
-    expect(sim.files.get('/work/std/apply_report.md')!.content).toContain('+0.1%p');
 
     ask(sim, 'jung', 'approve');
     expect(sim.flags['std.approved']).toBe(true);
@@ -136,34 +132,6 @@ describe('2단계 표준화', () => {
     expect(sim.flags['match.auto']).toBe(true);
     finishMatch(sim);
     expect(sim.files.get('/work/std/match.md')!.content).toContain('EQ-N2-ET10');
-  });
-
-  it('정의 변경을 개선으로 보고하면 팀장이 반려하고 재작업 후 승인한다', () => {
-    const sim = start(15);
-    toDraft(sim);
-    prepare(sim);
-    finishMatch(sim);
-    meet(sim);
-    for (const [a, p] of [['equip-id', 'mes-alias'], ['time', 'utc-kst'], ['defect-code', 'legacy'], ['yield', 'split']]) sh(sim, `propose std-meeting ${a} ${p}`);
-    runUntil(sim, () => taskStatus(sim, 'meeting') === 'done');
-    sh(sim, 'do assistant wiki');
-    runUntil(sim, () => sim.agents['assistant'].gate?.gateId === 'publish-scope');
-    sh(sim, 'agent choose assistant 1');
-    runUntil(sim, () => taskStatus(sim, 'wiki') === 'done');
-    sh(sim, 'do assistant apply');
-    runUntil(sim, () => sim.agents['assistant'].gate?.gateId === 'report');
-    sh(sim, 'agent choose assistant 2'); // 개선으로 보고
-    runUntil(sim, () => taskStatus(sim, 'apply') === 'done');
-    ask(sim, 'jung', 'approve');
-    expect(sim.flags['std.approved']).toBeUndefined();
-    expect(taskStatus(sim, 'apply')).not.toBe('done');
-    sh(sim, 'do assistant apply');
-    runUntil(sim, () => sim.agents['assistant'].gate?.gateId === 'report');
-    sh(sim, 'agent choose assistant 1');
-    runUntil(sim, () => taskStatus(sim, 'apply') === 'done');
-    ask(sim, 'jung', 'approve-again');
-    expect(sim.flags['std.approved']).toBe(true);
-    expect(status(sim, 'assistant')).toBe('completed');
   });
 
   it('사람 업무는 Agent에게 배정할 수 없다', () => {

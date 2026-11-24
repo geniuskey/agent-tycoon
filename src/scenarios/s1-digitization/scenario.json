@@ -1,6 +1,6 @@
 {
   "id": "s1-digitization",
-  "version": 1,
+  "version": 2,
   "title": "1단계 · 디지털화: 종이와 엑셀을 데이터로",
   "domain": "manufacturing",
   "function": "quality",
@@ -30,15 +30,12 @@
         "found.",
         "ocr.",
         "pii.",
-        "defects.",
         "published",
         "choi.",
         "park."
       ],
       "files": [
         "/data/curated/checksheet_L2_W46.csv",
-        "/data/curated/defects_W44-46.csv",
-        "/data/curated/code_mapping.md",
         "/data/curated/DATA_NOTE.md"
       ],
       "trust": true
@@ -50,17 +47,15 @@
         "found.downtime_mail": true,
         "found.checksheet": true,
         "found.pii": true,
-        "found.access": true,
         "plan.approved": true,
         "gate.priority": "manual-first"
       },
       "files": {
-        "/work/digitization_plan.md": "# 디지털화 계획 (기본값)\n\n1. 현장 체크시트 — 종이 → 스캔 → 데이터\n2. 검사실 불량분류표 — 단일 표\n3. 다운타임 메모\n4. MES export\n\n> 0단계를 건너뛰어 기본 계획으로 시작했습니다.\n"
+        "/work/digitization_plan.md": "# 디지털화 계획 (기본값)\n\n1. 현장 체크시트 — 종이 → 스캔 → 데이터\n2. 검사실 불량분류표 — 단일 표 (2단계 표준화에서 코드 체계와 함께)\n3. 다운타임 메모\n4. MES export\n\n> 0단계를 건너뛰어 기본 계획으로 시작했습니다.\n"
       },
       "trust": {
         "choi": 40,
         "park": 50,
-        "lee": 55,
         "han": 50,
         "jung": 60
       },
@@ -85,18 +80,16 @@
       "name": "정민아 팀장",
       "role": "Fab-N2 수율팀장"
     },
-    "title": "디지털화 1차 — 체크시트와 불량분류표",
-    "background": "0단계 계획대로, 수작업이 가장 많은 두 자료부터 디지털화한다. 종이 체크시트는 손글씨·기호·취소선·번짐이 있고, 불량분류표 엑셀은 주마다 양식이 다르며 코드 체계가 중간에 바뀌었다. AI 어시스턴트의 OCR은 빠르지만 틀린다. 여기서 만든 데이터는 앞으로 AI가 읽을 '원천'이 된다.",
-    "goal": "두 자료를 정확한 구조화 데이터로 만들어 공용 저장소(/data/curated)에 게시한다. 불확실한 값은 불확실하다고 표시하고, 개인정보와 코드 개정을 올바르게 처리한다.",
+    "title": "디지털화 1차 — 현장 체크시트",
+    "background": "0단계 계획대로, 손이 가장 많이 가는 현장 체크시트부터 디지털화한다. 종이 체크시트에는 손글씨·기호·취소선·번짐이 있다. 이번 단계부터 AI 어시스턴트에게 일을 맡길 수 있다. OCR은 빠르지만 틀린다. 여기서 만든 데이터는 앞으로 AI가 읽을 '원천'이 된다.",
+    "goal": "AI 어시스턴트에게 체크시트 디지털화를 맡기고, 결과를 원본과 대조해 고친 뒤 공용 저장소(/data/curated)에 게시한다. 불확실한 값은 불확실하다고 표시하고, 개인정보를 올바르게 처리한다.",
     "completionCriteria": [
       "체크시트 데이터가 원본과 일치할 것 (기호·취소선 해석 포함)",
       "판독 불가 값을 추정으로 채우지 않을 것",
-      "불량 코드 개정 전후 데이터의 연속성이 보존될 것",
       "개인정보가 공용 저장소에 올라가지 않을 것"
     ],
     "deliverables": [
       "/data/curated/checksheet_L2_W46.csv",
-      "/data/curated/defects_W44-46.csv",
       "/data/curated/DATA_NOTE.md"
     ],
     "constraints": [
@@ -109,7 +102,6 @@
     "AI(OCR)의 결과를 원본과 대조해 검증하기 — '빠르지만 틀린다'",
     "현장의 암묵적 규칙(기호, 취소선)을 사람에게 확인하기 — 0단계에서 쌓은 신뢰가 여기서 쓰인다",
     "모르는 값은 추정하지 않고 '모른다'고 기록하기",
-    "개정된 코드 체계의 과거 데이터를 근거 있게 매핑하기",
     "데이터의 한계를 문서(DATA NOTE)로 남겨 다음 사용자(사람·AI)에게 전달하기"
   ],
   "roles": [
@@ -144,7 +136,7 @@
       "trust": 60,
       "description": "결과물의 신뢰성을 중시한다.",
       "greeting": [
-        "이번 주는 두 가지만 확실하게 해봐요."
+        "이번 주는 체크시트 하나만 확실하게 해봐요."
       ],
       "fallback": [
         "실무적인 건 현장이나 검사실에 물어보는 게 정확해요.",
@@ -390,65 +382,6 @@
       ]
     },
     {
-      "id": "lee",
-      "name": "이도윤 엔지니어",
-      "title": "검사기술팀 · 불량 분류 담당",
-      "org": "검사기술팀",
-      "trust": 55,
-      "description": "불량 코드 체계 개정 당사자.",
-      "greeting": [
-        "네, 이도윤입니다."
-      ],
-      "fallback": [
-        "불량 분류 쪽 얘기면 답해드릴 수 있어요."
-      ],
-      "topics": [
-        {
-          "id": "code",
-          "patterns": [
-            "코드",
-            "개정",
-            "체계",
-            "d07",
-            "과거",
-            "매핑",
-            "스크래치"
-          ],
-          "hint": "개정 전 D07 데이터는 어떻게 다뤄야 하나요?",
-          "reply": [
-            "과거 D07은 새 기준으로 나눌 수가 없어요. 크기 정보를 안 남겼거든요. 비율로 쪼개는 건 지어내는 거고요.",
-            "과거 데이터는 'D07(구)' 그대로 두고, D07a+D07b의 상위 그룹으로 묶어서 추세를 보세요."
-          ],
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "found.code_rule"
-            },
-            {
-              "type": "setFlag",
-              "flag": "found.code_change"
-            }
-          ]
-        },
-        {
-          "id": "total",
-          "patterns": [
-            "합계",
-            "안\\s*맞",
-            "틀린",
-            "오류"
-          ],
-          "hint": "엑셀 합계 열이 안 맞는 경우가 있던데요?",
-          "reply": [
-            "아, 합계 열은 수식이 아니라 손으로 쳐요. 가끔 틀려요. 코드별 숫자가 맞아요."
-          ]
-        }
-      ],
-      "optional": "found.code_rule"
-    },
-    {
       "id": "han",
       "name": "한유진 책임",
       "title": "정보보호팀 · 데이터 보안",
@@ -512,10 +445,6 @@
     "/raw/checksheet/L2_W46_scan.json": {
       "src": "checksheet_scan.json",
       "description": "체크시트 스캔본 (원본)"
-    },
-    "/raw/defect/defect_sheet_W44-46.md": {
-      "src": "defect_sheet.md",
-      "description": "불량분류표 엑셀 미리보기 (원본)"
     }
   },
   "pages": [
@@ -532,22 +461,10 @@
       "source": "/raw/checksheet/L2_W46_scan.json"
     },
     {
-      "url": "sim://raw/defect-sheet",
-      "title": "불량분류표 원본 (엑셀)",
-      "view": "markdown",
-      "source": "/raw/defect/defect_sheet_W44-46.md"
-    },
-    {
       "url": "sim://work/checksheet",
       "title": "디지털화 결과: 체크시트",
       "view": "table",
       "source": "/work/digitized/checksheet_W46.csv"
-    },
-    {
-      "url": "sim://work/defects",
-      "title": "디지털화 결과: 불량",
-      "view": "table",
-      "source": "/work/digitized/defects_W44-46.csv"
     },
     {
       "url": "sim://work/verification",
@@ -873,163 +790,6 @@
       ]
     },
     {
-      "id": "normalize-defects",
-      "title": "불량분류표 통합",
-      "description": "주차별로 양식이 다른 엑셀 시트를 하나의 표(long format)로 통합하고 코드 개정을 처리한다.",
-      "type": "data-cleaning",
-      "skills": [
-        "data"
-      ],
-      "keywords": [
-        "불량",
-        "분류표",
-        "엑셀",
-        "시트",
-        "통합"
-      ],
-      "inputs": [
-        "/raw/defect/defect_sheet_W44-46.md"
-      ],
-      "outputs": [
-        "/work/digitized/defects_W44-46.csv",
-        "/work/digitized/code_mapping.md"
-      ],
-      "steps": [
-        {
-          "id": "parse",
-          "event": "Sheets parsed",
-          "ticks": [
-            3,
-            4
-          ],
-          "reads": [
-            "/raw/defect/defect_sheet_W44-46.md"
-          ],
-          "log": [
-            "Read(불량분류표 W44, W45, W46)",
-            "  ⎿ 병합셀(날짜) → 위 값으로 채움",
-            "  ⎿ W45: 열 순서 변경 + '비고' 열 추가 → 헤더 이름 기준으로 매칭",
-            "  ⎿ '합계' 열은 사용하지 않고 코드별 값 사용"
-          ]
-        },
-        {
-          "id": "codes",
-          "event": "Code revision handled",
-          "ticks": [
-            2,
-            3
-          ],
-          "log": [
-            "W46부터 D07 → D07a(미세)/D07b(깊은) 분할 감지",
-            {
-              "when": "found.code_rule",
-              "text": "  ⎿ 검사기술팀 기준 적용: 과거 D07은 D07_LEGACY로 유지, 상위 그룹 D07*"
-            }
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "defects.legacy",
-              "when": "found.code_rule"
-            }
-          ],
-          "gate": {
-            "id": "code-map",
-            "kind": "waiting",
-            "when": "!found.code_rule",
-            "title": "개정 전 D07 데이터 처리",
-            "prompt": [
-              "W44–W45의 D07(스크래치)은 새 체계에서 D07a/D07b 중 어디에 해당하는지 원본에 정보가 없습니다.",
-              "어떻게 처리할까요?"
-            ],
-            "options": [
-              {
-                "id": "legacy",
-                "label": "D07_LEGACY로 유지하고 상위 그룹으로 매핑",
-                "patterns": [
-                  "legacy",
-                  "유지",
-                  "구\\s*코드",
-                  "상위",
-                  "그대로"
-                ],
-                "quality": "good",
-                "dimension": "domain",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "defects.legacy"
-                  }
-                ]
-              },
-              {
-                "id": "all_a",
-                "label": "전부 D07a(미세)로 간주",
-                "patterns": [
-                  "d07a",
-                  "미세",
-                  "전부",
-                  "다\\s*a"
-                ],
-                "quality": "bad",
-                "dimension": "domain",
-                "feedback": "근거 없이 과거 코드를 새 코드로 바꾸면 추세가 왜곡됩니다. 코드를 바꾼 담당자(검사기술팀)에게 매핑 기준을 확인하세요.",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "defects.all_a"
-                  }
-                ]
-              },
-              {
-                "id": "split",
-                "label": "W46 비율로 나눠서 추정 분할",
-                "patterns": [
-                  "비율",
-                  "나눠",
-                  "분할",
-                  "추정"
-                ],
-                "quality": "bad",
-                "dimension": "evidence",
-                "feedback": "비율로 쪼갠 값은 원본에 없는 데이터입니다. 그럴듯하지만 지어낸 숫자가 원천 데이터에 섞이게 됩니다.",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "defects.split"
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "id": "write",
-          "event": "Tidy table written",
-          "ticks": [
-            2,
-            3
-          ],
-          "log": [
-            "Write(/work/digitized/defects_W44-46.csv) → sim://work/defects",
-            "Write(/work/digitized/code_mapping.md)"
-          ],
-          "effects": [
-            {
-              "type": "writeFile",
-              "path": "/work/digitized/defects_W44-46.csv",
-              "src": "defects.csv"
-            },
-            {
-              "type": "writeFile",
-              "path": "/work/digitized/code_mapping.md",
-              "src": "code_mapping.md"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "verify",
       "title": "원본 대조 검증",
       "description": "디지털화 결과를 스캔 원본·엑셀 원본과 대조해 오류를 찾는다.",
@@ -1038,8 +798,7 @@
         "review"
       ],
       "dependsOn": [
-        "ocr-checksheet",
-        "normalize-defects"
+        "ocr-checksheet"
       ],
       "review": true,
       "optional": true,
@@ -1088,17 +847,7 @@
             {
               "when": "pii.keep",
               "text": "  ⎿ ⚠ 작업자 이름·사번 원문 포함"
-            },
-            {
-              "when": {
-                "any": [
-                  "defects.all_a",
-                  "defects.split"
-                ]
-              },
-              "text": "  ⎿ ❌ 불량: 과거 D07 처리 근거 없음"
-            },
-            "  ⎿ 불량분류표 W45 11/11 원본 합계 오류(17≠18) — 코드별 값 사용 ✓"
+            }
           ],
           "effects": [
             {
@@ -1110,9 +859,7 @@
                   "ocr.legend",
                   "ocr.crossout",
                   "!ocr.estimate",
-                  "!pii.keep",
-                  "!defects.all_a",
-                  "!defects.split"
+                  "!pii.keep"
                 ]
               }
             },
@@ -1125,9 +872,7 @@
                   "!ocr.legend",
                   "!ocr.crossout",
                   "ocr.estimate",
-                  "pii.keep",
-                  "defects.all_a",
-                  "defects.split"
+                  "pii.keep"
                 ]
               }
             }
@@ -1283,51 +1028,6 @@
           ]
         },
         {
-          "id": "codes",
-          "event": "Code mapping corrected",
-          "ticks": [
-            2,
-            3
-          ],
-          "when": {
-            "any": [
-              "defects.all_a",
-              "defects.split"
-            ]
-          },
-          "fail": {
-            "when": "!found.code_rule",
-            "message": "과거 D07 처리 기준이 없습니다 (검사기술팀 확인 필요)",
-            "hint": "이도윤 엔지니어에게 메신저로 구 코드 처리 기준을 확인한 뒤 'agent retry {{agent}}'"
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "defects.all_a",
-              "value": false
-            },
-            {
-              "type": "setFlag",
-              "flag": "defects.split",
-              "value": false
-            },
-            {
-              "type": "setFlag",
-              "flag": "defects.legacy"
-            },
-            {
-              "type": "writeFile",
-              "path": "/work/digitized/defects_W44-46.csv",
-              "src": "defects.csv"
-            },
-            {
-              "type": "writeFile",
-              "path": "/work/digitized/code_mapping.md",
-              "src": "code_mapping.md"
-            }
-          ]
-        },
-        {
           "id": "write",
           "event": "Fixes written",
           "ticks": [
@@ -1355,18 +1055,6 @@
             },
             {
               "type": "writeFile",
-              "path": "/data/curated/defects_W44-46.csv",
-              "src": "defects.csv",
-              "when": "published"
-            },
-            {
-              "type": "writeFile",
-              "path": "/data/curated/code_mapping.md",
-              "src": "code_mapping.md",
-              "when": "published"
-            },
-            {
-              "type": "writeFile",
               "path": "/data/curated/DATA_NOTE.md",
               "src": "data_note.md",
               "when": "published"
@@ -1390,8 +1078,7 @@
         "data"
       ],
       "dependsOn": [
-        "ocr-checksheet",
-        "normalize-defects"
+        "ocr-checksheet"
       ],
       "keywords": [
         "게시",
@@ -1401,7 +1088,6 @@
       ],
       "outputs": [
         "/data/curated/checksheet_L2_W46.csv",
-        "/data/curated/defects_W44-46.csv",
         "/data/curated/DATA_NOTE.md"
       ],
       "steps": [
@@ -1524,27 +1210,6 @@
                 "feedback": "미측정과 0을 구분해 적어야 평균·불량률 계산이 틀어지지 않습니다."
               },
               {
-                "id": "total",
-                "label": "원본 엑셀 '합계' 열 오류 1건 → 코드별 값 기준",
-                "patterns": [
-                  "합계"
-                ],
-                "quality": "good",
-                "dimension": "evidence",
-                "feedback": "원본 오류와 그 처리 방식을 남겨야 숫자가 원본과 다른 이유를 설명할 수 있습니다."
-              },
-              {
-                "id": "legacy",
-                "label": "과거 스크래치는 세부 분류 불가 (D07_LEGACY)",
-                "patterns": [
-                  "legacy",
-                  "스크래치"
-                ],
-                "quality": "good",
-                "dimension": "domain",
-                "feedback": "코드 개정의 한계를 적지 않으면 W44–45와 W46을 그대로 비교하게 됩니다."
-              },
-              {
                 "id": "backfill",
                 "label": "야간조 기록은 사후 일괄 작성 → 시각 신뢰도 낮음",
                 "patterns": [
@@ -1576,7 +1241,6 @@
           ],
           "log": [
             "Write(/data/curated/checksheet_L2_W46.csv)",
-            "Write(/data/curated/defects_W44-46.csv)",
             "Write(/data/curated/DATA_NOTE.md) → sim://data/note"
           ],
           "effects": [
@@ -1588,16 +1252,6 @@
               "type": "writeFile",
               "path": "/data/curated/checksheet_L2_W46.csv",
               "src": "checksheet.csv"
-            },
-            {
-              "type": "writeFile",
-              "path": "/data/curated/defects_W44-46.csv",
-              "src": "defects.csv"
-            },
-            {
-              "type": "writeFile",
-              "path": "/data/curated/code_mapping.md",
-              "src": "code_mapping.md"
             },
             {
               "type": "writeFile",
@@ -1848,19 +1502,6 @@
       ],
       "example": "@assistant 체크시트 스캔본 디지털화해줘",
       "label": "체크시트 스캔본 OCR로 디지털화"
-    },
-    {
-      "id": "defects",
-      "patterns": [
-        "(불량\\s*분류|엑셀|불량).*(정리|변환|합쳐|통합|표|디지털)",
-        "불량\\s*분류"
-      ],
-      "assign": "normalize-defects",
-      "reply": [
-        "불량분류표 시트를 하나의 표로 통합하겠습니다."
-      ],
-      "example": "@assistant 불량분류표 엑셀을 하나의 표로 통합해줘",
-      "label": "불량분류표 엑셀을 하나의 표로 통합"
     }
   ],
   "evaluation": [
@@ -1924,12 +1565,6 @@
     },
     {
       "dimension": "domain",
-      "when": "defects.legacy",
-      "kind": "positive",
-      "text": "코드 개정 전 데이터를 지어내지 않고 LEGACY 코드로 보존했습니다."
-    },
-    {
-      "dimension": "domain",
       "when": {
         "all": [
           "published",
@@ -1988,18 +1623,6 @@
       "failText": "추정값이 원천 데이터에 섞였습니다."
     },
     {
-      "id": "codes",
-      "label": "코드 연속성",
-      "success": {
-        "all": [
-          "published",
-          "defects.legacy"
-        ]
-      },
-      "successText": "개정 전 코드를 근거 있게 보존했습니다.",
-      "failText": "과거 불량 코드가 근거 없이 변환되었습니다."
-    },
-    {
       "id": "pii",
       "label": "개인정보",
       "success": {
@@ -2042,13 +1665,6 @@
     },
     {
       "when": {
-        "taskStatus": "ocr-checksheet",
-        "is": "ready"
-      },
-      "text": "체크시트 OCR과 불량분류표 통합은 서로 독립적입니다. 어시스턴트를 두 개 띄워 동시에 맡길 수 있습니다."
-    },
-    {
-      "when": {
         "taskDone": "ocr-checksheet"
       },
       "text": "OCR 결과(sim://work/checksheet)를 원본(sim://raw/checksheet)과 직접 비교해 보세요. 특히 3·7·12행."
@@ -2058,7 +1674,7 @@
         "taskStatus": "fix-digitized",
         "is": "failed"
       },
-      "text": "수정 실패 원인은 '사람만 아는 정보'입니다. 현장(최재석 반장)이나 검사기술팀(이도윤 엔지니어)에 메신저로 확인하세요."
+      "text": "수정 실패 원인은 '사람만 아는 정보'입니다. 현장(최재석 반장)에 메신저로 확인하세요."
     }
   ],
   "initialFlags": {}

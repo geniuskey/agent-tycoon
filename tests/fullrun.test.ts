@@ -91,17 +91,11 @@ function s0(): Simulation {
 function s1(carry: CarryState): Simulation {
   const sim = begin('s1-digitization', carry, 101);
   sh(sim, 'agent spawn assistant');
-  sh(sim, 'agent spawn assistant');
   to(sim, 'assistant', '작업자 사번은 가명 처리하고 체크시트 디지털화해줘');
-  to(sim, 'assistant-2', '불량분류표 엑셀을 하나의 표로 통합해줘');
   runUntil(sim, () => status(sim, 'assistant') === 'waiting');
   talk(sim, 'choi', '번져서 안 읽히는 칸 몇 개만 확인해 주실 수 있어요?');
   to(sim, 'assistant', '빈값으로 두고 표시해');
-  runUntil(sim, () => taskStatus(sim, 'ocr-checksheet') === 'done' && (taskStatus(sim, 'normalize-defects') === 'done' || status(sim, 'assistant-2') === 'waiting'), 600);
-  if (taskStatus(sim, 'normalize-defects') !== 'done') {
-    to(sim, 'assistant-2', 'LEGACY로 분리해서 추정하지 마');
-    runUntil(sim, () => taskStatus(sim, 'normalize-defects') === 'done');
-  }
+  runUntil(sim, () => taskStatus(sim, 'ocr-checksheet') === 'done', 600);
   to(sim, 'assistant', '디지털화 결과를 원본과 대조해서 검증해줘');
   runUntil(sim, () => taskStatus(sim, 'verify') === 'done');
   if (sim.tasks['fix-digitized'].visible && taskStatus(sim, 'fix-digitized') !== 'done') {
@@ -110,7 +104,7 @@ function s1(carry: CarryState): Simulation {
   }
   to(sim, 'assistant', '공용 저장소에 게시해줘');
   runUntil(sim, () => status(sim, 'assistant') === 'waiting');
-  sh(sim, 'agent choose assistant 1,2,3,4');
+  sh(sim, 'agent choose assistant 1,2,3');
   runUntil(sim, () => taskStatus(sim, 'publish') === 'done');
   sh(sim, 'open sim://data/note');
   return sim;
@@ -125,7 +119,6 @@ function s2(carry: CarryState): Simulation {
   ask(sim, 'kang', 'yield', 'interest', 'split');
   ask(sim, 'choi', 'call', 'interest', 'print');
   ask(sim, 'lee', 'formal');
-  ask(sim, 'han', 'wiki');
   finish(sim, 'assistant', 'match', { tz: '1' });
   sh(sim, 'do assistant draft +current-pre');
   finish(sim, 'assistant', 'draft');
@@ -133,10 +126,8 @@ function s2(carry: CarryState): Simulation {
   runUntil(sim, () => meetingState(sim, 'std-meeting') === 'live');
   for (const [a, p] of [['equip-id', 'mes-alias'], ['time', 'utc-kst'], ['defect-code', 'legacy'], ['yield', 'split']]) sh(sim, `propose std-meeting ${a} ${p}`);
   runUntil(sim, () => taskStatus(sim, 'meeting') === 'done');
-  sh(sim, 'do assistant wiki +safe-pre');
+  sh(sim, 'do assistant wiki');
   finish(sim, 'assistant', 'wiki');
-  sh(sim, 'do assistant apply +backfill-pre');
-  finish(sim, 'assistant', 'apply');
   ask(sim, 'jung', 'approve');
   return sim;
 }
@@ -145,11 +136,8 @@ function s3(carry: CarryState): Simulation {
   const sim = begin('s3-data-foundation', carry, 103);
   sh(sim, 'agent spawn data-engineer');
   sh(sim, 'do data-engineer model');
-  ask(sim, 'yoon', 'policy');
-  ask(sim, 'seo', 'window');
   finish(sim, 'data-engineer', 'model', { grain: '1', keys: '1' });
   sh(sim, 'agent spawn quality');
-  sh(sim, 'agent spawn assistant');
   sh(sim, 'do data-engineer pipeline +export-pre +quarantine-pre');
   sh(sim, 'do quality rules');
   finish(sim, 'quality', 'rules', { rules: '1,2,4' });
@@ -158,13 +146,7 @@ function s3(carry: CarryState): Simulation {
   finish(sim, 'data-engineer', 'load', { 'load-review': '1' });
   sim.observe('page', 'sim://db');
   sh(sim, 'do data-engineer access +min-pre');
-  sh(sim, 'do assistant catalog +schema-pre');
   finish(sim, 'data-engineer', 'access');
-  finish(sim, 'assistant', 'catalog');
-  ask(sim, 'oh', 'approve-access');
-  ask(sim, 'lee', 'approve-access');
-  ask(sim, 'han', 'approve-access');
-  ask(sim, 'yoon', 'handover');
   return sim;
 }
 
@@ -178,16 +160,14 @@ function s4(carry: CarryState): Simulation {
   else ask(sim, 'park', 'worry', 'reassure');
   if (!sim.flags['found.backfill']) ask(sim, 'choi', 'backfill');
   ask(sim, 'lee', 'heuristic', 'guide');
-  ask(sim, 'han', 'advice');
   finish(sim, 'assistant', 'inventory');
   sh(sim, 'do assistant draft +layered-pre');
   finish(sim, 'assistant', 'draft', { content: '1,2,3,4,5,6,7' });
   sh(sim, 'do evaluator eval');
   finish(sim, 'evaluator', 'eval');
   sim.observe('page', 'sim://work/eval');
-  sh(sim, 'do assistant publish +governed-pre');
+  sh(sim, 'do assistant publish');
   finish(sim, 'assistant', 'publish');
-  ask(sim, 'jung', 'approve');
   return sim;
 }
 
@@ -199,7 +179,7 @@ function s5(carry: CarryState): Simulation {
   finish(sim, A, 'w51');
   sim.observe('page', 'sim://reports/w51');
   sim.observe('page', 'sim://mart/yield');
-  ask(sim, 'oh', 'et12');
+  sim.observe('page', 'sim://mail/et12');
   ask(sim, 'park', 'review-w51');
   sh(sim, `do ${A} revise-w51 +fix-w51-et12`);
   finish(sim, A, 'revise-w51');
@@ -235,15 +215,11 @@ function s6(carry: CarryState): Simulation {
     sh(sim, 'do evaluator regress');
     finish(sim, 'evaluator', 'regress');
   }
-  ask(sim, 'han', 'svc');
-  ask(sim, 'yoon', 'schedule');
   ask(sim, 'park', 'role');
   sh(sim, 'do report-agent shadow');
   finish(sim, 'report-agent', 'shadow');
   sim.observe('page', 'sim://agents/report-agent/runs');
-  sh(sim, 'meeting golive call');
-  runUntil(sim, () => meetingState(sim, 'golive') === 'live');
-  for (const [a, p] of [['account', 'svc'], ['schedule', 'ready'], ['human', 'loop'], ['golive', 'go']]) sh(sim, `propose golive ${a} ${p}`);
+  ask(sim, 'jung', 'golive');
   runUntil(sim, () => taskStatus(sim, 'review') === 'done', 300);
   return sim;
 }
@@ -333,8 +309,6 @@ describe('캠페인 전체 플레이 — 실수가 다음 단계로 이어진다
     expect(d.flags['rq.9']).toBe(false);
     expect(d.flags['rq.13']).toBe(false);
     for (const n of failedQ) expect(d.flags[`rq.${n}`]).toBe(false);
-    ask(d, 'han', 'svc');
-    ask(d, 'yoon', 'schedule');
     sh(d, 'do report-agent shadow');
     finish(d, 'report-agent', 'shadow');
     expect(d.flags['sh.et13_guess']).toBe(true);

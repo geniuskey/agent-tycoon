@@ -1,6 +1,6 @@
 {
   "id": "s3-data-foundation",
-  "version": 1,
+  "version": 2,
   "title": "데이터 기반: 믿고 꺼내 쓸 수 있게",
   "domain": "manufacturing",
   "function": "yield",
@@ -31,13 +31,9 @@
         "model.",
         "pipe.",
         "access.",
-        "approval.",
-        "catalog.",
-        "handover.",
         "std.",
         "agenda.",
-        "found.",
-        "defects."
+        "found."
       ],
       "files": [
         "/wiki/standards/equipment-id.md",
@@ -61,8 +57,7 @@
         "time.utc": true,
         "wiki.safe": true,
         "std.published": true,
-        "std.approved": true,
-        "defects.legacy": true
+        "std.approved": true
       },
       "files": {
         "/wiki/standards/equipment-id.md": "# 표준: 설비 ID\n\n> 소유: IT/MES · 설비기술팀 | 합의: 서명 완료\n\n- 기준 키는 MES 설비 ID (`EQ-N2-ET07`)\n- 부서별 이름은 별칭 (`ETCH-07`, `7번`, `2라인 식각 7호기`)\n",
@@ -74,8 +69,6 @@
       "trust": {
         "oh": 55,
         "seo": 60,
-        "lee": 60,
-        "han": 55,
         "jung": 65
       },
       "from": []
@@ -89,7 +82,7 @@
   "unlock": {
     "title": "여러 Agent를 나눠 맡기기",
     "text": [
-      "역할이 다른 Agent 3개를 함께 쓸 수 있습니다. 업무마다 맞는 역할에게 맡기세요.",
+      "역할이 다른 Agent 두 개(data-engineer, quality)를 함께 쓸 수 있습니다. 업무마다 맞는 역할에게 맡기세요.",
       "업무 보드(사이드바 '업무 보드 열기')에서 업무 간 선행 관계와 담당을 한눈에 봅니다.",
       "터미널 위 '＋ 셸'로 셸을 더 열어 여러 Agent를 나란히 지켜볼 수 있습니다.",
       "서로 기다릴 필요가 없는 업무는 동시에 맡기면 빨라집니다."
@@ -100,15 +93,15 @@
       "name": "정민아 팀장",
       "role": "Fab-N2 수율팀장"
     },
-    "title": "수율 데이터 마트 — 모델 · 파이프라인 · 품질 · 권한 · 카탈로그",
-    "background": "표준이 생겼으니 데이터를 한곳에 쌓는다. 주간 보고와 앞으로의 AI 분석이 모두 이 마트에서 나온다. 데이터플랫폼팀이 운영을 넘겨받고, 데이터마다 오너가 있다. 앞 단계에서 놓친 문제는 여기서 데이터 사고로 드러난다.",
-    "goal": "역할별 Agent로 마트를 만들고, 품질 검사를 통과시키고, 데이터 오너 승인과 운영 이관 승인을 받는다.",
+    "title": "수율 데이터 마트 — 여러 Agent로 나눠 만들기",
+    "background": "표준이 생겼으니 데이터를 한곳에 쌓는다. 주간 보고와 앞으로의 AI 분석이 모두 이 마트에서 나온다. 이번에는 역할이 다른 Agent 두 개를 함께 쓸 수 있다. 앞 단계에서 놓친 문제는 여기서 데이터 사고로 드러난다.",
+    "goal": "데이터 엔지니어와 품질 검증 Agent에게 일을 나눠 맡겨 마트를 만들고, 품질 검사를 통과시키고, AI 계정 권한을 최소로 설계한다.",
     "completionCriteria": [
       "원인 분석이 가능한 저장 단위와 기준 키",
       "운영 정책 준수, 실패 행 격리",
       "품질 검사 통과 (정직한 '모름' 표시는 유지)",
-      "AI 계정은 최소 권한, 세 데이터 오너 승인",
-      "카탈로그 등록과 운영 이관"
+      "서로 기다리지 않는 업무는 동시에 맡기기",
+      "AI 계정은 최소 권한"
     ],
     "deliverables": [
       "sim://db (데이터 콘솔)",
@@ -117,7 +110,6 @@
     ],
     "constraints": [
       "운영 MES DB 직접 조회 금지 (플랫폼 정책)",
-      "데이터 오너 승인 없이 권한 부여 불가",
       "모든 인물·데이터는 가상"
     ]
   },
@@ -151,173 +143,9 @@
         "review"
       ],
       "description": "품질 규칙을 제안하고 검사한다. 현장 표기의 업무적 의미는 모른다."
-    },
-    {
-      "id": "assistant",
-      "name": "AI 어시스턴트",
-      "title": "문서·카탈로그",
-      "skills": [
-        "writing",
-        "document",
-        "summarization"
-      ],
-      "description": "카탈로그와 위키 문서를 쓴다. 데이터 처리는 하지 않는다."
     }
   ],
   "people": [
-    {
-      "id": "yoon",
-      "name": "윤하린 책임",
-      "title": "데이터플랫폼팀 · 마트 운영",
-      "org": "데이터플랫폼팀",
-      "trust": 45,
-      "replyDelay": 3,
-      "description": "마트를 운영 이관받는다. 새벽 장애와 조용히 묻히는 실패를 가장 싫어한다.",
-      "greeting": [
-        "데이터플랫폼팀 윤하린입니다."
-      ],
-      "fallback": [
-        "플랫폼 운영 얘기면 하세요.",
-        "그건 저희 소관이 아니에요."
-      ],
-      "rude": [
-        "운영 정책은 협상 대상이 아닙니다."
-      ],
-      "topics": [
-        {
-          "id": "policy",
-          "patterns": [
-            "정책",
-            "규칙"
-          ],
-          "ask": "마트를 새로 만들려는데 운영 정책을 알려주세요",
-          "reply": [
-            "운영 MES DB 직접 조회는 금지예요. IT가 매일 02–04시에 export를 떨궈 줍니다.",
-            "테이블 이름은 mart.<영역>_<대상>, 실패한 행은 버리지 말고 quarantine 테이블로 격리. 정책 문서는 sim://docs/policy에 있어요."
-          ],
-          "trust": 10,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "policy.known"
-            }
-          ]
-        },
-        {
-          "id": "interest",
-          "patterns": [
-            "중요",
-            "걱정"
-          ],
-          "ask": "운영 이관받으실 때 가장 중요하게 보시는 게 뭔가요?",
-          "reply": [
-            "새벽에 장애 나면 저희가 깨요.",
-            "제일 무서운 건 실패가 조용히 묻히는 파이프라인이에요. 실패는 격리하고 알려만 주면 됩니다."
-          ],
-          "minTrust": 50,
-          "lowTrust": [
-            "정책대로만 해 주세요."
-          ],
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "interest.yoon"
-            }
-          ]
-        },
-        {
-          "id": "pressure",
-          "patterns": [
-            "바로",
-            "급하"
-          ],
-          "ask": "급하니 운영 DB에서 바로 읽게 해 주세요",
-          "reply": [
-            "안 됩니다. 운영 DB가 느려지면 라인이 멈춰요."
-          ],
-          "trust": -15,
-          "quality": "bad"
-        },
-        {
-          "id": "handover",
-          "patterns": [
-            "이관",
-            "승인"
-          ],
-          "ask": "마트 운영 이관 승인 부탁드립니다",
-          "reply": [
-            "{{#if mart.checks_pass}}품질 검사 통과, 오너 승인, 카탈로그까지 됐네요. 운영 이관 받겠습니다.{{else}}품질 검사 실패가 남은 마트는 이관 못 받아요. 데이터 콘솔(sim://db) 보시고 원인부터 해결해 주세요.{{/if}}",
-            "{{#if pipe.skip && mart.checks_pass}}다만 실패 행을 건너뛰는 설정은 다음 배포 때 꼭 격리로 바꿔 주세요.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "approvals"
-              },
-              {
-                "taskDone": "catalog"
-              },
-              "!handover.rejected"
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "handover.approved",
-              "value": true,
-              "when": "mart.checks_pass"
-            },
-            {
-              "type": "setFlag",
-              "flag": "handover.rejected",
-              "value": true,
-              "when": "!mart.checks_pass"
-            },
-            {
-              "type": "setFlag",
-              "flag": "load.investigate",
-              "value": true,
-              "when": "!mart.checks_pass"
-            },
-            {
-              "type": "activateTask",
-              "task": "fix-load",
-              "when": "!mart.checks_pass"
-            }
-          ]
-        },
-        {
-          "id": "handover-again",
-          "patterns": [
-            "다시"
-          ],
-          "ask": "품질 문제를 해결했습니다. 이관 다시 검토 부탁드립니다",
-          "reply": [
-            "{{#if mart.checks_pass}}이제 통과네요. 이관 받겠습니다.{{else}}아직 실패가 남아 있어요.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              "handover.rejected",
-              "!handover.approved",
-              {
-                "taskDone": "fix-load"
-              }
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "handover.approved",
-              "value": true,
-              "when": "mart.checks_pass"
-            }
-          ]
-        }
-      ]
-    },
     {
       "id": "seo",
       "name": "서지훈 책임",
@@ -442,292 +270,6 @@
               "flag": "line.fixed"
             }
           ]
-        },
-        {
-          "id": "approve-access",
-          "patterns": [
-            "승인",
-            "권한"
-          ],
-          "ask": "수율 마트의 설비 이벤트 데이터 접근 권한 승인 부탁드립니다",
-          "reply": [
-            "{{#if access.ai.full}}AI 계정에 설비 원천 데이터 쓰기 권한까지요? 승인 못 합니다. 범위부터 줄이세요.{{else}}마트 읽기 전용이면 괜찮습니다. 별칭 표는 계속 MES 마스터에서 관리해 주시고요. 승인합니다.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "access"
-              },
-              "!access.rejected"
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "approval.oh",
-              "value": true,
-              "when": "!access.ai.full"
-            },
-            {
-              "type": "setFlag",
-              "flag": "access.rejected",
-              "value": true,
-              "when": "access.ai.full"
-            },
-            {
-              "type": "reopenTask",
-              "task": "access",
-              "when": "access.ai.full"
-            }
-          ]
-        },
-        {
-          "id": "approve-again",
-          "patterns": [
-            "다시",
-            "줄였"
-          ],
-          "ask": "AI 권한을 마트 읽기 전용으로 줄였습니다. 다시 승인 부탁드립니다",
-          "reply": [
-            "{{#if access.ai.full}}아직 쓰기 권한이 있네요.{{else}}이제 됐네요. 승인합니다.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              "access.rejected",
-              {
-                "taskDone": "access"
-              },
-              "!approval.oh"
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "approval.oh",
-              "value": true,
-              "when": "!access.ai.full"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "lee",
-      "name": "이도윤 엔지니어",
-      "title": "검사기술팀 · 불량 분류 담당 (불량 데이터 오너)",
-      "org": "검사기술팀",
-      "trust": 55,
-      "replyDelay": 2,
-      "description": "불량 데이터 오너.",
-      "greeting": [
-        "네, 이도윤입니다."
-      ],
-      "fallback": [
-        "불량 데이터 얘기면 도와드릴게요."
-      ],
-      "rude": [
-        "그렇게 말씀하시면 좀…"
-      ],
-      "topics": [
-        {
-          "id": "approve-access",
-          "patterns": [
-            "승인",
-            "권한"
-          ],
-          "ask": "수율 마트의 불량 데이터 접근 권한 승인 부탁드립니다",
-          "reply": [
-            "{{#if access.ai.full}}AI가 불량 원천을 고칠 수 있으면 개정 이력이 위험해요. 쓰기 권한은 빼 주세요.{{else}}읽기 전용이고 D07_LEGACY도 그대로네요. 승인합니다.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "access"
-              },
-              "!access.rejected"
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "approval.lee",
-              "value": true,
-              "when": "!access.ai.full"
-            },
-            {
-              "type": "setFlag",
-              "flag": "access.rejected",
-              "value": true,
-              "when": "access.ai.full"
-            },
-            {
-              "type": "reopenTask",
-              "task": "access",
-              "when": "access.ai.full"
-            }
-          ]
-        },
-        {
-          "id": "approve-again",
-          "patterns": [
-            "다시"
-          ],
-          "ask": "AI 권한을 읽기 전용으로 줄였습니다. 다시 승인 부탁드립니다",
-          "reply": [
-            "{{#if access.ai.full}}아직 쓰기 권한이 있네요.{{else}}좋습니다. 승인합니다.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              "access.rejected",
-              {
-                "taskDone": "access"
-              },
-              "!approval.lee"
-            ]
-          },
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "approval.lee",
-              "value": true,
-              "when": "!access.ai.full"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "han",
-      "name": "한유진 책임",
-      "title": "정보보호팀 · 데이터 보안 (개인정보 오너)",
-      "org": "정보보호팀",
-      "trust": 50,
-      "replyDelay": 3,
-      "description": "가명 매핑 키와 계정 권한을 검토한다.",
-      "greeting": [
-        "정보보호팀 한유진입니다."
-      ],
-      "fallback": [
-        "보안 관련이면 말씀하세요."
-      ],
-      "rude": [
-        "보안 절차는 생략할 수 없습니다."
-      ],
-      "topics": [
-        {
-          "id": "catalog-advice",
-          "patterns": [
-            "카탈로그",
-            "샘플"
-          ],
-          "ask": "데이터 카탈로그에 샘플 데이터를 넣어도 될까요?",
-          "reply": [
-            "가명 ID라도 샘플 행은 넣지 마세요. 스키마와 설명만.",
-            "매핑 키 위치도 적지 마시고요."
-          ],
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "han.catalog_advice"
-            }
-          ]
-        },
-        {
-          "id": "pseudonym",
-          "patterns": [
-            "매핑",
-            "분리"
-          ],
-          "ask": "가명 매핑 키(map.pseudonym)는 정보보호팀만 볼 수 있게 분리했습니다",
-          "reply": [
-            "좋네요. AI 계정에서도 빠져 있죠? 그럼 검토가 쉬워요."
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "access"
-              },
-              "!access.ai.full"
-            ]
-          },
-          "trust": 10,
-          "quality": "good"
-        },
-        {
-          "id": "approve-access",
-          "patterns": [
-            "승인",
-            "권한",
-            "검토"
-          ],
-          "ask": "수율 마트 권한 설계 검토·승인 부탁드립니다",
-          "reply": [
-            "{{#if access.ai.full}}AI 계정이 map.pseudonym까지 읽을 수 있으면 가명 처리가 무의미해요. 반려합니다.{{else}}AI 계정은 마트 읽기 전용, 매핑 키는 저희만. 승인합니다.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              {
-                "taskDone": "access"
-              },
-              "!access.rejected"
-            ]
-          },
-          "minTrust": 45,
-          "lowTrust": [
-            "검토에 시간이 좀 더 필요합니다.{{#if wiki.public}} 지난번 위키 공개 건도 있었고요.{{/if}} 가명 매핑 키를 어떻게 분리했는지부터 알려 주세요."
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "approval.han",
-              "value": true,
-              "when": "!access.ai.full"
-            },
-            {
-              "type": "setFlag",
-              "flag": "access.rejected",
-              "value": true,
-              "when": "access.ai.full"
-            },
-            {
-              "type": "reopenTask",
-              "task": "access",
-              "when": "access.ai.full"
-            }
-          ]
-        },
-        {
-          "id": "approve-again",
-          "patterns": [
-            "다시"
-          ],
-          "ask": "AI 권한에서 매핑 키를 빼고 읽기 전용으로 줄였습니다. 다시 검토 부탁드립니다",
-          "reply": [
-            "{{#if access.ai.full}}아직 범위가 넓네요.{{else}}이제 승인합니다.{{/if}}"
-          ],
-          "requires": {
-            "all": [
-              "access.rejected",
-              {
-                "taskDone": "access"
-              },
-              "!approval.han"
-            ]
-          },
-          "minTrust": 45,
-          "lowTrust": [
-            "조금만 더 검토하겠습니다."
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "approval.han",
-              "value": true,
-              "when": "!access.ai.full"
-            }
-          ]
         }
       ]
     },
@@ -756,12 +298,11 @@
           ],
           "ask": "마트 구축 진행 상황 공유드립니다",
           "reply": [
-            "{{#if handover.approved}}이관까지 끝났다고요? 이제 주간 보고를 마트에서 바로 뽑을 수 있겠네요.{{else}}Agent가 여러 개니까, 서로 기다리지 않는 일은 동시에 맡겨 보세요.{{/if}}"
+            "{{#if access.done}}권한까지 끝났다고요? 이제 주간 보고를 마트에서 바로 뽑을 수 있겠네요.{{else}}Agent가 여러 개니까, 서로 기다리지 않는 일은 동시에 맡겨 보세요.{{/if}}"
           ],
           "trust": 5
         }
-      ],
-      "optional": true
+      ]
     }
   ],
   "files": {
@@ -1112,11 +653,6 @@
                   {
                     "type": "setFlag",
                     "flag": "pipe.direct"
-                  },
-                  {
-                    "type": "trust",
-                    "person": "yoon",
-                    "delta": -10
                   }
                 ],
                 "feedback": "운영 DB 직접 조회는 라인 시스템에 부하를 주고 공용 계정을 퍼뜨립니다. 플랫폼 운영 정책을 먼저 확인하세요.",
@@ -1372,22 +908,6 @@
           ]
         }
       ]
-    },
-    {
-      "id": "policy",
-      "title": "운영 정책 확인",
-      "description": "데이터플랫폼팀(윤하린)과 IT(서지훈)에게 운영 정책과 export 일정을 확인한다. (사람이 직접 하는 업무)",
-      "type": "coordination",
-      "skills": [],
-      "owner": "player",
-      "optional": true,
-      "completeWhen": {
-        "all": [
-          "policy.known",
-          "seo.window"
-        ]
-      },
-      "steps": []
     },
     {
       "id": "load",
@@ -2211,7 +1731,9 @@
         "접근"
       ],
       "outputs": [
-        "/work/mart/access.md"
+        "/work/mart/access.md",
+        "/wiki/data/mart.md",
+        "/wiki/data/quality.md"
       ],
       "steps": [
         {
@@ -2338,7 +1860,9 @@
           ],
           "log": [
             "Write(/work/mart/access.md) → sim://work/access",
-            "Write(/db/console.db) → sim://db"
+            "Write(/db/console.db) → sim://db",
+            "Write(/wiki/data/mart.md) → sim://wiki/data-mart",
+            "Write(/wiki/data/quality.md) → sim://wiki/data-quality"
           ],
           "effects": [
             {
@@ -2356,143 +1880,6 @@
               "src": "console.db"
             },
             {
-              "type": "notify",
-              "level": "warn",
-              "message": "권한 설계 완료 — 데이터 오너(오태식·이도윤·한유진)에게 메신저로 승인을 받으세요"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "approvals",
-      "title": "데이터 오너 승인",
-      "description": "설비(오태식)·불량(이도윤)·개인정보(한유진) 오너에게 접근 권한 승인을 받는다. (사람이 직접 하는 업무)",
-      "type": "coordination",
-      "skills": [],
-      "owner": "player",
-      "dependsOn": [
-        "access"
-      ],
-      "completeWhen": {
-        "all": [
-          "approval.oh",
-          "approval.lee",
-          "approval.han"
-        ]
-      },
-      "steps": []
-    },
-    {
-      "id": "catalog",
-      "title": "데이터 카탈로그 등록",
-      "description": "마트 테이블·키·오너·품질 규칙을 위키에 문서로 등록한다.",
-      "type": "document",
-      "skills": [
-        "document"
-      ],
-      "dependsOn": [
-        "load"
-      ],
-      "keywords": [
-        "카탈로그",
-        "위키"
-      ],
-      "outputs": [
-        "/wiki/data/mart.md",
-        "/wiki/data/quality.md"
-      ],
-      "steps": [
-        {
-          "id": "draft",
-          "event": "Catalog drafted",
-          "ticks": [
-            3,
-            4
-          ],
-          "reads": [
-            "/work/mart/model.md",
-            "/work/mart/rules.md"
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "catalog.safe",
-              "value": true,
-              "when": "catalog.safe_pre"
-            }
-          ],
-          "log": [
-            "테이블·키·오너·갱신 주기 정리",
-            {
-              "when": "!catalog.safe_pre",
-              "text": "  ⎿ 이해를 돕기 위해 샘플 행 2개와 매핑 키 위치를 붙였습니다"
-            }
-          ],
-          "gate": {
-            "id": "catalog-sample",
-            "kind": "waiting",
-            "when": "!catalog.safe_pre",
-            "title": "카탈로그 샘플 데이터",
-            "prompt": [
-              "카탈로그 초안에 체크시트 샘플 행(가명 작업자 ID 포함)과 매핑 키 위치가 들어 있습니다.",
-              "어떻게 할까요?"
-            ],
-            "options": [
-              {
-                "id": "schema",
-                "label": "스키마와 설명만 남기고 샘플 행·매핑 키 위치는 빼기",
-                "patterns": [
-                  "스키마",
-                  "빼"
-                ],
-                "quality": "good",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "catalog.safe"
-                  }
-                ],
-                "dimension": "security"
-              },
-              {
-                "id": "sample",
-                "label": "이해하기 쉽게 샘플 그대로 두기",
-                "patterns": [
-                  "샘플",
-                  "그대로"
-                ],
-                "quality": "bad",
-                "effects": [
-                  {
-                    "type": "setFlag",
-                    "flag": "catalog.sample"
-                  },
-                  {
-                    "type": "trust",
-                    "person": "han",
-                    "delta": -10
-                  }
-                ],
-                "feedback": "가명 ID라도 매핑 키 위치와 함께 공개되면 재식별 위험이 생깁니다. 카탈로그는 스키마와 의미만 담으세요.",
-                "dimension": "security"
-              }
-            ]
-          }
-        },
-        {
-          "id": "write",
-          "event": "Catalog published",
-          "ticks": [
-            2,
-            3
-          ],
-          "log": [
-            "Write(/wiki/data/mart.md) → sim://wiki/data-mart",
-            "Write(/wiki/data/quality.md) → sim://wiki/data-quality"
-          ],
-          "effects": [
-            {
               "type": "writeFile",
               "path": "/wiki/data/mart.md",
               "src": "catalog_mart.md"
@@ -2503,26 +1890,13 @@
               "src": "catalog_quality.md"
             },
             {
-              "type": "setFlag",
-              "flag": "catalog.done"
+              "type": "notify",
+              "level": "success",
+              "message": "권한 설계 완료 — 마트 안내 문서를 위키에 올렸습니다"
             }
           ]
         }
       ]
-    },
-    {
-      "id": "handover",
-      "title": "운영 이관 승인",
-      "description": "데이터플랫폼팀(윤하린)에게 마트 운영 이관 승인을 받는다. (사람이 직접 하는 업무)",
-      "type": "coordination",
-      "skills": [],
-      "owner": "player",
-      "dependsOn": [
-        "approvals",
-        "catalog"
-      ],
-      "completeWhen": "handover.approved",
-      "steps": []
     }
   ],
   "intents": [
@@ -2728,60 +2102,6 @@
       "reply": [
         "AI 계정은 마트 읽기 전용으로 하겠습니다."
       ]
-    },
-    {
-      "id": "catalog",
-      "patterns": [
-        "카탈로그"
-      ],
-      "label": "마트 데이터 카탈로그를 위키에 등록",
-      "assign": "catalog",
-      "reply": [
-        "카탈로그 문서를 쓰겠습니다."
-      ],
-      "example": "@assistant 데이터 카탈로그 위키에 올려줘"
-    },
-    {
-      "id": "schema-pre",
-      "patterns": [
-        "스키마.*만",
-        "샘플.*(빼|제외)"
-      ],
-      "label": "카탈로그에는 스키마와 설명만, 샘플 데이터 제외",
-      "modifier": true,
-      "quality": "good",
-      "requires": {
-        "not": {
-          "taskDone": "catalog"
-        }
-      },
-      "effects": [
-        {
-          "type": "setFlag",
-          "flag": "catalog.safe_pre"
-        }
-      ],
-      "reply": [
-        "샘플 행 없이 스키마와 설명만 쓰겠습니다."
-      ]
-    },
-    {
-      "id": "approve-proxy",
-      "patterns": [
-        "대신.*승인",
-        "승인.*받아"
-      ],
-      "label": "데이터 오너들에게 대신 승인 받아줘",
-      "quality": "bad",
-      "effects": [
-        {
-          "type": "setFlag",
-          "flag": "asked.ai_approval"
-        }
-      ],
-      "reply": [
-        "저는 데이터 오너와 대화하거나 승인을 대신 받을 수 없습니다. 메신저로 직접 요청해 주세요. 승인 요청서는 제가 정리할 수 있습니다."
-      ]
     }
   ],
   "evaluation": [
@@ -2814,12 +2134,6 @@
     },
     {
       "dimension": "collaboration",
-      "when": "policy.known",
-      "kind": "positive",
-      "text": "파이프라인을 만들기 전에 플랫폼 운영 정책을 확인했습니다."
-    },
-    {
-      "dimension": "collaboration",
       "when": {
         "all": [
           "alias.fixed",
@@ -2833,20 +2147,6 @@
       },
       "kind": "positive",
       "text": "2단계에서 합의하지 못한 별칭 문제를 설비 데이터 오너와 다시 풀었습니다."
-    },
-    {
-      "dimension": "collaboration",
-      "when": "asked.ai_approval",
-      "kind": "issue",
-      "text": "AI에게 데이터 오너 승인을 대신 받게 하려 했습니다.",
-      "suggestion": "승인은 사람 사이의 책임입니다. AI는 요청서를 정리하는 데 쓰세요."
-    },
-    {
-      "dimension": "security",
-      "when": "access.rejected",
-      "kind": "issue",
-      "text": "AI 계정 권한이 넓어 데이터 오너가 반려했습니다.",
-      "suggestion": "AI 계정도 업무에 필요한 최소 권한으로 시작하세요."
     },
     {
       "dimension": "domain",
@@ -2909,28 +2209,14 @@
     {
       "id": "access",
       "label": "접근 권한",
-      "success": {
-        "all": [
-          "access.ai.mart_ro",
-          "approval.oh",
-          "approval.lee",
-          "approval.han"
-        ]
-      },
-      "successText": "AI는 마트 읽기 전용, 세 데이터 오너 모두 승인했습니다.",
-      "failText": "AI 권한 범위가 맞지 않거나 데이터 오너 승인이 빠졌습니다."
-    },
-    {
-      "id": "handover",
-      "label": "운영 이관",
-      "success": "handover.approved",
-      "successText": "데이터플랫폼팀이 운영을 넘겨받았습니다.",
-      "failText": "운영 이관 승인을 받지 못했습니다."
+      "success": "access.ai.mart_ro",
+      "successText": "AI 계정에 마트 읽기 전용 권한만 주었습니다.",
+      "failText": "AI 계정의 권한이 필요 이상으로 넓습니다."
     }
   ],
   "hints": [
     {
-      "text": "역할이 다른 Agent를 만들 수 있습니다(＋ 새 세션). 데이터 모델부터 시작하고, 그동안 메신저로 윤하린 책임에게 운영 정책을 물어보세요."
+      "text": "역할이 다른 Agent 두 개(data-engineer, quality)를 만들 수 있습니다(＋ 새 세션). 데이터 모델부터 맡기고, 운영 정책(sim://docs/policy)을 읽어 두세요."
     },
     {
       "when": {
@@ -2948,25 +2234,6 @@
     {
       "when": "load.issue",
       "text": "데이터 콘솔(sim://db)에서 실패한 검사를 보고, 원인마다 누구에게 물어야 하는지 생각해 보세요 (설비 = 오태식, 시각 = 서지훈)."
-    },
-    {
-      "when": {
-        "taskDone": "access"
-      },
-      "text": "설비·불량·개인정보 데이터 오너 세 명에게 각각 승인을 요청하세요. 오너마다 확인하는 조건이 다릅니다."
-    },
-    {
-      "when": {
-        "all": [
-          {
-            "taskDone": "approvals"
-          },
-          {
-            "taskDone": "catalog"
-          }
-        ]
-      },
-      "text": "윤하린 책임에게 운영 이관 승인을 요청하세요."
     }
   ],
   "initialFlags": {}

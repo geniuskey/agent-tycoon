@@ -15,7 +15,3 @@
 {{else}}| EQ-N2-ET01 | ETCH-01 | 1번 | 2라인 식각 1호기 |
 {{/if}}| EQ-N2-DP02 | DEP-02 | 증착 2호기 | 2라인 증착 2호기 |
 | EQ-N2-CM04 | CMP-04 | CMP 4호기 | 2라인 CMP 4호기 |
-{{#if wiki.public}}
-## 참고 링크
-- 원본: `/raw/mes/equipment_master.csv` · MES 조회 계정 `fab_shared` (공용)
-{{/if}}

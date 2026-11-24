@@ -9,7 +9,7 @@
 | D07 (스크래치) | 41 | 58 | {{#if w51.used.cite || kb.cite_rule}}view.yield_weekly.d07_count{{else}}—{{/if}} |
 
 ## 주요 변동
-- D07 41 → 58 (+41%). {{#if w51.left.cause}}**원인: CMP 슬러리 교체 지연.** CMP 공정 점검이 필요합니다.{{/if}}{{#if w51.fix.cause && cause.checked}}가설: 스크러버 점검 중 영향 가능 (이도윤 엔지니어 12/29 확인: 이번 주 슬러리 교체 없음) — 원인 확정 아님{{/if}}{{#if w51.fix.cause && !cause.checked}}가설: CMP 슬러리 상태 또는 스크러버 — 검사기술팀 확인 필요{{/if}}{{#if !w51.issue.cause}}가설: CMP 슬러리 상태 또는 스크러버 — 검사기술팀 확인 필요{{/if}}
+- D07 41 → 58 (+41%). {{#if w51.left.cause}}**원인: CMP 슬러리 교체 지연.** CMP 공정 점검이 필요합니다.{{/if}}{{#if w51.fix.cause}}가설: CMP 슬러리 상태 또는 스크러버 — 검사기술팀 확인 필요{{/if}}{{#if !w51.issue.cause}}가설: CMP 슬러리 상태 또는 스크러버 — 검사기술팀 확인 필요{{/if}}
 
 ## 설비 이벤트
 - ETCH-07 (EQ-N2-ET07) 정지 {{#if w51.left.utc}}04:20–07:50 (로거){{else}}13:20–16:50 (KST){{/if}} — MFC 알람

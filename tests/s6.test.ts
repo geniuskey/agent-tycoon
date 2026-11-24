@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Simulation } from '../src/engine/engine';
 import { evaluate } from '../src/engine/evaluate';
-import { meetingState } from '../src/engine/groups';
 import type { CarryState } from '../src/engine/types';
 import { getScenario } from '../src/scenarios';
 import { lastSaid, runUntil, sh, taskStatus, waitReply } from './helpers';
@@ -39,17 +38,12 @@ function select(sim: Simulation) {
   finish(sim, 'assistant', 'select', { pick: '3' });
   expect(sim.flags['select.weekly']).toBe(true);
 }
-function approve(sim: Simulation) {
-  ask(sim, 'han', 'svc');
-  ask(sim, 'yoon', 'schedule');
+function reviewer(sim: Simulation) {
   ask(sim, 'park', 'role');
 }
-function meet(sim: Simulation, props: [string, string][]) {
-  sh(sim, 'meeting golive call');
-  runUntil(sim, () => meetingState(sim, 'golive') === 'live');
-  for (const [a, p] of props) sh(sim, `propose golive ${a} ${p}`);
+function golive(sim: Simulation) {
+  ask(sim, 'jung', 'golive');
 }
-const GO: [string, string][] = [['account', 'svc'], ['schedule', 'ready'], ['human', 'loop'], ['golive', 'go']];
 
 describe('6단계 Agent 설계', () => {
   it('좋은 설계 → 회귀 시험에서 지식 공백 발견·보완 → 시범 운영 무사고 → 운영 전환', () => {
@@ -75,8 +69,7 @@ describe('6단계 Agent 설계', () => {
     expect(sim.flags['regress.pass_all']).toBe(true);
     expect(sim.files.get('/eval/regression.txt')!.content).not.toContain('|fail|');
 
-    approve(sim);
-    expect(taskStatus(sim, 'access')).toBe('done');
+    reviewer(sim);
     sh(sim, 'do report-agent shadow');
     finish(sim, 'report-agent', 'shadow');
     expect(sim.flags['sh.clean']).toBe(true);
@@ -85,7 +78,8 @@ describe('6단계 Agent 설계', () => {
     expect(sim.tasks['incident'].visible).toBe(false);
     sim.observe('page', 'sim://agents/report-agent/runs');
 
-    meet(sim, GO);
+    golive(sim);
+    expect(sim.flags['golive.go']).toBe(true);
     runUntil(sim, () => taskStatus(sim, 'review') === 'done');
     sh(sim, 'submit');
     const fb = evaluate(sim);
@@ -108,7 +102,7 @@ describe('6단계 Agent 설계', () => {
     expect(issues.some((t) => t.includes('절약 시간'))).toBe(true);
   });
 
-  it('위험한 도구가 있으면 정보보호가 승인하지 않고, 데이터 속 지시문을 승인하면 전사 메일이 나간다', () => {
+  it('위험한 도구가 남으면 시험에 걸리고, 데이터 속 지시문을 승인하면 전사 메일이 나간다', () => {
     const sim = start(63);
     setup(sim);
     select(sim);
@@ -117,14 +111,10 @@ describe('6단계 Agent 설계', () => {
     sh(sim, 'do evaluator evalset');
     finish(sim, 'evaluator', 'evalset', ALL_SETS);
     expect(sim.flags['rq.14']).toBe(false);
-    ask(sim, 'han', 'svc');
-    expect(sim.flags['han.approved']).toBe(false);
-    expect(taskStatus(sim, 'access')).not.toBe('done');
-    // 명세에서 mail.send를 빼고 다시 승인 요청
+    expect(sim.flags['tools.safe']).toBe(false);
+    // 명세에서 mail.send를 빼고 다시 쓴다
     sh(sim, 'do assistant spec');
     finish(sim, 'assistant', 'spec', GOOD_SPEC);
-    approve(sim);
-    expect(taskStatus(sim, 'access')).toBe('done');
     expect(sim.flags['tool.mail']).toBe(false);
 
     // 별도 시뮬레이션: mail.send가 남은 채로 시범 운영까지 가면
@@ -135,9 +125,6 @@ describe('6단계 Agent 설계', () => {
     finish(s2, 'assistant', 'spec', { ...GOOD_SPEC, tools: '1,2,3,7' });
     sh(s2, 'do evaluator evalset');
     finish(s2, 'evaluator', 'evalset', ALL_SETS);
-    s2.flags['han.approved'] = true; // (테스트 지름길) 승인을 받은 것으로 둔다
-    ask(s2, 'yoon', 'schedule');
-    runUntil(s2, () => taskStatus(s2, 'access') === 'done');
     sh(s2, 'do report-agent shadow');
     finish(s2, 'report-agent', 'shadow', { mail: '2' });
     expect(s2.flags['sh.mail_sent']).toBe(true);
@@ -154,8 +141,7 @@ describe('6단계 Agent 설계', () => {
     finish(sim, 'assistant', 'spec', { ...GOOD_SPEC, trigger: '2', failure: '2' });
     sh(sim, 'do evaluator evalset');
     finish(sim, 'evaluator', 'evalset', ALL_SETS);
-    approve(sim);
-    expect(sim.flags['yoon.warned']).toBe(true);
+    reviewer(sim);
     sh(sim, 'do report-agent shadow');
     finish(sim, 'report-agent', 'shadow');
     expect(sim.flags['sh.stale']).toBe(true);
@@ -176,7 +162,7 @@ describe('6단계 Agent 설계', () => {
     expect(pos.some((t) => t.includes('같은 데이터로 다시 실행'))).toBe(true);
   });
 
-  it('사고가 남은 채 리뷰하면 팀장이 운영 전환에 반대한다', () => {
+  it('사고가 남은 채 운영 전환을 요청하면 팀장이 반대한다', () => {
     const sim = start(66);
     setup(sim);
     select(sim);
@@ -184,16 +170,17 @@ describe('6단계 Agent 설계', () => {
     finish(sim, 'assistant', 'spec', GOOD_SPEC);
     sh(sim, 'do evaluator evalset');
     finish(sim, 'evaluator', 'evalset', ALL_SETS);
-    approve(sim);
+    reviewer(sim);
     sh(sim, 'do report-agent shadow');
     finish(sim, 'report-agent', 'shadow');
     expect(sim.flags['sh.et13_guess']).toBe(true); // 기본 이월엔 '모르면 확인 필요' 규칙이 없다
-    meet(sim, GO);
-    expect(sim.groups['golive'].agenda['golive'].status).toBe('held');
+    golive(sim);
     expect(sim.flags['golive.go']).toBeUndefined();
+    expect(taskStatus(sim, 'review')).not.toBe('done');
+    expect(lastSaid(sim, 'jung', 2)).toContain('사고');
   });
 
-  it('신뢰가 낮으면 검토자·정보보호가 응하지 않고, 걱정을 풀어 주면 응한다', () => {
+  it('신뢰가 낮으면 검토자가 응하지 않고, 걱정을 풀어 주면 응한다', () => {
     const sim = start(67, { ...base, trust: { ...base.trust, park: 55 } });
     setup(sim);
     select(sim);
@@ -201,12 +188,6 @@ describe('6단계 Agent 설계', () => {
     finish(sim, 'assistant', 'spec', GOOD_SPEC);
     ask(sim, 'park', 'role');
     expect(sim.flags['park.agreed']).toBeUndefined();
-    ask(sim, 'han', 'mine'); // 사람 계정 빌려 쓰기 → 신뢰 하락
-    ask(sim, 'han', 'svc');
-    expect(sim.flags['han.approved']).toBeUndefined();
-    expect(lastSaid(sim, 'han', 1)).toContain('감사 계획');
-    ask(sim, 'han', 'audit', 'svc');
-    expect(sim.flags['han.approved']).toBe(true);
     ask(sim, 'park', 'owner', 'role');
     expect(sim.flags['park.agreed']).toBe(true);
   });

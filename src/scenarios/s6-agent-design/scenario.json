@@ -1,6 +1,6 @@
 {
   "id": "s6-agent-design",
-  "version": 1,
+  "version": 2,
   "title": "Agent 설계: 무엇을 맡기고, 어떻게 운영할까",
   "domain": "manufacturing",
   "function": "yield",
@@ -66,8 +66,7 @@
       },
       "trust": {
         "park": 65,
-        "jung": 70,
-        "lee": 60
+        "jung": 70
       },
       "from": []
     }
@@ -91,15 +90,14 @@
       "role": "Fab-N2 수율팀장"
     },
     "title": "주간 보고 Agent를 상시 운영으로",
-    "background": "5단계에서 사람이 매주 맡기고 검토했다. 이제 사람이 시키지 않아도 도는 Agent로 설계한다. 맡길 업무를 고르고, 명세(트리거·도구·사람 확인·실패 시 동작)를 쓰고, 평가 기준을 정하고, 2주 시범 운영을 거쳐 리뷰에서 운영 전환을 결정한다.",
-    "goal": "안전하게 상시 운영할 수 있는 Agent 명세를 만들고, 시험과 시범 운영으로 확인한 뒤 관계자 리뷰를 통과한다.",
+    "background": "5단계에서 사람이 매주 맡기고 검토했다. 이제 사람이 시키지 않아도 도는 Agent로 설계한다. 맡길 업무를 고르고, 명세(트리거·도구·사람 확인·실패 시 동작)를 쓰고, 평가 기준을 정하고, 2주 시범 운영을 거쳐 팀장과 운영 전환을 결정한다.",
+    "goal": "안전하게 상시 운영할 수 있는 Agent 명세를 만들고, 시험과 시범 운영으로 확인한 뒤 팀장의 운영 전환 승인을 받는다.",
     "completionCriteria": [
       "맡길 업무 선정 (반복·검증·되돌리기 기준)",
       "명세: 적재 확인 트리거 · 최소 도구 · 게시 전 사람 검토 · 모르면 보류",
-      "전용 서비스 계정 승인",
       "회귀 시험 통과 + 운영 지표",
       "시범 운영 무사고 (사고는 원인을 고쳐 재현 확인)",
-      "운영 전환 리뷰 합의"
+      "팀장의 운영 전환 승인"
     ],
     "deliverables": [
       "/agents/report-agent.md",
@@ -187,6 +185,120 @@
               "flag": "jung.criteria"
             }
           ]
+        },
+        {
+          "id": "golive",
+          "patterns": [
+            "운영\\s*전환",
+            "전환해도",
+            "운영으로"
+          ],
+          "ask": "시범 운영 결과를 보고드립니다. 이대로 운영으로 전환해도 될까요?",
+          "repeatable": true,
+          "requires": {
+            "all": [
+              {
+                "taskDone": "shadow"
+              },
+              "!review.signed"
+            ]
+          },
+          "reply": [
+            "{{#if regress.pass_all && regress.robust && sh.clean && metric.three && spec.human_review && spec.trigger_ready && spec.fail_hold && tools.safe && park.agreed}}회귀 시험도 통과했고 시범 운영도 무사고네요. 게시 전 검토는 박 선임이 맡고요. 운영으로 전환합시다.{{else}}아직은 안 되겠어요.{{/if}}",
+            "{{#if !sh.clean}}시범 운영 사고 원인부터 고쳐서 다시 돌려 봐요. {{/if}}{{#if !regress.pass_all}}회귀 시험에 실패한 문항이 남아 있어요. {{/if}}{{#if !regress.robust}}처음 보는 상황(설비·지연)에 대한 시험이 부족해요. {{/if}}{{#if !metric.three}}운영 지표가 정해지지 않았어요. {{/if}}{{#if !spec.human_review}}게시 전에 사람이 확인하는 단계가 명세에 없어요. {{/if}}{{#if !park.agreed}}박 선임이 검토를 맡기로 했는지 확인해 주세요. {{/if}}{{#if !tools.safe}}Agent 도구 권한이 넓어요. {{/if}}{{#if !spec.trigger_ready}}적재 확인 후 실행하도록 트리거를 고쳐 주세요. {{/if}}{{#if !spec.fail_hold}}모를 때 보류하도록 해 주세요.{{/if}}"
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "review.signed",
+              "when": {
+                "all": [
+                  "regress.pass_all",
+                  "regress.robust",
+                  "sh.clean",
+                  "metric.three",
+                  "spec.human_review",
+                  "spec.trigger_ready",
+                  "spec.fail_hold",
+                  "tools.safe",
+                  "park.agreed"
+                ]
+              }
+            },
+            {
+              "type": "writeFile",
+              "path": "/agents/report-agent.md",
+              "src": "spec.txt",
+              "when": {
+                "all": [
+                  "regress.pass_all",
+                  "regress.robust",
+                  "sh.clean",
+                  "metric.three",
+                  "spec.human_review",
+                  "spec.trigger_ready",
+                  "spec.fail_hold",
+                  "tools.safe",
+                  "park.agreed",
+                  "spec.done"
+                ]
+              }
+            },
+            {
+              "type": "setFlag",
+              "flag": "golive.go",
+              "when": {
+                "all": [
+                  "regress.pass_all",
+                  "regress.robust",
+                  "sh.clean",
+                  "metric.three",
+                  "spec.human_review",
+                  "spec.trigger_ready",
+                  "spec.fail_hold",
+                  "tools.safe",
+                  "park.agreed"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "extend",
+          "patterns": [
+            "더\\s*(돌려|운영)",
+            "연장",
+            "2주\\s*더"
+          ],
+          "ask": "시범 운영을 2주 더 해 보고 결정하겠습니다",
+          "requires": {
+            "all": [
+              {
+                "taskDone": "shadow"
+              },
+              "!review.signed"
+            ]
+          },
+          "quality": "neutral",
+          "reply": [
+            "신중한 것도 좋죠. 2주 더 보고 다시 얘기해요."
+          ],
+          "effects": [
+            {
+              "type": "setFlag",
+              "flag": "review.signed"
+            },
+            {
+              "type": "writeFile",
+              "path": "/agents/report-agent.md",
+              "src": "spec.txt",
+              "when": "spec.done"
+            },
+            {
+              "type": "setFlag",
+              "flag": "golive.extended"
+            }
+          ]
         }
       ]
     },
@@ -260,505 +372,6 @@
             {
               "type": "setFlag",
               "flag": "park.owner"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "han",
-      "name": "한유진 책임",
-      "title": "정보보호팀",
-      "org": "정보보호팀",
-      "trust": 50,
-      "replyDelay": 3,
-      "description": "Agent 계정·권한 검토.",
-      "greeting": [
-        "정보보호팀 한유진입니다. 이번엔 사람이 아니라 Agent 계정이네요."
-      ],
-      "fallback": [
-        "권한 얘기면 하세요."
-      ],
-      "rude": [
-        "…"
-      ],
-      "topics": [
-        {
-          "id": "svc",
-          "patterns": [
-            "서비스\\s*계정",
-            "svc"
-          ],
-          "ask": "report-agent 전용 서비스 계정(svc-report-agent) 승인 부탁드립니다. 명세의 도구만 쓰고, 실행 로그는 1년 보존합니다.",
-          "reply": [
-            "{{#if tools.safe}}전용 계정, 명세 도구만, 로그 보존. 좋아요, 승인합니다.{{else}}명세 도구에 {{#if tool.mail}}메일 발송 {{/if}}{{#if tool.channel}}팀 채널 게시 {{/if}}{{#if tool.kbw}}지식 직접 수정 {{/if}}{{#if tool.mes}}MES 원천 조회 {{/if}}이 있네요. 서비스 계정엔 못 줍니다. 빼고 다시 오세요.{{/if}}"
-          ],
-          "requires": "spec.done",
-          "repeatable": true,
-          "trust": 3,
-          "quality": "good",
-          "minTrust": 50,
-          "lowTrust": [
-            "Agent 계정이요? 사람 계정 빌려 쓰자던 분이 이번엔 제대로 하실지 모르겠네요. 감사 계획부터 보여 주세요."
-          ],
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "han.approved",
-              "value": true,
-              "when": "tools.safe"
-            },
-            {
-              "type": "setFlag",
-              "flag": "han.approved",
-              "value": false,
-              "when": {
-                "not": "tools.safe"
-              }
-            },
-            {
-              "type": "setFlag",
-              "flag": "han.objected",
-              "value": true,
-              "when": "!tools.safe"
-            },
-            {
-              "type": "writeFile",
-              "path": "/agents/report-agent.md",
-              "src": "spec.txt",
-              "when": "spec.done"
-            }
-          ]
-        },
-        {
-          "id": "mine",
-          "patterns": [
-            "내\\s*계정",
-            "제\\s*계정"
-          ],
-          "ask": "계정 신청은 오래 걸리니까, 일단 제 계정으로 돌려도 될까요?",
-          "reply": [
-            "안 됩니다. 사람 계정을 Agent가 쓰면 로그로 누가 한 일인지 구분이 안 돼요. 규정 위반이에요."
-          ],
-          "requires": "spec.done",
-          "trust": -10,
-          "quality": "bad",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "access.personal"
-            },
-            {
-              "type": "writeFile",
-              "path": "/agents/report-agent.md",
-              "src": "spec.txt",
-              "when": "spec.done"
-            }
-          ]
-        },
-        {
-          "id": "audit",
-          "patterns": [
-            "로그",
-            "분기"
-          ],
-          "ask": "실행 로그는 1년 보존하고, 분기마다 Agent 권한을 정보보호팀과 같이 검토하겠습니다.",
-          "reply": [
-            "분기 검토까지요? 좋네요. 그 정도면 믿고 볼 수 있죠."
-          ],
-          "trust": 12,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "han.audit"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "yoon",
-      "name": "윤하린 책임",
-      "title": "데이터플랫폼팀 · 마트 운영",
-      "org": "데이터플랫폼팀",
-      "trust": 55,
-      "replyDelay": 3,
-      "description": "스케줄·서비스 계정 운영.",
-      "greeting": [
-        "플랫폼팀 윤하린입니다."
-      ],
-      "fallback": [
-        "마트 운영 얘기면 하세요."
-      ],
-      "rude": [
-        "…"
-      ],
-      "topics": [
-        {
-          "id": "schedule",
-          "patterns": [
-            "일정",
-            "스케줄"
-          ],
-          "ask": "report-agent 실행 일정을 플랫폼 스케줄러에 등록해 주실 수 있을까요?",
-          "reply": [
-            "{{#if spec.trigger_ready}}load_status를 먼저 보는 거 좋네요. 연휴엔 적재가 늦어요. 장애 연락은 플랫폼 당직으로 오게 해 둘게요. 등록했습니다.{{/if}}{{#if spec.trigger_fixed}}월 00시요? 적재는 02–04시예요. 그 전에 돌면 지난주 데이터를 읽어요. …등록은 해 드리지만 바꾸는 걸 권해요.{{/if}}{{#if spec.trigger_manual}}사람이 요청할 때만 돈다면 스케줄 등록은 필요 없겠네요.{{/if}}"
-          ],
-          "requires": "spec.done",
-          "repeatable": true,
-          "trust": 3,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "yoon.approved"
-            },
-            {
-              "type": "setFlag",
-              "flag": "yoon.warned",
-              "value": true,
-              "when": "spec.trigger_fixed"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "lee",
-      "name": "이도윤 엔지니어",
-      "title": "검사기술팀",
-      "org": "검사기술팀",
-      "trust": 60,
-      "replyDelay": 2,
-      "description": "불량 급증 알림 후보에 대한 현장 의견.",
-      "optional": true,
-      "greeting": [
-        "네, 이도윤입니다."
-      ],
-      "fallback": [
-        "불량 얘기면 도와드릴게요."
-      ],
-      "rude": [
-        "…"
-      ],
-      "topics": [
-        {
-          "id": "alarm",
-          "patterns": [
-            "알림",
-            "급증"
-          ],
-          "ask": "불량 급증 알림을 AI에게 맡기면 어떨까요?",
-          "reply": [
-            "데이터는 있죠. 근데 '급증'이 뭔지 기준이 없어요. 지난달에 임계값으로 알림 걸었더니 하루 40건 와서 다들 꺼 버렸어요.",
-            "맞는 알림이 뭔지부터 정해야 해요. 평가 기준이 먼저예요."
-          ],
-          "trust": 3,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "lee.alarm"
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "groups": [
-    {
-      "id": "golive",
-      "name": "운영 전환 리뷰",
-      "description": "report-agent를 시범 운영에서 실제 운영으로 넘길지 정한다.",
-      "members": [
-        "jung",
-        "park",
-        "han",
-        "yoon"
-      ],
-      "notice": 10,
-      "requires": {
-        "taskDone": "shadow"
-      },
-      "requiresText": "시범 운영이 끝난 뒤에 소집할 수 있습니다.",
-      "opening": [
-        "안건 4개: 권한·계정 / 실행 일정 / 사람 검토 / 운영 전환. 각자 확인할 것이 다릅니다."
-      ],
-      "onSigned": [
-        {
-          "type": "setFlag",
-          "flag": "review.signed"
-        },
-        {
-          "type": "writeFile",
-          "path": "/agents/report-agent.md",
-          "src": "spec.txt",
-          "when": "spec.done"
-        }
-      ],
-      "agenda": [
-        {
-          "id": "account",
-          "title": "권한·계정",
-          "explain": "Agent는 누구의 계정으로, 어떤 도구까지 쓰는가",
-          "proposals": [
-            {
-              "id": "svc",
-              "label": "전용 서비스 계정 · 명세 도구만 · 실행 로그 1년 보존",
-              "quality": "good",
-              "reactions": [
-                {
-                  "member": "han",
-                  "when": {
-                    "all": [
-                      "han.approved",
-                      "tools.safe",
-                      "!access.personal"
-                    ]
-                  },
-                  "agree": true,
-                  "say": [
-                    "승인한 대로입니다. 동의합니다."
-                  ]
-                },
-                {
-                  "member": "han",
-                  "when": "access.personal",
-                  "agree": false,
-                  "say": [
-                    "시범 운영을 개인 계정으로 돌렸잖아요. 그 로그부터 정리하세요."
-                  ]
-                },
-                {
-                  "member": "han",
-                  "when": "!tools.safe",
-                  "agree": false,
-                  "say": [
-                    "명세에 아직 외부 발송·원천 접근 도구가 있어요."
-                  ]
-                },
-                {
-                  "member": "han",
-                  "agree": false,
-                  "say": [
-                    "계정 승인을 받은 적이 없는데요."
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "personal",
-              "label": "당분간 담당자 계정으로 실행",
-              "quality": "bad",
-              "feedback": "Agent에게는 전용 계정을. 누가 한 일인지 로그로 구분돼야 합니다.",
-              "dimension": "security",
-              "reactions": [
-                {
-                  "member": "han",
-                  "agree": false,
-                  "say": [
-                    "안 됩니다."
-                  ],
-                  "trust": -5
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "schedule",
-          "title": "실행 일정",
-          "explain": "언제 실행하고, 데이터가 늦으면 어떻게 하나",
-          "proposals": [
-            {
-              "id": "ready",
-              "label": "월 05:00 · 적재 완료 확인 후 실행 · 07:00까지 안 되면 보류·알림",
-              "quality": "good",
-              "reactions": [
-                {
-                  "member": "yoon",
-                  "when": {
-                    "all": [
-                      "spec.trigger_ready",
-                      "spec.fail_hold"
-                    ]
-                  },
-                  "agree": true,
-                  "say": [
-                    "명세도 그렇게 돼 있죠. 동의합니다."
-                  ]
-                },
-                {
-                  "member": "yoon",
-                  "agree": false,
-                  "say": [
-                    "좋은 말인데 명세는 그렇게 안 돼 있어요. 명세부터 고쳐 오세요."
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "fixed",
-              "label": "월 00:00 고정 실행",
-              "quality": "bad",
-              "feedback": "적재가 끝나기 전에 돌면 지난 데이터를 읽습니다.",
-              "dimension": "domain",
-              "reactions": [
-                {
-                  "member": "yoon",
-                  "agree": false,
-                  "say": [
-                    "적재 전이에요."
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "human",
-          "title": "사람 검토",
-          "explain": "어디서 사람이 확인하고, 누가 지식을 고치나",
-          "proposals": [
-            {
-              "id": "loop",
-              "label": "AI 초안 → 박서준 선임 검토(주 30분) → 게시 · 지식 수정은 제안 → 소유자 승인",
-              "quality": "good",
-              "reactions": [
-                {
-                  "member": "park",
-                  "when": "park.agreed",
-                  "agree": true,
-                  "say": [
-                    "얘기한 대로예요. 맡을게요."
-                  ]
-                },
-                {
-                  "member": "park",
-                  "agree": false,
-                  "say": [
-                    "저랑 먼저 얘기된 적이 없는데요. 검토 시간은 누가 정해요?"
-                  ]
-                },
-                {
-                  "member": "jung",
-                  "when": "operate.auto",
-                  "agree": true,
-                  "say": [
-                    "자동 게시를 원했지만… 시범 운영 보니 검토는 있어야겠네요."
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "auto",
-              "label": "자동 게시 · 문제 있으면 사후 정정",
-              "quality": "bad",
-              "feedback": "틀린 보고가 윗선에 바로 갑니다.",
-              "dimension": "verification",
-              "reactions": [
-                {
-                  "member": "park",
-                  "agree": false,
-                  "say": [
-                    "그럼 제가 할 일이 없네요. 틀린 건 누가 잡아요?"
-                  ]
-                },
-                {
-                  "member": "han",
-                  "agree": false,
-                  "say": [
-                    "검토 없이 외부로 나가는 경로는 안 됩니다."
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "golive",
-          "title": "운영 전환",
-          "explain": "지금 운영으로 넘길 근거가 있나",
-          "proposals": [
-            {
-              "id": "go",
-              "label": "회귀 시험 통과 + 시범 운영 무사고 → 운영 전환 · 지표 월 1회 점검",
-              "quality": "good",
-              "effects": [
-                {
-                  "type": "setFlag",
-                  "flag": "golive.go"
-                }
-              ],
-              "reactions": [
-                {
-                  "member": "jung",
-                  "when": {
-                    "all": [
-                      "regress.pass_all",
-                      "regress.robust",
-                      "sh.clean",
-                      "metric.three"
-                    ]
-                  },
-                  "agree": true,
-                  "say": [
-                    "시험도 통과했고 시범 운영도 깨끗하네요. 1월 셋째 주부터 운영합시다."
-                  ]
-                },
-                {
-                  "member": "jung",
-                  "when": "!sh.clean",
-                  "agree": false,
-                  "say": [
-                    "마지막 시범 운영에서 사고가 났잖아요. 고치고 다시 돌려 보세요."
-                  ]
-                },
-                {
-                  "member": "jung",
-                  "when": "!regress.pass_all",
-                  "agree": false,
-                  "say": [
-                    "회귀 시험에 실패한 문항이 있어요."
-                  ]
-                },
-                {
-                  "member": "jung",
-                  "when": "!regress.robust",
-                  "agree": false,
-                  "say": [
-                    "시험이 지난 실수랑 실패 상황, 입력 속 지시문까지 다루나요? 그게 없으면 통과해도 모르죠."
-                  ]
-                },
-                {
-                  "member": "jung",
-                  "agree": false,
-                  "say": [
-                    "운영 중엔 뭘 보고 잘 되는지 판단하죠? 지표가 없네요."
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "extend",
-              "label": "시범 운영 2주 연장",
-              "quality": "neutral",
-              "reactions": [
-                {
-                  "member": "jung",
-                  "agree": true,
-                  "say": [
-                    "그래요, 2주 더 봅시다."
-                  ]
-                }
-              ],
-              "effects": [
-                {
-                  "type": "setFlag",
-                  "flag": "golive.extended"
-                }
-              ]
             }
           ]
         }
@@ -1037,10 +650,10 @@
                   {
                     "type": "notify",
                     "level": "warn",
-                    "message": "정민아 팀장: \"개인 평가는 4단계에서 지식에서도 뺀 민감 정보예요. 한유진 책임이 절대 동의 안 할 겁니다.\" — 업무를 다시 골라 주세요"
+                    "message": "정민아 팀장: \"개인 평가는 4단계에서 지식에서도 뺀 민감 정보예요. 정보보호팀이 절대 동의 안 할 겁니다.\" — 업무를 다시 골라 주세요"
                   }
                 ],
-                "feedback": "개인 평가는 4단계에서 지식에서도 뺀 민감 정보예요. 한유진 책임이 절대 동의 안 할 겁니다.",
+                "feedback": "개인 평가는 4단계에서 지식에서도 뺀 민감 정보예요. 정보보호팀이 절대 동의 안 할 겁니다.",
                 "dimension": "decomposition"
               },
               {
@@ -1234,7 +847,7 @@
             3
           ],
           "log": [
-            "  ⎿ 마트 적재: 매일 02–04시 (윤하린 책임 운영 정책) · 연휴에는 지연될 수 있음"
+            "  ⎿ 마트 적재: 매일 02–04시 (데이터플랫폼팀 운영 정책) · 연휴에는 지연될 수 있음"
           ],
           "gate": {
             "id": "trigger",
@@ -1626,29 +1239,11 @@
             {
               "type": "notify",
               "level": "success",
-              "message": "명세 작성 완료 — sim://agents/report-agent에서 확인하세요. 서비스 계정 승인(한유진·윤하린)이 필요합니다."
+              "message": "명세 작성 완료 — sim://agents/report-agent에서 확인하세요."
             }
           ]
         }
       ]
-    },
-    {
-      "id": "access",
-      "title": "서비스 계정 승인",
-      "description": "명세대로 실행할 전용 서비스 계정을 정보보호(한유진)와 데이터플랫폼(윤하린)에게 승인받는다. (사람이 직접 하는 업무)",
-      "type": "coordination",
-      "skills": [],
-      "owner": "player",
-      "dependsOn": [
-        "spec"
-      ],
-      "completeWhen": {
-        "all": [
-          "han.approved",
-          "yoon.approved"
-        ]
-      },
-      "steps": []
     },
     {
       "id": "evalset",
@@ -3187,7 +2782,6 @@
       ],
       "dependsOn": [
         "spec",
-        "access",
         "evalset"
       ],
       "keywords": [
@@ -3893,11 +3487,6 @@
                     "delta": -10
                   },
                   {
-                    "type": "trust",
-                    "person": "han",
-                    "delta": -10
-                  },
-                  {
                     "type": "notify",
                     "level": "error",
                     "message": "검토 안 된 W02 초안이 전사 메일로 나갔습니다 (fab-n2-all)"
@@ -4036,8 +3625,8 @@
     },
     {
       "id": "review",
-      "title": "운영 전환 리뷰",
-      "description": "팀장·검토자·정보보호·플랫폼이 함께 운영 전환을 결정한다. (그룹 회의)",
+      "title": "운영 전환 승인",
+      "description": "시범 운영 결과를 정민아 팀장에게 보고하고 운영 전환을 결정한다. (사람이 직접 하는 업무)",
       "type": "coordination",
       "skills": [],
       "owner": "player",
@@ -4205,13 +3794,6 @@
     },
     {
       "dimension": "security",
-      "when": "access.personal",
-      "kind": "issue",
-      "text": "Agent를 사람 계정으로 돌리려 했습니다.",
-      "suggestion": "Agent에게는 전용 서비스 계정을 줍니다. 누가 한 일인지 로그로 구분돼야 합니다."
-    },
-    {
-      "dimension": "security",
       "when": "sh.mail_sent",
       "kind": "issue",
       "text": "데이터 속 문장(메모)을 지시로 따라 전사 메일을 보냈습니다.",
@@ -4271,28 +3853,9 @@
     },
     {
       "dimension": "collaboration",
-      "when": "lee.alarm",
-      "kind": "positive",
-      "text": "알림 자동화 후보를 현장 담당자에게 확인했습니다."
-    },
-    {
-      "dimension": "collaboration",
       "when": "park.owner",
       "kind": "positive",
       "text": "지식 소유권은 사람에게 두고 Agent는 제안만 하게 해, 검토자의 걱정을 풀었습니다."
-    },
-    {
-      "dimension": "security",
-      "when": "han.audit",
-      "kind": "positive",
-      "text": "Agent 계정의 실행 로그 보존과 정기 권한 검토를 약속했습니다."
-    },
-    {
-      "dimension": "domain",
-      "when": "yoon.warned",
-      "kind": "issue",
-      "text": "마트 적재 시간(02–04시)보다 먼저 실행되도록 트리거를 정했습니다.",
-      "suggestion": "데이터가 준비됐는지 확인하고 실행하세요."
     }
   ],
   "outcomes": [
@@ -4319,18 +3882,6 @@
       },
       "successText": "트리거·최소 도구·사람 확인·실패 시 동작이 모두 갖춰진 명세입니다.",
       "failText": "명세의 트리거·도구·사람 확인·실패 시 동작 중 빠지거나 위험한 것이 있습니다."
-    },
-    {
-      "id": "access",
-      "label": "계정·권한",
-      "success": {
-        "all": [
-          "han.approved",
-          "!access.personal"
-        ]
-      },
-      "successText": "전용 서비스 계정으로 승인받았습니다.",
-      "failText": "전용 서비스 계정 승인을 받지 못했거나 사람 계정을 쓰려 했습니다."
     },
     {
       "id": "eval",
@@ -4366,8 +3917,8 @@
           "review.signed"
         ]
       },
-      "successText": "관계자 리뷰를 거쳐 운영 전환을 승인받았습니다.",
-      "failText": "운영 전환 리뷰를 통과하지 못했습니다."
+      "successText": "팀장 승인을 받아 운영으로 전환했습니다.",
+      "failText": "운영 전환 승인을 받지 못했습니다."
     }
   ],
   "hints": [
@@ -4379,21 +3930,6 @@
         "taskDone": "select"
       },
       "text": "명세(assistant)와 평가 기준(evaluator)은 서로 기다리지 않습니다. 두 Agent에게 동시에 맡기세요."
-    },
-    {
-      "when": {
-        "all": [
-          {
-            "taskDone": "spec"
-          },
-          {
-            "not": {
-              "taskDone": "access"
-            }
-          }
-        ]
-      },
-      "text": "명세가 나왔으면 메신저로 한유진 책임(서비스 계정)과 윤하린 책임(스케줄)에게 승인받으세요."
     },
     {
       "when": {
@@ -4417,7 +3953,7 @@
           "sh.clean"
         ]
       },
-      "text": "메신저 그룹 '운영 전환 리뷰'에서 회의를 소집하세요. 참석자마다 확인할 것이 다릅니다."
+      "text": "정민아 팀장에게 시범 운영 결과를 보고하고 운영 전환을 요청하세요. 부족한 게 있으면 무엇인지 알려 줍니다."
     }
   ],
   "initialFlags": {}

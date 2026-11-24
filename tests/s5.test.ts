@@ -50,7 +50,7 @@ describe('5단계 단일 Agent', () => {
     expect(modIds(sim)).not.toContain('fix-w51-et12');
     sim.observe('page', 'sim://reports/w51');
     sim.observe('page', 'sim://mart/yield');
-    ask(sim, 'oh', 'et12');
+    sim.observe('page', 'sim://mail/et12');
     expect(modIds(sim)).toContain('fix-w51-et12');
     sh(sim, `do ${A} revise-w51 +fix-w51-et12`);
     finish(sim, 'revise-w51');
@@ -85,8 +85,7 @@ describe('5단계 단일 Agent', () => {
     expect(sim.flags['w51.issue.cause']).toBe(true); // 원인 단정
     expect(sim.files.get('/reports/weekly_W51.md')!.content).toContain('ETCH-01 (EQ-N2-ET01) 파티클 상승');
     sim.observe('page', 'sim://reports/w51');
-    ask(sim, 'oh', 'et12');
-    ask(sim, 'lee', 'cause');
+    sim.observe('page', 'sim://mail/et12');
     sh(sim, `do ${A} revise-w51 +fix-w51-et12 +fix-w51-cause`);
     finish(sim, 'revise-w51');
     expect(sim.flags['w51.clean']).toBe(true);

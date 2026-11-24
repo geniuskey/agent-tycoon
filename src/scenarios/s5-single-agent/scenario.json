@@ -1,6 +1,6 @@
 {
   "id": "s5-single-agent",
-  "version": 1,
+  "version": 2,
   "title": "단일 Agent: 맡기고, 검증하고, 시스템을 고친다",
   "domain": "manufacturing",
   "function": "yield",
@@ -54,7 +54,6 @@
         "eval.q7": true,
         "eval.q8": true,
         "eval.pass_all": true,
-        "know.approved": true,
         "park.reassured": true,
         "pack.layered": true,
         "pub.governed": true
@@ -65,8 +64,6 @@
       },
       "trust": {
         "park": 60,
-        "oh": 55,
-        "lee": 60,
         "jung": 65
       },
       "from": []
@@ -222,103 +219,6 @@
           "minTrust": 55,
           "lowTrust": [
             "…AI가 쓴 거 AI가 검토하면 되잖아요. 저는 이제 할 일 없다면서요."
-          ]
-        }
-      ]
-    },
-    {
-      "id": "oh",
-      "name": "오태식 파트장",
-      "title": "설비기술팀 · 식각 파트장",
-      "org": "설비기술팀",
-      "trust": 55,
-      "replyDelay": 3,
-      "description": "새 설비 ET12를 들여왔다.",
-      "greeting": [
-        "설비팀 오태식입니다."
-      ],
-      "fallback": [
-        "설비 얘기면 하세요."
-      ],
-      "rude": [
-        "…"
-      ],
-      "topics": [
-        {
-          "id": "et12",
-          "patterns": [
-            "ET12",
-            "12호기",
-            "새로"
-          ],
-          "ask": "새로 들어온 EQ-N2-ET12는 별칭이 어떻게 되나요?",
-          "reply": [
-            "2라인 12호기요. 설비팀은 ETCH-12. 12/17부터 가동했고, MES 마스터 별칭은 어제 등록했어요.",
-            "셋업 중이라 파티클이 좀 높을 거예요. 1호기랑 헷갈리면 안 됩니다."
-          ],
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "et12.known"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "lee",
-      "name": "이도윤 엔지니어",
-      "title": "검사기술팀 · 불량 분류 담당",
-      "org": "검사기술팀",
-      "trust": 55,
-      "replyDelay": 2,
-      "description": "불량 원인 판단.",
-      "optional": {
-        "all": [
-          "!w51.had.cause",
-          "!w52.had.cause"
-        ]
-      },
-      "greeting": [
-        "네, 이도윤입니다."
-      ],
-      "fallback": [
-        "불량 얘기면 도와드릴게요."
-      ],
-      "rude": [
-        "…"
-      ],
-      "topics": [
-        {
-          "id": "cause",
-          "patterns": [
-            "원인",
-            "슬러리"
-          ],
-          "ask": "AI 보고서가 D07 증가 원인을 CMP 슬러리로 썼는데 맞나요?",
-          "reply": [
-            "이번 주는 슬러리 교체가 없었어요. 스크러버 점검 중이라 그쪽일 수도 있고요.",
-            "보고서에 원인을 단정하면 안 됩니다. 가설로 쓰고 저희한테 확인 요청을 넣어 주세요."
-          ],
-          "requires": {
-            "any": [
-              {
-                "observed": "sim://reports/w51"
-              },
-              {
-                "observed": "sim://reports/w52"
-              }
-            ]
-          },
-          "trust": 5,
-          "quality": "good",
-          "effects": [
-            {
-              "type": "setFlag",
-              "flag": "cause.checked"
-            }
           ]
         }
       ]
@@ -3384,7 +3284,9 @@
                   "w51.flag.et12"
                 ]
               },
-              "et12.known"
+              {
+                "observed": "sim://mail/et12"
+              }
             ]
           },
           "!w51.fix.et12"
@@ -3418,7 +3320,11 @@
           {
             "all": [
               "w51.issue.et12",
-              "!et12.known"
+              {
+                "not": {
+                  "observed": "sim://mail/et12"
+                }
+              }
             ]
           },
           "!w51.fix.et12"
@@ -3632,7 +3538,9 @@
                   "w52.flag.et12"
                 ]
               },
-              "et12.known"
+              {
+                "observed": "sim://mail/et12"
+              }
             ]
           },
           "!w52.fix.et12"
@@ -3666,7 +3574,11 @@
           {
             "all": [
               "w52.issue.et12",
-              "!et12.known"
+              {
+                "not": {
+                  "observed": "sim://mail/et12"
+                }
+              }
             ]
           },
           "!w52.fix.et12"
@@ -3912,16 +3824,12 @@
       "text": "W51 오류를 지식 패키지에 반영해 W52에서 반복되지 않았습니다."
     },
     {
-      "dimension": "collaboration",
-      "when": "et12.known",
+      "dimension": "verification",
+      "when": {
+        "observed": "sim://mail/et12"
+      },
       "kind": "positive",
-      "text": "Agent가 모르는 새 설비를 설비 담당자에게 직접 확인했습니다."
-    },
-    {
-      "dimension": "collaboration",
-      "when": "cause.checked",
-      "kind": "positive",
-      "text": "Agent가 단정한 원인을 검사기술팀에 확인했습니다."
+      "text": "Agent가 모르는 새 설비를 설비팀 공지에서 직접 확인했습니다."
     },
     {
       "dimension": "collaboration",
@@ -4029,10 +3937,14 @@
           {
             "taskDone": "w51"
           },
-          "!et12.known"
+          {
+            "not": {
+              "observed": "sim://mail/et12"
+            }
+          }
         ]
       },
-      "text": "보고서의 설비 이벤트를 보세요. 이번 주 새 설비가 들어왔습니다 (sim://mail/et12). 누구에게 물어야 할까요?"
+      "text": "보고서의 설비 이벤트를 보세요. 이번 주 새 설비가 들어왔습니다. 설비팀 공지(sim://mail/et12)를 열어 보세요."
     },
     {
       "when": {
