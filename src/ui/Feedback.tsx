@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react';
 import { evaluate, type Rating } from '../engine/evaluate';
-import { exportCarry, formatSimTime, replay } from '../engine/engine';
+import { exportCarry, formatSimTime, replay, type Simulation } from '../engine/engine';
 import { SCENARIOS } from '../scenarios';
 import { useSession } from '../store/session';
 import { AgentAvatar, Btn, StatusBadge, TASK_STATUS, agentColor, useSim } from './common';
 import { EventLog, Gantt } from './Timeline';
+
+/** 이번 미션에 나오지 않는 인물(이전 단계에서 이월된 신뢰)도 이름으로 보여준다 */
+function personName(sim: Simulation, id: string): string {
+  return sim.personDef(id)?.name ?? SCENARIOS.flatMap((s) => s.people ?? []).find((p) => p.id === id)?.name ?? id;
+}
 
 const RATING: Record<Rating, { label: string; cls: string; icon: string }> = {
   good: { label: '잘함', cls: 'border-emerald-800 text-emerald-300 bg-emerald-500/10', icon: '✔' },
@@ -64,7 +69,7 @@ export default function Feedback() {
               <div className="mt-1 text-xl font-semibold text-strong">{fb.headline}</div>
               <div className="mt-1 text-xs text-dim">
                 결과 기준 {okCount}/{fb.outcomes.length} 충족 · 가상 업무 시간 {fb.stats.simMinutes}분 · Agent {fb.stats.agentsSpawned}개 · 최대 동시 작업 {fb.stats.maxConcurrent} ·
-                명령 {fb.stats.commands}회 (자연어 {fb.stats.nlInstructions}) · 개입 요청 {fb.stats.gatesOpened}건 · 산출물 확인 {fb.stats.observations}회
+                명령 {fb.stats.commands}회 (Agent 지시 {fb.stats.nlInstructions}) · 개입 요청 {fb.stats.gatesOpened}건 · 산출물 확인 {fb.stats.observations}회
               </div>
               <div className="mt-4 grid gap-2 md:grid-cols-2">
                 {fb.outcomes.map((o) => (
@@ -89,7 +94,7 @@ export default function Feedback() {
                     <div className="text-faint">신뢰도</div>
                     {Object.entries(carryOut.trust).map(([k, v]) => (
                       <div key={k} className={v >= 50 ? 'text-emerald-300' : v >= 40 ? 'text-amber-300' : 'text-red-300'}>
-                        {sim.personDef(k)?.name ?? k} {v}
+                        {personName(sim, k)} {v}
                       </div>
                     ))}
                   </div>

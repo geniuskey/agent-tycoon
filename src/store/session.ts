@@ -81,6 +81,7 @@ interface SessionState {
   persist: () => void;
 }
 
+const PERSIST_ON = new Set(['command', 'observe', 'task.status', 'gate.opened', 'person.said', 'group.said']);
 let unsub: (() => void) | null = null;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -105,7 +106,8 @@ export const useSession = create<SessionState>((set, get) => {
     if (!fresh.length) return;
     set({ uiSeq: fresh[fresh.length - 1].seq });
     for (const e of fresh) {
-      if (e.type === 'command') get().persist();
+      // 명령뿐 아니라 진행 지점(작업 완료·Agent 질문·답장)에서도 저장 — 새로고침해도 가상 시간이 크게 되돌아가지 않게
+      if (PERSIST_ON.has(e.type)) get().persist();
       if (e.type !== 'ui.request') continue;
       const action = e.data?.action;
       if (action === 'agent-pane' && e.agentId) get().openAgentPane(e.agentId, false);

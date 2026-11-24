@@ -188,7 +188,7 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
       tabIndex={0}
       onKeyDown={onKey}
       onFocus={() => useSession.getState().focusPane(paneId)}
-      className={`${isGate ? 'max-h-[78%] min-h-[45%] border-t-2' : 'max-h-[55%] border-t'} shrink-0 overflow-y-auto px-2 pb-1.5 outline-none ${tone.box}`}
+      className={`${isGate ? 'max-h-[78%] min-h-[45%] border-t-2' : 'max-h-[60%] border-t'} @container shrink-0 overflow-y-auto px-2 pb-1.5 outline-none ${tone.box}`}
     >
       <div className={`-mx-2 mb-1 flex items-start gap-2 px-3 ${isGate ? `pt-2 pb-2 ${tone.head}` : 'pt-1.5'}`}>
         <div className="flex-1">
@@ -218,7 +218,7 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
                   {planMode ? '⏸ plan mode 켜짐' : 'plan mode 꺼짐'} · Shift+Tab
                 </button>
               </div>
-              <div className={`mt-1 rounded border px-2 py-1.5 font-mono text-[12px] leading-snug ${single >= 0 ? 'border-line2 bg-black/30 text-strong' : 'border-dashed border-line2 text-faint'}`}>
+              <div className={`mt-1 rounded border px-2 py-1.5 font-mono text-[12px] leading-snug ${single >= 0 ? 'border-line2 bg-black/30 text-strong' : 'truncate border-dashed border-line2 text-faint'}`}>
                 <span className="text-dim">&gt; </span>
                 {ch.mode === 'instruct' && single >= 0
                   ? composePrompt(
@@ -256,18 +256,18 @@ export default function ChoiceCard({ paneId, agentId, onFreeText }: { paneId: st
         <button
           disabled={!canSubmit}
           onClick={submit}
-          className={`rounded px-3 py-1 text-[12px] font-semibold disabled:opacity-30 ${tone.btn}`}
+          className={`shrink-0 rounded px-3 py-1 text-[12px] font-semibold whitespace-nowrap disabled:opacity-30 ${tone.btn}`}
         >
           {ch.mode === 'instruct' ? (planMode ? '계획 요청 ⏎' : '보내기 ⏎') : '확인 ⏎'}
         </button>
         {ch.mode === 'instruct' &&
           ch.actions.map((a) => (
-            <button key={a.command} onClick={() => run(a.command)} className="rounded border border-line2 px-2 py-0.5 text-[11.5px] text-dim hover:text-fg">
+            <button key={a.command} onClick={() => run(a.command)} className="shrink-0 rounded border border-line2 px-2 py-0.5 text-[11.5px] whitespace-nowrap text-dim hover:text-fg">
               {a.label}
             </button>
           ))}
-        <span className="ml-auto text-[10.5px] text-faint">1–9 선택 · Space 토글 · ⏎ 확정{ch.mode === 'instruct' ? ' · Shift+Tab plan mode' : ''}</span>
-        <button onClick={onFreeText} className="text-[11px] text-faint hover:text-fg">
+        <span className="ml-auto hidden truncate text-[10.5px] text-faint @lg:inline">1–9 선택 · Space 토글 · ⏎ 확정{ch.mode === 'instruct' ? ' · Shift+Tab plan mode' : ''}</span>
+        <button onClick={onFreeText} className="ml-auto shrink-0 text-[11px] whitespace-nowrap text-faint hover:text-fg @lg:ml-0">
           직접 입력 ⌨
         </button>
       </div>

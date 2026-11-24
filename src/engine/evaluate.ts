@@ -96,7 +96,12 @@ export function evaluate(sim: Simulation): Feedback {
         `완료된 Task ${done.length}개 중 ${top[1]}개를 ${top[0]} 한 Agent가 처리했습니다.`,
         '역할별 전문 Agent에게 업무를 나누면 품질과 속도가 함께 올라갑니다.',
       );
-    else add('decomposition', 'positive', `${doers.size}개 Agent가 업무를 나누어 수행했습니다.`);
+    else
+      add(
+        'decomposition',
+        'positive',
+        doers.size > 1 ? `${doers.size}개 Agent가 업무를 나누어 수행했습니다.` : `업무를 ${done.length}개 Task로 나누어 단계별로 맡겼습니다.`,
+      );
   }
   if (sim.metrics.unrecognized >= 4)
     add(

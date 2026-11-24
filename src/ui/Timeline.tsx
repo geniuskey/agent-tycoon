@@ -52,7 +52,7 @@ export function Gantt({ sim, uptoTick, onPick }: { sim: Simulation; uptoTick?: n
     <div className="px-3 py-2">
       {lanes.map(([id, l]) => (
         <div key={id} className="mb-1 flex items-center gap-2">
-          <span className="flex w-28 shrink-0 items-center gap-1.5 truncate font-mono text-[11.5px] font-semibold" style={{ color: agentColor(sim, id) }}>
+          <span className="flex w-32 shrink-0 items-center gap-1.5 truncate font-mono text-[11.5px] font-semibold" style={{ color: agentColor(sim, id) }}>
             <AgentAvatar sim={sim} id={id} size={15} />
             {id}
           </span>

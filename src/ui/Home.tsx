@@ -102,7 +102,7 @@ export default function Home() {
             <Filter label="직무" value={fn} onChange={setFn} options={usedFns.map((d) => [d, FUNCTIONS[d] ?? d])} />
             <Filter label="업무 유형" value={type} onChange={setType} options={usedTypes.map((d) => [d, TASK_TYPES[d] ?? d])} />
             <span className="ml-auto text-[11px] text-faint">
-              플레이 가능 {SCENARIOS.length} · 준비 중 {CATALOG.length}
+              플레이 가능 {SCENARIOS.filter((s) => !s.campaign).length} · 준비 중 {CATALOG.length}
             </span>
           </div>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
