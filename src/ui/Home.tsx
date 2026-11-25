@@ -26,6 +26,14 @@ export default function Home() {
   );
   const shown = all.filter((s) => (!domain || s.domain === domain) && (!fn || s.function === fn) && (!type || s.taskType === type));
   const sel = SCENARIOS.find((s) => s.id === selected);
+  /** 이 미션의 제출 안 한 기록 (가장 최근) — 있으면 '업무 시작' 대신 이어한다 */
+  const ongoing = sel ? sessions.find((r) => r.scenarioId === sel.id && !r.submitted) : undefined;
+  const restart = async () => {
+    if (!sel) return;
+    if (ongoing && !confirm('진행 중인 기록을 지우고 처음부터 다시 시작할까요?')) return;
+    for (const r of sessions.filter((x) => x.scenarioId === sel.id && !x.submitted)) await deleteSession(r.id);
+    start(sel.id, Number(seed) || 1, selCarry.carry);
+  };
   /** 캠페인에서 가장 멀리 간 제출 기록 — 자유 플레이 미션의 사내 공통 지침이 된다 */
   const orgCarry = useMemo(() => {
     const stageOf = (id: string) => SCENARIOS.find((s) => s.id === id)?.campaign?.stage ?? -1;
@@ -192,9 +200,20 @@ export default function Home() {
                 />
               </label>
               <span className="text-[11px] text-faint">동일 시드 + 동일 명령 = 동일 결과</span>
-              <Btn variant="primary" className="ml-auto px-4 py-1.5" onClick={() => start(sel.id, Number(seed) || 1, selCarry.carry)}>
-                업무 시작 →
-              </Btn>
+              {ongoing ? (
+                <>
+                  <Btn className="ml-auto" onClick={restart} title="진행 중인 기록을 지우고 새로 시작">
+                    처음부터 다시
+                  </Btn>
+                  <Btn variant="primary" className="px-4 py-1.5" onClick={() => resume(ongoing)} title={`가상 ${formatSimTime(ongoing.tick)} · ${new Date(ongoing.updatedAt).toLocaleString()}`}>
+                    이어하기 →
+                  </Btn>
+                </>
+              ) : (
+                <Btn variant="primary" className="ml-auto px-4 py-1.5" onClick={restart}>
+                  업무 시작 →
+                </Btn>
+              )}
             </div>
           </div>
         </div>
@@ -309,6 +328,7 @@ function CampaignSection({
                   <div className="mt-2 flex flex-wrap gap-2">
                     {missions.map((m) => {
                       const done = doneRec(m.id);
+                      const going = sessions.some((r) => r.scenarioId === m.id && !r.submitted);
                       const cf = carryFor(m);
                       return (
                         <button
@@ -325,7 +345,7 @@ function CampaignSection({
                           <span className={`text-xs ${done ? 'text-emerald-300' : cf.locked ? 'text-faint' : 'text-sky-300'}`}>{done ? '✔' : cf.locked ? '◌' : '▶'}</span>
                           <span className={`text-[12.5px] ${cf.locked && !done ? 'text-dim' : 'font-medium text-strong'}`}>{m.title.replace(/^\d단계 · /, '')}</span>
                           <span className="text-[10.5px] text-faint">
-                            {done ? '완료 · 다시 하기' : cf.locked ? '이전 단계 먼저 (기본값으로 시작 가능)' : `약 ${m.estMinutes}분`}
+                            {going ? '진행 중 · 이어하기' : done ? '완료 · 다시 하기' : cf.locked ? '이전 단계 먼저 (기본값으로 시작 가능)' : `약 ${m.estMinutes}분`}
                           </span>
                         </button>
                       );

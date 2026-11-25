@@ -209,12 +209,13 @@ export const useSession = create<SessionState>((set, get) => {
     },
 
     goHome: () => {
-      get().persist();
+      // 대기 중인 저장을 바로 끝낸 뒤 목록을 새로 읽는다 — 홈에서 '이어하기'가 최신 상태를 가리키게
+      const saving = flushSave();
       unsub?.();
       unsub = null;
       setActiveSessionId(null);
       set({ screen: 'home', sim: null, sessionId: null });
-      void get().refreshSessions();
+      void saving.then(() => get().refreshSessions());
     },
 
     showFeedback: (rec) => {
@@ -329,24 +330,28 @@ export const useSession = create<SessionState>((set, get) => {
 
     persist: () => {
       if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
-        const { sim, sessionId, createdAt, panes } = get();
-        if (!sim || !sessionId) return;
-        void saveSession({
-          id: sessionId,
-          scenarioId: sim.scenario.id,
-          scenarioTitle: sim.scenario.title,
-          seed: sim.seed,
-          commands: sim.commands,
-          tick: sim.tick,
-          createdAt,
-          updatedAt: Date.now(),
-          submitted: sim.submitted,
-          panes,
-          carry: sim.carry,
-          exportCarry: sim.submitted && sim.scenario.campaign ? exportCarry(sim) : undefined,
-        });
-      }, 300);
+      saveTimer = setTimeout(() => void flushSave(), 300);
     },
   };
+
+  function flushSave(): Promise<void> {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = null;
+    const { sim, sessionId, createdAt, panes } = get();
+    if (!sim || !sessionId) return Promise.resolve();
+    return saveSession({
+      id: sessionId,
+      scenarioId: sim.scenario.id,
+      scenarioTitle: sim.scenario.title,
+      seed: sim.seed,
+      commands: sim.commands,
+      tick: sim.tick,
+      createdAt,
+      updatedAt: Date.now(),
+      submitted: sim.submitted,
+      panes,
+      carry: sim.carry,
+      exportCarry: sim.submitted && sim.scenario.campaign ? exportCarry(sim) : undefined,
+    });
+  }
 });
